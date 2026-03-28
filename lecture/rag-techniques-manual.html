@@ -1,0 +1,4031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뉴스룸을 위한 RAG 실전 가이드.</title>
+<style>
+
+  :root {
+    --bg: #fafaf9; --surface: #ffffff; --border: #e7e5e4;
+    --text: #1c1917; --text-secondary: #78716c;
+    --accent: #2563eb; --accent-light: #eff6ff; --accent-dark: #1d4ed8;
+    --green: #16a34a; --green-light: #f0fdf4;
+    --orange: #ea580c; --orange-light: #fff7ed;
+    --purple: #7c3aed; --purple-light: #f5f3ff;
+    --red: #dc2626; --red-light: #fef2f2;
+    --code-bg: #1e293b; --code-text: #e2e8f0;
+    --sidebar-w: 280px; --header-h: 64px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; font-size:16px; }
+  .header { position:fixed; top:0; left:0; right:0; z-index:100; height:var(--header-h); background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; }
+  .header h1 { font-size:20px; font-weight:700; }
+  .header .badge { font-size:11px; font-weight:600; background:var(--accent-light); color:var(--accent); padding:3px 10px; border-radius:12px; }
+  .menu-btn { display:none; background:none; border:none; cursor:pointer; font-size:24px; color:var(--text); }
+  .sidebar { position:fixed; top:var(--header-h); left:0; bottom:0; width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:20px 0; z-index:90; transition:transform 0.3s; }
+  .sidebar .nav-group { margin-bottom:8px; }
+  .sidebar .nav-group-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); padding:8px 20px 4px; }
+  .sidebar .nav-item { display:block; padding:8px 20px 8px 28px; font-size:13.5px; color:var(--text-secondary); text-decoration:none; border-left:3px solid transparent; cursor:pointer; transition:all 0.15s; }
+  .sidebar .nav-item:hover { color:var(--text); background:var(--bg); }
+  .sidebar .nav-item.active { color:var(--accent); font-weight:600; border-left-color:var(--accent); background:var(--accent-light); }
+  .sidebar .progress-bar { margin:16px 20px; padding:12px; background:var(--bg); border-radius:8px; }
+  .sidebar .progress-bar .bar-bg { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .sidebar .progress-bar .bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s; }
+  .sidebar .progress-bar .label { font-size:12px; color:var(--text-secondary); margin-top:6px; }
+  .main { margin-left:var(--sidebar-w); margin-top:var(--header-h); padding:40px 48px 80px; max-width:920px; }
+  .section { display:none; } .section.active { display:block; }
+  h2 { font-size:28px; font-weight:800; margin-bottom:8px; }
+  h3 { font-size:20px; font-weight:700; margin:32px 0 12px; }
+  h4 { font-size:16px; font-weight:700; margin:24px 0 8px; }
+  p { margin-bottom:16px; } ul,ol { margin:0 0 16px 20px; } li { margin-bottom:6px; }
+  a { color:var(--accent); }
+  .module-header { padding:24px 28px; border-radius:12px; margin-bottom:32px; }
+  .module-header.m1 { background:var(--accent-light); border-left:4px solid var(--accent); }
+  .module-header.m2 { background:var(--green-light); border-left:4px solid var(--green); }
+  .module-header.m3 { background:var(--purple-light); border-left:4px solid var(--purple); }
+  .module-header.m4 { background:var(--orange-light); border-left:4px solid var(--orange); }
+  .module-header.m5 { background:var(--red-light); border-left:4px solid var(--red); }
+  .module-header .subtitle { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .module-header .learning-goals { font-size:14px; color:var(--text-secondary); margin-top:8px; }
+  .tag { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; margin-right:4px; }
+  .tag.beginner { background:#dcfce7; color:#166534; } .tag.intermediate { background:#fef3c7; color:#92400e; }
+  .tag.advanced { background:#fce7f3; color:#9d174d; } .tag.time { background:#e0e7ff; color:#3730a3; }
+  .code-block { position:relative; margin:16px 0 24px; background:var(--code-bg); border-radius:10px; overflow:hidden; }
+  .code-block .code-header { display:flex; justify-content:space-between; align-items:center; padding:8px 16px; background:rgba(255,255,255,0.05); font-size:12px; color:#94a3b8; }
+  .code-block .copy-btn { background:rgba(255,255,255,0.1); border:none; color:#94a3b8; font-size:12px; padding:3px 10px; border-radius:4px; cursor:pointer; transition:all 0.15s; }
+  .code-block .copy-btn:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .code-block pre { padding:16px; overflow-x:auto; font-family:'JetBrains Mono','Fira Code',monospace; font-size:13.5px; line-height:1.6; color:var(--code-text); white-space:pre-wrap; word-wrap:break-word; }
+  .code-block pre .kw { color:#c084fc; } .code-block pre .fn { color:#67e8f9; }
+  .code-block pre .str { color:#86efac; } .code-block pre .cm { color:#64748b; font-style:italic; }
+  .code-block pre .num { color:#fbbf24; } .code-block pre .op { color:#f472b6; }
+  .callout { padding:16px 20px; border-radius:8px; margin:20px 0; font-size:14.5px; }
+  .callout.tip { background:#f0fdf4; border-left:3px solid var(--green); }
+  .callout.warn { background:#fffbeb; border-left:3px solid #f59e0b; }
+  .callout.info { background:var(--accent-light); border-left:3px solid var(--accent); }
+  .callout.danger { background:var(--red-light); border-left:3px solid var(--red); }
+  .callout.success { background:#f0fdf4; border-left:3px solid var(--green); }
+  .callout.warning { background:#fffbeb; border-left:3px solid #f59e0b; }
+  .callout.important { background:var(--accent-light); border-left:3px solid var(--accent); }
+  .callout .callout-title { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .accordion { border:1px solid var(--border); border-radius:8px; margin:16px 0; overflow:hidden; }
+  .accordion-header { padding:14px 20px; background:var(--surface); cursor:pointer; font-weight:600; font-size:15px; display:flex; justify-content:space-between; align-items:center; user-select:none; transition:background 0.15s; }
+  .accordion-header:hover { background:var(--bg); }
+  .accordion-header .arrow { transition:transform 0.25s; font-size:12px; }
+  .accordion.open .accordion-header .arrow { transform:rotate(90deg); }
+  .accordion-body { display:none; padding:16px 20px; border-top:1px solid var(--border); background:var(--bg); }
+  .accordion.open .accordion-body { display:block; }
+  button.accordion-header { border:none; width:100%; text-align:left; font-family:inherit; font-size:15px; }
+  .step { display:flex; gap:16px; margin:20px 0; align-items:flex-start; }
+  .step-num { flex-shrink:0; width:32px; height:32px; background:var(--accent); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+  .step-content { flex:1; } .step-content h4 { margin-top:4px; }
+  .table-wrap { overflow-x:auto; margin:16px 0 24px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  th { background:var(--bg); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-secondary); }
+  td code { background:#f1f5f9; padding:1px 6px; border-radius:4px; font-size:13px; }
+  code { background:#f1f5f9; padding:1px 6px; border-radius:4px; font-size:13px; font-family:'JetBrains Mono','Fira Code',monospace; }
+  .quiz { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin:24px 0; }
+  .quiz h4 { margin-top:0; }
+  .quiz-q { margin-bottom:8px; }
+  .quiz-answer { margin-bottom:16px; }
+  .quiz-btn { display:inline-block; padding:6px 16px; border:1px solid var(--accent); border-radius:6px; background:var(--accent-light); color:var(--accent-dark); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; margin:4px 0; }
+  .quiz-btn:hover { background:var(--accent); color:white; }
+  .answer-text { margin-top:10px; padding:12px 16px; background:var(--green-light); border-left:3px solid var(--green); border-radius:6px; font-size:14px; }
+  .answer-text p { margin-bottom:6px; }
+  .answer-text p:last-child { margin-bottom:0; }
+  .diagram { text-align:center; margin:24px 0; padding:24px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .diagram .flow { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; }
+  .diagram .flow-box { background:var(--accent-light); border:1px solid #bfdbfe; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:600; color:var(--accent-dark); }
+  .diagram .flow-arrow { font-size:18px; color:var(--text-secondary); }
+  .nav-buttons { display:flex; justify-content:space-between; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+  .nav-btn { padding:10px 24px; border:1px solid var(--border); border-radius:8px; background:var(--surface); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; text-decoration:none; transition:all 0.15s; }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn.primary { background:var(--accent); color:white; border-color:var(--accent); }
+  .nav-btn.primary:hover { background:var(--accent-dark); }
+  .checklist { list-style:none; margin:12px 0; padding:0; }
+  .checklist li { padding:8px 12px; display:flex; align-items:center; gap:10px; border-radius:6px; cursor:pointer; font-size:14.5px; transition:background 0.15s; }
+  .checklist li:hover { background:var(--bg); }
+  .checklist li .check { width:20px; height:20px; border:2px solid var(--border); border-radius:4px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent; transition:all 0.2s; }
+  .checklist li.done .check { background:var(--accent); border-color:var(--accent); color:white; }
+  @media (max-width:768px) { .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)} .main{margin-left:0;padding:24px 16px 80px} .menu-btn{display:block} }
+  @media print { .sidebar,.header,.nav-buttons,.menu-btn{display:none!important} .main{margin:0;max-width:100%} .section{display:block!important;page-break-before:always} .code-block{break-inside:avoid} }
+
+
+  .module-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin:24px 0; }
+  .module-card { padding:20px; border-radius:10px; border:1px solid var(--border); background:var(--surface); }
+  .module-card.m1 { border-left:3px solid var(--accent); }
+  .module-card.m2 { border-left:3px solid var(--green); }
+  .module-card.m3 { border-left:3px solid var(--purple); }
+  .module-card.m4 { border-left:3px solid var(--orange); }
+  .module-card.m5 { border-left:3px solid var(--red); }
+  .module-num { font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+  .module-card h4 { font-size:15px; margin:6px 0 4px; }
+  .module-card p { font-size:13px; color:var(--text-secondary); margin-bottom:8px; }
+  .module-card .time, .module-card .level { font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; margin-right:4px; }
+  .module-card .time { background:#e0e7ff; color:#3730a3; }
+  .module-card .level { background:#dcfce7; color:#166534; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .tags .tag { font-size:11px; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--accent-light); color:var(--accent); }
+  .ref-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; }
+  .ref-card h4 { margin-top:0; }
+  .flow-diagram { text-align:center; margin:24px 0; padding:24px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .architecture-box { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; }
+  .tool-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; margin:12px 0; }
+  .comparison-table { width:100%; border-collapse:collapse; margin:16px 0; }
+  .comparison-table th, .comparison-table td { padding:10px 14px; border:1px solid var(--border); font-size:14px; }
+  .comparison-table th { background:var(--bg); font-weight:700; }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+  <h1>RAG 실전 가이드.</h1>
+  <span class="badge">RAG Techniques 기반</span>
+</div>
+<nav class="sidebar" id="sidebar">
+  <div class="progress-bar">
+    <div class="bar-bg"><div class="bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="label" id="progressLabel">0/11 완료</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">시작하기</div>
+    <a class="nav-item active" onclick="showSection('sec-intro')">과정 소개</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">기초</div>
+    <a class="nav-item" onclick="showSection('sec-m1')">1. RAG 기초</a>
+    <a class="nav-item" onclick="showSection('sec-m2')">2. 청크 최적화</a>
+    <a class="nav-item" onclick="showSection('sec-m3')">3. 쿼리 강화</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">심화</div>
+    <a class="nav-item" onclick="showSection('sec-m4')">4. 컨텍스트 강화</a>
+    <a class="nav-item" onclick="showSection('sec-m5')">5. 고급 검색 전략</a>
+    <a class="nav-item" onclick="showSection('sec-m6')">6. 반복·적응 검색</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">고급</div>
+    <a class="nav-item" onclick="showSection('sec-m7')">7. 평가와 설명 가능성</a>
+    <a class="nav-item" onclick="showSection('sec-m8')">8. 그래프 RAG</a>
+    <a class="nav-item" onclick="showSection('sec-m9')">9. 고급 아키텍처</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">부록</div>
+    <a class="nav-item" onclick="showSection('sec-ref')">레퍼런스 카드</a>
+  </div>
+</nav>
+<div class="main">
+<div class="section" id="sec-intro">
+  <div class="module-header intro">
+    <div class="subtitle">뉴스룸을 위한 검색증강생성 완전 가이드.</div>
+    <h2>뉴스룸을 위한 RAG 실전 가이드.</h2>
+    <div class="learning-goals">
+      <p>이 가이드에서 배울 내용입니다.</p>
+    </div>
+  </div>
+
+  <div class="tags">
+    <span class="tag">RAG</span>
+    <span class="tag">검색증강생성</span>
+    <span class="tag">뉴스 자동화</span>
+    <span class="tag">벡터 검색</span>
+  </div>
+
+  <h3>RAG(검색증강생성)란 무엇인가요.</h3>
+  <p>RAG(Retrieval-Augmented Generation, 검색증강생성)는 대언어모델(LLM)이 외부 지식을 검색해서 답변하는 기술입니다. 기존의 LLM은 학습 데이터의 시점에서 고정된 정보만 알고 있지만, RAG는 최신 자료를 실시간으로 검색하여 더 정확하고 신뢰할 수 있는 답변을 생성합니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">질문 입력</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">지식 검색</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">LLM 처리</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">정확한 답변</div>
+    </div>
+  </div>
+
+  <h3>기자·PD가 RAG를 필요로 하는 이유.</h3>
+  <ul>
+    <li><strong>정확한 출처 기반 답변.</strong> 국회 회의록, 판결문, 보도자료 등 공식 자료를 검색하여 팩트 기반의 기사를 작성할 수 있습니다.</li>
+    <li><strong>팩트체크 자동화.</strong> 수백만 건의 보도자료와 공식 기록에서 모순되는 정보를 자동으로 찾아낼 수 있습니다.</li>
+    <li><strong>아카이브 검색 효율화.</strong> 신문사의 기존 기사 데이터베이스에서 관련 기사를 즉시 검색하여 심화 보도를 준비합니다.</li>
+    <li><strong>다중 소스 통합.</strong> 선거자금 보고서, 정치자금 공시, 판결문 등 다양한 형식의 공공 데이터를 한 번에 검색합니다.</li>
+    <li><strong>실시간 정보 반영.</strong> 최신 보도자료, 성명서, 공시 정보를 즉시 기사에 반영합니다.</li>
+  </ul>
+
+  <div class="callout info">
+    <strong>RAG의 기본 아이디어.</strong> LLM의 강력한 이해와 표현 능력 + 검색 기술의 정확한 정보 추출 = 신뢰할 수 있는 뉴스 자동화 시스템.
+  </div>
+
+  <h3>이 가이드의 9개 모듈 구성.</h3>
+  <p>기초부터 고급까지 단계별로 학습하는 RAG 마스터 과정입니다.</p>
+
+  <div class="modules-grid">
+    <div class="module-card">
+      <h4>모듈 1.</h4>
+      <p><strong>RAG 기초.</strong></p>
+      <p>기본 RAG 파이프라인, CSV 데이터 처리, 신뢰성 있는 RAG 구축.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 2.</h4>
+      <p><strong>청크 최적화.</strong></p>
+      <p>문서를 최적의 크기로 분할하는 전략.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 3.</h4>
+      <p><strong>쿼리 강화.</strong></p>
+      <p>사용자의 질문을 더 효과적으로 변환하는 기법.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 4.</h4>
+      <p><strong>검색 알고리즘.</strong></p>
+      <p>벡터 검색, 융합 검색, 적응형 검색.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 5.</h4>
+      <p><strong>맥락 강화.</strong></p>
+      <p>검색 결과 주변 정보 활용, 컨텍스트 윈도우 확장.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 6.</h4>
+      <p><strong>평가 및 최적화.</strong></p>
+      <p>RAG 성능 측정, 품질 개선 방법.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 7.</h4>
+      <p><strong>다중 소스 통합.</strong></p>
+      <p>여러 데이터 소스 동시 활용.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 8.</h4>
+      <p><strong>고급 기법.</strong></p>
+      <p>에이전트 RAG, 그래프 기반 RAG.</p>
+    </div>
+    <div class="module-card">
+      <h4>모듈 9.</h4>
+      <p><strong>실전 프로젝트.</strong></p>
+      <p>뉴스룸 자동화 시스템 구축 사례.</p>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <strong>이 가이드의 특징.</strong> 모든 예제는 한국 언론 환경에 맞게 설계했습니다. 국회 회의록, 판결문, 보도자료, 선거자금 보고서, 정치자금 공시, 정부 보고서 등 기자·PD가 자주 다루는 자료를 사용합니다.
+  </div>
+
+  <h3>왜 지금 RAG를 배워야 하나.</h3>
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 뉴스 제작 시간 단축.</button>
+    <div class="accordion-body">
+      <p>팩트체크, 배경 설명 자료 검색, 유사 기사 참고 등 기사 작성에 걸리는 시간을 50% 이상 단축할 수 있습니다.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 정보 누락 방지.</button>
+    <div class="accordion-body">
+      <p>RAG 시스템은 관련 공식 자료, 과거 보도, 통계 자료 등을 자동으로 검색해 중요 정보 누락을 방지합니다.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 심화 보도 고도화.</button>
+    <div class="accordion-body">
+      <p>대규모 데이터베이스를 신속하게 분석하여 기존 보도와 다른 각도의 심화 보도를 개발할 수 있습니다.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 팩트 기반 저널리즘 강화.</button>
+    <div class="accordion-body">
+      <p>공식 자료 기반으로 검증된 정보만 생성되므로, 거짓 정보(할루시네이션) 위험을 최소화할 수 있습니다.</p>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m1')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m1">
+  <div class="module-header m1">
+    <div class="subtitle">기본 개념 및 첫 시스템 구축.</div>
+    <h2>모듈 1: RAG 기초.</h2>
+    <div class="learning-goals">
+      <p>이 모듈에서 배울 내용입니다.</p>
+      <ul>
+        <li>RAG의 전체 파이프라인 이해.</li>
+        <li>기본 RAG 시스템 구축 방법.</li>
+        <li>CSV, 표 형식 데이터 처리 방법.</li>
+        <li>신뢰할 수 있는 답변 생성 방법.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>RAG의 전체 파이프라인.</h3>
+  <p>RAG 시스템은 6개의 핵심 단계로 구성됩니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">1. 문서 로드</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">2. 청크 분할</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">3. 임베딩</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">4. 벡터 저장</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">5. 의미 검색</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-box">6. LLM 답변</div>
+    </div>
+  </div>
+
+  <h4>1단계: 문서 로드.</h4>
+  <p>기자·PD가 사용할 수 있는 문서 소스입니다.</p>
+  <ul>
+    <li>국회 회의록 (국회도서관 공개 자료)</li>
+    <li>판결문 (대법원 판례 검색 시스템)</li>
+    <li>보도자료 (각 부처, 기관, 기업)</li>
+    <li>신문사 기존 기사 아카이브</li>
+    <li>선거자금 보고서, 정치자금 공시</li>
+    <li>통계청 보도자료 및 통계표</li>
+    <li>정부 보도자료 (공식 보도자료 시스템)</li>
+  </ul>
+
+  <h4>2단계: 청크 분할.</h4>
+  <p>긴 문서를 LLM이 처리 가능한 작은 단위로 나누는 과정입니다. 예를 들어, 100페이지 탐사보도 원고를 500-1000 토큰 크기의 청크로 분할합니다.</p>
+
+  <h4>3단계: 임베딩.</h4>
+  <p>각 청크를 벡터(수의 배열)로 변환합니다. 의미가 유사한 청크는 벡터 공간에서 가까이 위치합니다.</p>
+
+  <h4>4단계: 벡터 저장.</h4>
+  <p>변환된 벡터를 벡터 데이터베이스에 저장합니다. ChromaDB, Weaviate, Milvus 등을 사용할 수 있습니다.</p>
+
+  <h4>5단계: 의미 검색.</h4>
+  <p>사용자의 질문을 벡터로 변환한 후, 저장된 벡터 중 가장 유사한 청크들을 찾습니다.</p>
+
+  <h4>6단계: LLM 답변.</h4>
+  <p>검색된 관련 정보와 사용자의 질문을 함께 LLM에 전달하여 최종 답변을 생성합니다.</p>
+
+  <h3>실제 예제: 국회 회의록 검색 시스템.</h3>
+  <p>국회 회의록에서 특정 의원의 발언을 검색하고 요약하는 RAG 시스템을 구축해봅시다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 필요한 라이브러리 임포트</span>
+<span class="kw">from</span> langchain.document_loaders <span class="kw">import</span> <span class="fn">TextLoader</span>
+<span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> <span class="fn">RecursiveCharacterTextSplitter</span>
+<span class="kw">from</span> langchain.embeddings <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>
+<span class="kw">from</span> langchain.vectorstores <span class="kw">import</span> <span class="fn">Chroma</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> <span class="fn">OpenAI</span>
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> <span class="fn">RetrievalQA</span>
+
+<span class="cm"># 1단계: 국회 회의록 문서 로드</span>
+<span class="fn">loader</span> <span class="op">=</span> <span class="fn">TextLoader</span>(<span class="str">"parliament_records.txt"</span>, encoding<span class="op">=</span><span class="str">"utf-8"</span>)
+<span class="fn">documents</span> <span class="op">=</span> <span class="fn">loader</span>.<span class="fn">load</span>()
+
+<span class class="cm"># 2단계: 청크 분할</span>
+<span class="fn">text_splitter</span> <span class="op">=</span> <span class="fn">RecursiveCharacterTextSplitter</span>(
+    chunk_size<span class="op">=</span><span class="num">800</span>,
+    chunk_overlap<span class="op">=</span><span class="num">100</span>
+)
+<span class="fn">chunks</span> <span class="op">=</span> <span class="fn">text_splitter</span>.<span class="fn">split_documents</span>(<span class="fn">documents</span>)
+
+<span class="cm"># 3-4단계: 임베딩 및 벡터 저장</span>
+<span class="fn">embeddings</span> <span class="op">=</span> <span class="fn">OpenAIEmbeddings</span>(model<span class="op">=</span><span class="str">"text-embedding-3-small"</span>)
+<span class="fn">vectorstore</span> <span class="op">=</span> <span class="fn">Chroma</span>.<span class="fn">from_documents</span>(
+    <span class="fn">chunks</span>,
+    <span class="fn">embeddings</span>,
+    persist_directory<span class="op">=</span><span class="str">"./parliament_db"</span>
+)
+
+<span class="cm"># 5-6단계: RAG 체인 구성</span>
+<span class="fn">llm</span> <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>, model_name<span class="op">=</span><span class="str">"gpt-3.5-turbo"</span>)
+<span class="fn">qa_chain</span> <span class="op">=</span> <span class="fn">RetrievalQA</span>.<span class="fn">from_chain_type</span>(
+    llm<span class="op">=</span><span class="fn">llm</span>,
+    chain_type<span class="op">=</span><span class="str">"stuff"</span>,
+    retriever<span class="op">=</span><span class="fn">vectorstore</span>.<span class="fn">as_retriever</span>()
+)
+
+<span class="cm"># 질의 실행</span>
+<span class="fn">query</span> <span class="op">=</span> <span class="str">"의료보험 개혁에 대해 김○○ 의원이 한 발언을 요약해줘."</span>
+<span class="fn">result</span> <span class="op">=</span> <span class="fn">qa_chain</span>.<span class="fn">run</span>(<span class="fn">query</span>)
+<span class="fn">print</span>(<span class="fn">result</span>)</pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>구현 팁.</strong> 국회도서관 국정감사 자료실이나 대법원 판례 검색 시스템의 공개 API를 활용하면, 자동으로 최신 자료를 수집하고 벡터 DB를 업데이트할 수 있습니다.
+  </div>
+
+  <h3>기법 1: 기본 RAG (Basic RAG).</h3>
+  <p>가장 단순하고 효과적인 RAG 방식입니다. 위의 예제가 기본 RAG입니다.</p>
+
+  <ul>
+    <li><strong>장점.</strong> 구현이 간단하고, 빠르며, 대부분의 경우에 충분한 정확도를 제공합니다.</li>
+    <li><strong>단점.</strong> 검색된 정보가 항상 정확하지 않을 수 있으며, 질문의 복잡도가 높을 때 성능 저하가 있을 수 있습니다.</li>
+    <li><strong>사용 사례.</strong> 기사 작성 보조, 배경 정보 검색, 유사 기사 찾기.</li>
+  </ul>
+
+  <h3>기법 2: CSV/표 형식 데이터 처리.</h3>
+  <p>선거자금 보고서, 재정 데이터, 통계표 등 구조화된 데이터에 RAG를 적용합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># CSV 파일 처리 예제</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> langchain.document_loaders <span class="kw">import</span> <span class="fn">CSVLoader</span>
+<span class="kw">from</span> langchain_experimental.agents <span class="kw">import</span> <span class="fn">create_pandas_dataframe_agent</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> <span class="fn">OpenAI</span>
+
+<span class="cm"># 선거자금 보고서 CSV 로드</span>
+<span class="fn">df</span> <span class="op">=</span> <span class="fn">pd</span>.<span class="fn">read_csv</span>(<span class="str">"campaign_finance_report.csv"</span>, encoding<span class="op">=</span><span class="str">"utf-8"</span>)
+
+<span class="cm"># 데이터프레임 기반 에이전트 생성</span>
+<span class="fn">llm</span> <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+<span class="fn">agent</span> <span class="op">=</span> <span class="fn">create_pandas_dataframe_agent</span>(
+    <span class="fn">llm</span>,
+    <span class="fn">df</span>,
+    verbose<span class="op">=</span><span class="kw">True</span>
+)
+
+<span class="cm"># 복잡한 쿼리 실행</span>
+<span class="fn">query</span> <span class="op">=</span> <span class="str">"2023년 대선 후보 중 서울 지역에서 가장 많은 기부금을 받은 후보는 누구고, 그 금액은?"</span>
+<span class="fn">result</span> <span class="op">=</span> <span class="fn">agent</span>.<span class="fn">run</span>(<span class="fn">query</span>)
+<span class="fn">print</span>(<span class="fn">result</span>)</pre>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> CSV 데이터 RAG의 특징.</button>
+    <div class="accordion-body">
+      <p>CSV 기반 RAG는 임베딩 대신 SQL 쿼리나 pandas 연산을 사용합니다. 정확한 수치 데이터를 다룰 때 매우 효과적입니다. 예를 들어, "2020-2023 4년간 전라북도 예산 증감"과 같은 정확한 통계 질문에 RAG보다 이 방식이 더 적합합니다.</p>
+    </div>
+  </div>
+
+  <h3>기법 3: 신뢰할 수 있는 RAG (Reliable RAG).</h3>
+  <p>RAG 시스템이 거짓 정보(할루시네이션)를 생성하지 않도록 보장하는 기법입니다. 팩트 기반 저널리즘에 필수적입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 신뢰할 수 있는 RAG 구현</span>
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> <span class="fn">RetrievalQA</span>
+<span class="kw">from</span> langchain.prompts <span class="kw">import</span> <span class="fn">PromptTemplate</span>
+
+<span class="cm"># 답변 검증 프롬프트</span>
+<span class="fn">verification_prompt</span> <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+    input_variables<span class="op">=</span>[<span class="str">"question"</span>, <span class="str">"context"</span>, <span class="str">"answer"</span>],
+    template<span class="op">=</span><span class="str">"""주어진 문맥(context)에 기반하여 다음 답변이 정확한지 판단하세요.
+
+문맥:
+{context}
+
+질문: {question}
+
+답변: {answer}
+
+판단:
+1. 답변이 문맥에서 나온 정보만 사용했는가?
+2. 답변에 문맥에 없는 정보(할루시네이션)가 포함되어 있는가?
+3. 출처를 명확히 제시했는가?
+
+결론: [정확함/부분 정확/거짓 정보 포함] 및 이유를 설명하세요."""</span>
+)
+
+<span class="cm"># RAG 체인에 검증 추가</span>
+<span class="kw">class</span> <span class="fn">ReliableRAG</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, vectorstore, llm):
+        <span class="fn">self</span>.vectorstore <span class="op">=</span> vectorstore
+        <span class="fn">self</span>.llm <span class="op">=</span> llm
+
+    <span class="kw">def</span> <span class="fn">query</span>(<span class="fn">self</span>, question):
+        <span class="cm"># 1. 관련 문서 검색</span>
+        docs <span class="op">=</span> <span class="fn">self</span>.vectorstore.<span class="fn">similarity_search</span>(question, k<span class="op">=</span><span class="num">3</span>)
+        context <span class="op">=</span> <span class="str">"\n\n"</span>.<span class="fn">join</span>([<span class="fn">doc</span>.page_content <span class="kw">for</span> doc <span class="kw">in</span> docs])
+
+        <span class="cm"># 2. 답변 생성</span>
+        answer <span class="op">=</span> <span class="fn">self</span>.llm.<span class="fn">predict</span>(context<span class="op">=</span>context, question<span class="op">=</span>question)
+
+        <span class="cm"># 3. 답변 검증</span>
+        verification <span class="op">=</span> <span class="fn">self</span>.llm.<span class="fn">predict</span>(
+            context<span class="op">=</span>context,
+            question<span class="op">=</span>question,
+            answer<span class="op">=</span>answer
+        )
+
+        <span class="cm"># 4. 출처 표시</span>
+        sources <span class="op">=</span> [<span class="fn">doc</span>.metadata.<span class="fn">get</span>(<span class="str">"source"</span>, <span class="str">"알 수 없음"</span>) <span class="kw">for</span> doc <span class="kw">in</span> docs]
+
+        <span class="kw">return</span> {
+            <span class="str">"answer"</span>: answer,
+            <span class="str">"verification"</span>: verification,
+            <span class="str">"sources"</span>: sources
+        }</span>
+  </div>
+
+  <div class="callout warn">
+    <strong>중요 주의사항.</strong> RAG는 할루시네이션(거짓 정보 생성)을 줄일 수 있지만 완전히 없앨 수는 없습니다. 반드시 생성된 답변을 원본 자료로 다시 확인하는 단계가 필요합니다.
+  </div>
+
+  <h3>모듈 1 요약.</h3>
+  <table class="summary-table">
+    <tr>
+      <td><strong>기법</strong></td>
+      <td><strong>특징</strong></td>
+      <td><strong>사용 사례</strong></td>
+    </tr>
+    <tr>
+      <td>기본 RAG</td>
+      <td>간단하고 빠름</td>
+      <td>배경 정보 검색, 기사 작성 보조</td>
+    </tr>
+    <tr>
+      <td>CSV/표 RAG</td>
+      <td>구조화된 데이터 처리</td>
+      <td>통계, 선거자금, 재정 분석</td>
+    </tr>
+    <tr>
+      <td>신뢰할 수 있는 RAG</td>
+      <td>검증 단계 포함</td>
+      <td>팩트체크, 정확성이 중요한 보도</td>
+    </tr>
+  </table>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">RAG의 6단계 파이프라인을 순서대로 나열하세요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">1. 문서 로드 2. 청크 분할 3. 임베딩 4. 벡터 저장 5. 의미 검색 6. LLM 답변.</div>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">CSV 기반 RAG와 임베딩 기반 RAG의 가장 큰 차이점은 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">CSV 기반 RAG는 임베딩 대신 SQL 쿼리나 pandas 연산을 사용하여 정확한 수치 데이터를 처리하는 반면, 임베딩 기반 RAG는 의미적 유사성을 기반으로 문서를 검색합니다.</div>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">신뢰할 수 있는 RAG에서 필수적인 단계는 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">답변 검증 및 출처 표시. LLM의 답변이 검색된 문서에만 기반하는지 확인하고, 모든 정보에 출처를 명확히 제시해야 합니다.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-intro')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-m2')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m2">
+  <div class="module-header m2">
+    <div class="subtitle">문서 분할 전략의 모든 것.</div>
+    <h2>모듈 2: 청크 최적화.</h2>
+    <div class="learning-goals">
+      <p>이 모듈에서 배울 내용입니다.</p>
+      <ul>
+        <li>청크 크기가 검색 성능에 미치는 영향.</li>
+        <li>명제 기반 청킹(Proposition Chunking).</li>
+        <li>의미 기반 청킹(Semantic Chunking).</li>
+        <li>뉴스 기사에 최적화된 청킹 전략.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>청크 크기가 중요한 이유.</h3>
+  <p>청크 크기는 RAG 시스템의 검색 품질을 직접 좌우합니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">너무 작은 청크<br/>(100-200 토큰)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">맥락 손실<br/>정보 단편화</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">최적 청크<br/>(500-1000 토큰)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">적절한 맥락<br/>빠른 검색</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">너무 큰 청크<br/>(2000+ 토큰)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">노이즈 증가<br/>검색 부정확</div>
+    </div>
+  </div>
+
+  <h3>기법 1: 청크 크기 최적화 (Optimizing Chunk Sizes).</h3>
+  <p>문서 유형에 따라 최적의 청크 크기를 결정하는 방법입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 다양한 청크 크기 실험</span>
+<span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> <span class="fn">RecursiveCharacterTextSplitter</span>
+
+<span class="cm"># 뉴스 기사용 청크 크기</span>
+<span class="fn">news_splitter</span> <span class="op">=</span> <span class="fn">RecursiveCharacterTextSplitter</span>(
+    chunk_size<span class="op">=</span><span class="num">800</span>,          <span class="cm"># 한글 기준 약 300-400단어</span>
+    chunk_overlap<span class="op">=</span><span class="num">100</span>      <span class="cm"># 문맥 손실 방지</span>
+)
+
+<span class="cm"># 탐사보도용 청크 크기 (더 정교함)</span>
+<span class="fn">investigative_splitter</span> <span class="op">=</span> <span class="fn">RecursiveCharacterTextSplitter</span>(
+    chunk_size<span class="op">=</span><span class="num">1200</span>,
+    chunk_overlap<span class="op">=</span><span class="num">150</span>
+)
+
+<span class="cm"># 보도자료용 청크 크기 (짧고 구체적)</span>
+<span class="fn">press_release_splitter</span> <span class="op">=</span> <span class="fn">RecursiveCharacterTextSplitter</span>(
+    chunk_size<span class="op">=</span><span class="num">500</span>,
+    chunk_overlap<span class="op">=</span><span class="num">50</span>
+)
+
+<span class="cm"># 성능 비교 함수</span>
+<span class="kw">def</span> <span class="fn">evaluate_chunk_size</span>(<span class="fn">documents</span>, <span class="fn">splitter</span>, <span class="fn">vectorstore</span>, <span class="fn">test_queries</span>):
+    <span class="cm"># 청크 분할</span>
+    chunks <span class="op">=</span> <span class="fn">splitter</span>.<span class="fn">split_documents</span>(<span class="fn">documents</span>)
+
+    <span class="cm"># 벡터 DB 생성</span>
+    <span class="fn">db</span> <span class="op">=</span> <span class="fn">Chroma</span>.<span class="fn">from_documents</span>(<span class="fn">chunks</span>, <span class="fn">embeddings</span>)
+
+    <span class="cm"># 각 쿼리에 대해 검색 결과 평가</span>
+    <span class="fn">scores</span> <span class="op">=</span> []
+    <span class="kw">for</span> query <span class="kw">in</span> <span class="fn">test_queries</span>:
+        results <span class="op">=</span> <span class="fn">db</span>.<span class="fn">similarity_search</span>(<span class="fn">query</span>, k<span class="op">=</span><span class="num">3</span>)
+        <span class="cm"># 관련성 점수 계산 (생략)</span>
+        <span class="fn">scores</span>.<span class="fn">append</span>(<span class="fn">relevance_score</span>)
+
+    <span class="kw">return</span> {
+        <span class="str">"chunk_count"</span>: <span class="fn">len</span>(<span class="fn">chunks</span>),
+        <span class="str">"avg_score"</span>: <span class="fn">sum</span>(<span class="fn">scores</span>) <span class="op">/</span> <span class="fn">len</span>(<span class="fn">scores</span>)
+    }</pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>실전 팁.</strong> 신문사별로 청크 크기가 다릅니다. 경제신문은 복잡한 문맥이 필요하므로 800-1000 토큰, 속보는 빠른 검색이 중요하므로 500-600 토큰이 적합합니다.
+  </div>
+
+  <h3>기법 2: 명제 기반 청킹 (Proposition Chunking).</h3>
+  <p>문서를 문법적 또는 의미적 경계로 자연스럽게 나누는 대신, 각 문장이나 단락을 하나의 "명제"(주장, 사실)로 분해하는 기법입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 명제 기반 청킹 구현</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> <span class="fn">OpenAI</span>
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> <span class="fn">LLMChain</span>
+<span class="kw">from</span> langchain.prompts <span class="kw">import</span> <span class="fn">PromptTemplate</span>
+
+<span class="cm"># 명제 추출 프롬프트</span>
+<span class="fn">proposition_prompt</span> <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+    input_variables<span class="op">=</span>[<span class="str">"text"</span>],
+    template<span class="op">=</span><span class="str">"""다음 텍스트를 간단하고 명확한 명제들로 분해하세요.
+각 명제는 하나의 주장이나 사실을 포함해야 합니다.
+
+텍스트:
+{text}
+
+명제들 (각 줄에 하나씩):
+1.
+2.
+3.
+..."""</span>
+)
+
+<span class="kw">class</span> <span class="fn">PropositionChunker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, llm):
+        <span class="fn">self</span>.llm_chain <span class="op">=</span> <span class="fn">LLMChain</span>(
+            llm<span class="op">=</span>llm,
+            prompt<span class="op">=</span>proposition_prompt
+        )
+
+    <span class="kw">def</span> <span class="fn">chunk</span>(<span class="fn">self</span>, text):
+        <span class="cm"># LLM을 사용해 명제 추출</span>
+        propositions_text <span class="op">=</span> <span class="fn">self</span>.llm_chain.<span class="fn">run</span>(text<span class="op">=</span>text)
+
+        <span class="cm"># 숫자 앞의 점 제거</span>
+        propositions <span class="op">=</span> [
+            line.strip()
+            <span class="kw">for</span> line <span class="kw">in</span> <span class="fn">propositions_text</span>.<span class="fn">split</span>(<span class="str">"\n"</span>)
+            <span class="kw">if</span> line.strip() <span class="op">and</span> <span class="kw">not</span> <span class="fn">line</span>[<span class="num">0</span>].<span class="fn">isdigit</span>()
+        ]
+
+        <span class="kw">return</span> propositions
+
+<span class="cm"># 사용 예제</span>
+llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+chunker <span class="op">=</span> <span class="fn">PropositionChunker</span>(llm)
+
+text <span class="op">=</span> <span class="str">"""정부는 어제 새로운 의료보험 개혁안을 발표했습니다.
+이 안은 보험료를 15% 인상하되, 저소득층에 대한 지원을 2배로 확대합니다.
+개혁안은 2024년 7월부터 시행될 예정입니다."""</span>
+
+propositions <span class="op">=</span> chunker.<span class="fn">chunk</span>(text)
+<span class="kw">for</span> prop <span class="kw">in</span> propositions:
+    <span class="fn">print</span>(<span class="fn">prop</span>)</pre>
+  </div>
+
+  <h4>명제 청킹의 장점.</h4>
+  <ul>
+    <li><strong>높은 검색 정확도.</strong> 각 명제는 명확한 의미를 가지므로, 특정 사실을 찾을 때 정확합니다.</li>
+    <li><strong>중복 제거.</strong> 같은 내용을 다르게 표현한 명제들을 자동으로 인식할 수 있습니다.</li>
+    <li><strong>추론 강화.</strong> 명제 간의 논리적 관계를 파악하기 쉬워 더 나은 추론이 가능합니다.</li>
+  </ul>
+
+  <h4>명제 청킹의 단점.</h4>
+  <ul>
+    <li><strong>높은 비용.</strong> LLM을 사용하므로 처리 시간과 비용이 많이 걭니다.</li>
+    <li><strong>품질 편차.</strong> LLM의 성능에 따라 추출된 명제의 질이 달라집니다.</li>
+  </ul>
+
+  <h3>기법 3: 의미 기반 청킹 (Semantic Chunking).</h3>
+  <p>텍스트의 의미적 경계를 기반으로 청크를 나누는 기법입니다. 연속된 문장들의 의미적 유사성을 측정하여, 유사성이 급격히 떨어지는 지점에서 청크를 분할합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 의미 기반 청킹 구현</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> langchain.embeddings <span class="kw">import</span> <span class="fn">OpenAIEmbeddings</span>
+
+<span class="kw">class</span> <span class="fn">SemanticChunker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, embeddings, threshold<span class="op">=</span><span class="num">0.5</span>):
+        <span class="fn">self</span>.embeddings <span class="op">=</span> embeddings
+        <span class="fn">self</span>.threshold <span class="op">=</span> threshold
+
+    <span class="kw">def</span> <span class="fn">_cosine_similarity</span>(<span class="fn">self</span>, vec1, vec2):
+        <span class="cm"># 코사인 유사도 계산</span>
+        <span class="kw">return</span> np.<span class="fn">dot</span>(vec1, vec2) <span class="op">/</span> (np.<span class="fn">linalg</span>.<span class="fn">norm</span>(vec1) <span class="op">*</span> np.<span class="fn">linalg</span>.<span class="fn">norm</span>(vec2))
+
+    <span class="kw">def</span> <span class="fn">chunk</span>(<span class="fn">self</span>, text):
+        <span class="cm"># 문장으로 분할</span>
+        sentences <span class="op">=</span> text.<span class="fn">split</span>(<span class="str">"."</span>)
+        sentences <span class="op">=</span> [s.strip() <span class="kw">for</span> s <span class="kw">in</span> sentences <span class="kw">if</span> s.strip()]
+
+        <span class="cm"># 각 문장의 임베딩 생성</span>
+        embeddings <span class="op">=</span> [
+            <span class="fn">self</span>.embeddings.<span class="fn">embed_query</span>(sentence)
+            <span class="kw">for</span> sentence <span class="kw">in</span> sentences
+        ]
+
+        <span class="cm"># 연속된 문장 간 유사도 계산</span>
+        chunks <span class="op">=</span> [[sentences[<span class="num">0</span>]]]
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, <span class="fn">len</span>(sentences)):
+            similarity <span class="op">=</span> <span class="fn">self</span>.<span class="fn">_cosine_similarity</span>(embeddings[i<span class="op">-</span><span class="num">1</span>], embeddings[i])
+
+            <span class="cm"># 유사도가 임계값보다 낮으면 새 청크 시작</span>
+            <span class="kw">if</span> similarity <span class="op">&lt;</span> <span class="fn">self</span>.threshold:
+                chunks.<span class="fn">append</span>([sentences[i]])
+            <span class="kw">else</span>:
+                chunks[<span class="op">-</span><span class="num">1</span>].<span class="fn">append</span>(sentences[i])
+
+        <span class="cm"># 청크 문자열로 변환</span>
+        <span class="kw">return</span> [<span class="str">"."</span>.<span class="fn">join</span>(chunk) <span class="op">+</span> <span class="str">"."</span> <span class="kw">for</span> chunk <span class="kw">in</span> chunks]
+
+<span class="cm"># 사용 예제</span>
+embeddings <span class="op">=</span> <span class="fn">OpenAIEmbeddings</span>()
+chunker <span class="op">=</span> <span class="fn">SemanticChunker</span>(embeddings, threshold<span class="op">=</span><span class="num">0.5</span>)
+
+text <span class="op">=</span> <span class="str">"""대선 후보 A 의원이 오늘 기자회견을 열었습니다. 그는 새로운 경제 정책을 제시했습니다.
+이 정책은 중소 기업 지원을 중심으로 합니다. 이와 별개로, 대선 후보 B는 교육 정책을 강조했습니다."""</span>
+
+semantic_chunks <span class="op">=</span> chunker.<span class="fn">chunk</span>(text)
+<span class="kw">for</span> i, chunk <span class="kw">in</span> <span class="fn">enumerate</span>(semantic_chunks):
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"청크 {i+1}: {chunk}\n"</span>)</pre>
+  </div>
+
+  <div class="callout info">
+    <strong>의미 기반 청킹의 특징.</strong> 의미 기반 청킹은 고정 크기 청킹과 달리, 문서의 의미 구조에 따라 동적으로 청크 크기가 결정됩니다. 복잡한 주제는 큰 청크로, 간단한 주제는 작은 청크로 분할됩니다.
+  </div>
+
+  <h3>실제 사례: 탐사보도 기사 청킹.</h3>
+  <p>긴 탐사보도 기사(20-30페이지)를 최적으로 청킹하는 방법입니다.</p>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 탐사보도 청킹 전략.</button>
+    <div class="accordion-body">
+      <p><strong>1단계:</strong> 기사를 섹션(도입, 배경, 분석, 결론 등)으로 분류합니다.</p>
+      <p><strong>2단계:</strong> 각 섹션에서 주요 주제를 식별합니다.</p>
+      <p><strong>3단계:</strong> 의미 기반 청킹으로 세부 청크를 생성합니다.</p>
+      <p><strong>4단계:</strong> 각 청크에 섹션 정보와 주제 메타데이터를 추가합니다.</p>
+      <p><strong>5단계:</strong> 벡터 DB에 저장할 때 메타데이터를 함께 저장합니다.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 탐사보도 기사 청킹 예제</span>
+<span class="kw">from</span> langchain.document_loaders <span class="kw">import</span> <span class="fn">Document</span>
+
+<span class="kw">class</span> <span class="fn">InvestigativeArticleChunker</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, semantic_chunker):
+        <span class="fn">self</span>.semantic_chunker <span class="op">=</span> semantic_chunker
+
+    <span class="kw">def</span> <span class="fn">chunk_with_metadata</span>(<span class="fn">self</span>, text, title, date):
+        <span class="cm"># 섹션 분류</span>
+        sections <span class="op">=</span> {
+            <span class="str">"도입"</span>: text[:<span class="num">500</span>],
+            <span class="str">"배경"</span>: text[<span class="num">500</span>:<span class="num">2000</span>],
+            <span class="str">"분석"</span>: text[<span class="num">2000</span>:<span class="num">5000</span>],
+            <span class="str">"결론"</span>: text[<span class="num">5000</span>:]
+        }
+
+        documents <span class="op">=</span> []
+        <span class="kw">for</span> section_name, section_text <span class="kw">in</span> sections.<span class="fn">items</span>():
+            <span class="cm"># 의미 기반 청킹</span>
+            chunks <span class="op">=</span> <span class="fn">self</span>.semantic_chunker.<span class="fn">chunk</span>(section_text)
+
+            <span class="cm"># 메타데이터와 함께 Document 객체 생성</span>
+            <span class="kw">for</span> i, chunk <span class="kw">in</span> <span class="fn">enumerate</span>(chunks):
+                doc <span class="op">=</span> <span class="fn">Document</span>(
+                    page_content<span class="op">=</span>chunk,
+                    metadata<span class="op">=</span>{
+                        <span class="str">"title"</span>: title,
+                        <span class="str">"date"</span>: date,
+                        <span class="str">"section"</span>: section_name,
+                        <span class="str">"chunk_index"</span>: i
+                    }
+                )
+                documents.<span class="fn">append</span>(doc)
+
+        <span class="kw">return</span> documents</pre>
+  </div>
+
+  <h3>모듈 2 요약.</h3>
+  <table class="summary-table">
+    <tr>
+      <td><strong>기법</strong></td>
+      <td><strong>최적 크기</strong></td>
+      <td><strong>장점</strong></td>
+      <td><strong>단점</strong></td>
+    </tr>
+    <tr>
+      <td>크기 최적화</td>
+      <td>500-1000<br/>토큰</td>
+      <td>구현 간단</td>
+      <td>맥락 손실 가능</td>
+    </tr>
+    <tr>
+      <td>명제 청킹</td>
+      <td>동적</td>
+      <td>높은 정확도</td>
+      <td>높은 비용</td>
+    </tr>
+    <tr>
+      <td>의미 청킹</td>
+      <td>동적</td>
+      <td>자연스러움</td>
+      <td>느린 처리</td>
+    </tr>
+  </table>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">너무 작은 청크의 가장 큰 문제점은 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">맥락이 부족해 관련 정보가 여러 청크로 분산되어, 검색할 때 필요한 정보를 모두 가져오지 못할 수 있습니다.</div>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">명제 기반 청킹과 의미 기반 청킹의 가장 큰 차이는 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">명제 청킹은 LLM을 사용해 각 문장을 하나의 명제로 분해하는 반면, 의미 청킹은 문장 간의 의미적 유사도를 계산해 동적으로 경계를 결정합니다.</div>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">탐사보도 기사를 청킹할 때 꼭 포함해야 할 메타데이터는 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">제목, 날짜, 섹션(도입/배경/분석/결론), 청크 인덱스 등이 있습니다. 이렇게 하면 나중에 검색 결과에서 정확한 출처를 제시할 수 있습니다.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m1')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-m3')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m3">
+  <div class="module-header m3">
+    <div class="subtitle">사용자의 질문을 더 똑똑하게 처리하기.</div>
+    <h2>모듈 3: 쿼리 강화.</h2>
+    <div class="learning-goals">
+      <p>이 모듈에서 배울 내용입니다.</p>
+      <ul>
+        <li>쿼리 리라이팅(Query Rewriting).</li>
+        <li>HyDE (Hypothetical Document Embeddings).</li>
+        <li>HyPE (Hypothetical Prompt Embeddings).</li>
+        <li>복잡한 저널리즘 질문 처리.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>왜 쿼리 강화가 필요한가.</h3>
+  <p>사용자가 입력한 질문이 항상 최적이 아닙니다. "대통령 탄핵 헌재 판단"이라는 짧은 질문으로는 관련된 판례, 정치 배경, 법적 선례 등을 모두 검색할 수 없습니다.</p>
+
+  <div class="callout info">
+    <strong>쿼리 강화의 목표.</strong> 사용자의 원래 의도는 유지하면서, 벡터 DB에서 더 많은 관련 정보를 찾을 수 있도록 질문을 변형하는 것입니다.
+  </div>
+
+  <h3>기법 1: 쿼리 변환 (Query Transformations).</h3>
+  <p>사용자의 질문을 다양한 형태로 변환하여, 여러 각도에서 관련 정보를 검색합니다.</p>
+
+  <h4>변환 유형 1: 리라이팅.</h4>
+  <p>질문을 더 구체적으로 다시 쓰기.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 쿼리 리라이팅</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> <span class="fn">OpenAI</span>
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> <span class="fn">LLMChain</span>
+<span class="kw">from</span> langchain.prompts <span class="kw">import</span> <span class="fn">PromptTemplate</span>
+
+<span class="cm"># 쿼리 리라이팅 프롬프트</span>
+<span class="fn">rewrite_prompt</span> <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+    input_variables<span class="op">=</span>[<span class="str">"query"</span>],
+    template<span class="op">=</span><span class="str">"""다음 질문을 더 상세하고 구체적으로 리라이팅하세요.
+
+원래 질문: {query}
+
+더 상세한 질문:"""</span>
+)
+
+<span class="kw">class</span> <span class="fn">QueryTransformer</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, llm):
+        <span class="fn">self</span>.rewrite_chain <span class="op">=</span> <span class="fn">LLMChain</span>(
+            llm<span class="op">=</span>llm,
+            prompt<span class="op">=</span>rewrite_prompt
+        )
+
+    <span class="kw">def</span> <span class="fn">rewrite</span>(<span class="fn">self</span>, query):
+        <span class="cm"># 원래 질문을 더 상세하게 변환</span>
+        rewritten <span class="op">=</span> <span class="fn">self</span>.rewrite_chain.<span class="fn">run</span>(query<span class="op">=</span>query).strip()
+        <span class="kw">return</span> rewritten
+
+    <span class="kw">def</span> <span class="fn">decompose</span>(<span class="fn">self</span>, query):
+        <span class="cm"># 복합 질문을 하위 질문으로 분해</span>
+        decompose_prompt <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+            input_variables<span class="op">=</span>[<span class="str">"query"</span>],
+            template<span class="op">=</span><span class="str">"""다음 복합 질문을 3-5개의 단순한 하위 질문으로 분해하세요.
+
+원래 질문: {query}
+
+하위 질문들:
+1.
+2.
+3."""</span>
+        )
+        decompose_chain <span class="op">=</span> <span class="fn">LLMChain</span>(
+            llm<span class="op">=</span><span class="fn">self</span>.llm,
+            prompt<span class="op">=</span>decompose_prompt
+        )
+        result <span class="op">=</span> decompose_chain.<span class="fn">run</span>(query<span class="op">=</span>query).strip()
+        <span class="cm"># 숫자와 점 제거</span>
+        questions <span class="op">=</span> [
+            line.strip() <span class="kw">for</span> line <span class="kw">in</span> result.<span class="fn">split</span>(<span class="str">"\n"</span>)
+            <span class="kw">if</span> line.strip() <span class="op">and</span> <span class="kw">not</span> <span class="fn">line</span>[<span class="num">0</span>].<span class="fn">isdigit</span>()
+        ]
+        <span class="kw">return</span> questions
+
+<span class="cm"># 사용 예제</span>
+llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0.3</span>)
+transformer <span class="op">=</span> <span class="fn">QueryTransformer</span>(llm)
+
+<span class="cm"># 예 1: 리라이팅</span>
+original_q <span class="op">=</span> <span class="str">"대통령 탄핵 헌재 판단"</span>
+rewritten_q <span class="op">=</span> <span class="fn">transformer</span>.<span class="fn">rewrite</span>(original_q)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"리라이팅된 쿼리: {rewritten_q}"</span>)
+
+<span class="cm"># 예 2: 분해</span>
+complex_q <span class="op">=</span> <span class="str">"2021년 대선에서 A 후보가 B 지역에서 얼마나 많은 기부금을 받았고, 이것이 전국 평균과 비교해 어떠했는가?"</span>
+subquestions <span class="op">=</span> <span class="fn">transformer</span>.<span class="fn">decompose</span>(complex_q)
+<span class="kw">for</span> i, q <span class="kw">in</span> <span class="fn">enumerate</span>(subquestions, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{i}. {q}"</span>)</pre>
+  </div>
+
+  <h4>변환 유형 2: 확장.</h4>
+  <p>질문에 동의어, 관련 개념, 배경 정보를 추가합니다.</p>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 쿼리 확장 예제.</button>
+    <div class="accordion-body">
+      <p><strong>원래 질문:</strong> "의료보험 개혁 의견"</p>
+      <p><strong>확장된 질문:</strong> "의료보험 개혁, 보험료 인상, 건강보험 체계 개선, 의료 접근성, 의료비 부담에 대한 의견"</p>
+    </div>
+  </div>
+
+  <h3>기법 2: HyDE (Hypothetical Document Embeddings).</h3>
+  <p>LLM이 사용자의 질문에 대해 "가상의 답변 문서"를 먼저 생성한 후, 이를 기반으로 관련 문서를 검색하는 기법입니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">사용자 질문</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">LLM이 가상<br/>문서 생성</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">가상 문서의<br/>임베딩 계산</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">유사 문서<br/>검색</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># HyDE 구현</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> <span class="fn">OpenAI</span>
+<span class="kw">from</span> langchain.prompts <span class="kw">import</span> <span class="fn">PromptTemplate</span>
+
+<span class="kw">class</span> <span class="fn">HyDERetriever</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, llm, vectorstore, embeddings):
+        <span class="fn">self</span>.llm <span class="op">=</span> llm
+        <span class="fn">self</span>.vectorstore <span class="op">=</span> vectorstore
+        <span class="fn">self</span>.embeddings <span class="op">=</span> embeddings
+
+    <span class="kw">def</span> <span class="fn">retrieve</span>(<span class="fn">self</span>, query, k<span class="op">=</span><span class="num">5</span>):
+        <span class="cm"># 1단계: 가상 문서 생성</span>
+        hyde_prompt <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+            input_variables<span class="op">=</span>[<span class="str">"query"</span>],
+            template<span class="op">=</span><span class="str">"""다음 질문에 대한 완벽한 답변 문서를 작성하세요.
+
+질문: {query}
+
+답변 문서:"""</span>
+        )
+
+        <span class="cm"># 가상 문서 생성</span>
+        hypothetical_doc <span class="op">=</span> <span class="fn">self</span>.llm.<span class="fn">predict</span>(
+            query<span class="op">=</span>query,
+            **hyde_prompt.<span class="fn">dict</span>()
+        )
+
+        <span class="cm"># 2단계: 가상 문서의 임베딩 계산</span>
+        doc_embedding <span class="op">=</span> <span class="fn">self</span>.embeddings.<span class="fn">embed_query</span>(hypothetical_doc)
+
+        <span class="cm"># 3단계: 원래 질문의 임베딩 계산</span>
+        query_embedding <span class="op">=</span> <span class="fn">self</span>.embeddings.<span class="fn">embed_query</span>(query)
+
+        <span class="cm"># 4단계: 두 임베딩을 모두 사용해 검색 (가중치 혼합)</span>
+        <span class="cm"># 가상 문서를 기반으로 한 검색이 더 정확할 수 있음</span>
+        results <span class="op">=</span> <span class="fn">self</span>.vectorstore.<span class="fn">similarity_search_by_vector</span>(
+            doc_embedding,
+            k<span class="op">=</span>k
+        )
+
+        <span class="kw">return</span> {
+            <span class="str">"hypothetical_doc"</span>: hypothetical_doc,
+            <span class="str">"results"</span>: results
+        }
+
+<span class="cm"># 사용 예제</span>
+hyde_retriever <span class="op">=</span> <span class="fn">HyDERetriever</span>(llm, vectorstore, embeddings)
+
+query <span class="op">=</span> <span class="str">"최근 중국 경제 정책이 한국 수출에 미치는 영향"</span>
+results <span class="op">=</span> <span class="fn">hyde_retriever</span>.<span class="fn">retrieve</span>(query)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"가상 문서:\n{results['hypothetical_doc']}\n"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"검색 결과 수: {len(results['results'])}"</span>)</pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>HyDE의 강점.</strong> 질문이 불명확하거나 맥락이 부족할 때 특히 효과적입니다. 예를 들어, "정책의 영향"이라는 추상적 질문도 HyDE는 완전한 답변 문서를 생성해 관련 정보를 더 잘 찾아낼 수 있습니다.
+  </div>
+
+  <h3>기법 3: HyPE (Hypothetical Prompt Embeddings).</h3>
+  <p>HyDE의 변형으로, 인덱싱 시점에 각 문서에 대해 "가상의 질문들"을 미리 생성해 저장하는 기법입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># HyPE 구현</span>
+<span class="kw">class</span> <span class="fn">HyPEIndexer</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, llm, embeddings):
+        <span class="fn">self</span>.llm <span class="op">=</span> llm
+        <span class="fn">self</span>.embeddings <span class="op">=</span> embeddings
+
+    <span class="kw">def</span> <span class="fn">generate_hypothetical_questions</span>(<span class="fn">self</span>, document, num_questions<span class="op">=</span><span class="num">5</span>):
+        <span class="cm"># 각 문서에 대해 가능한 질문 생성</span>
+        prompt <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+            input_variables<span class="op">=</span>[<span class="str">"document"</span>],
+            template<span class="op">=</span><span class="str">"""다음 문서를 읽고, 이 문서로 답할 수 있는 5개의 구체적인 질문을 생성하세요.
+
+문서:
+{document}
+
+질문들:
+1.
+2.
+3.
+4.
+5."""</span>
+        )
+
+        response <span class="op">=</span> <span class="fn">self</span>.llm.<span class="fn">predict</span>(document<span class="op">=</span>document)
+
+        <span class="cm"># 질문 추출</span>
+        questions <span class="op">=</span> [
+            line.strip() <span class="kw">for</span> line <span class="kw">in</span> response.<span class="fn">split</span>(<span class="str">"\n"</span>)
+            <span class="kw">if</span> line.strip() <span class="op">and</span> <span class="kw">not</span> <span class="fn">line</span>[<span class="num">0</span>].<span class="fn">isdigit</span>()
+        ]
+
+        <span class="kw">return</span> questions[:<span class="num">num_questions</span>]
+
+    <span class="kw">def</span> <span class="fn">add_documents_with_hype</span>(<span class="fn">self</span>, documents, vectorstore):
+        <span class="cm"># 각 문서에 대해 가상 질문들의 임베딩을 추가</span>
+        <span class="kw">for</span> doc <span class="kw">in</span> documents:
+            <span class="cm"># 가상 질문 생성</span>
+            questions <span class="op">=</span> <span class="fn">self</span>.<span class="fn">generate_hypothetical_questions</span>(doc.page_content)
+
+            <span class="cm"># 각 질문의 임베딩 계산 및 저장</span>
+            <span class="kw">for</span> q <span class="kw">in</span> questions:
+                q_embedding <span class="op">=</span> <span class="fn">self</span>.embeddings.<span class="fn">embed_query</span>(q)
+                <span class="cm"># 벡터 DB에 저장 (문서 ID와 연결)</span>
+
+        <span class="kw">return</span> vectorstore
+
+<span class="cm"># 사용 예제</span>
+hype_indexer <span class="op">=</span> <span class="fn">HyPEIndexer</span>(llm, embeddings)
+
+document <span class="op">=</span> <span class="str">"""
+정부가 어제 2024년 의료보험 개혁안을 발표했습니다.
+개혁안의 핵심은 보험료 15% 인상과 저소득층 지원 2배 확대입니다.
+시행 예정일은 2024년 7월입니다.
+"""</span>
+
+questions <span class="op">=</span> hype_indexer.<span class="fn">generate_hypothetical_questions</span>(document)
+<span class="kw">for</span> i, q <span class="kw">in</span> <span class="fn">enumerate</span>(questions, <span class="num">1</span>):
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"{i}. {q}"</span>)</pre>
+  </div>
+
+  <h3>실전 사례: 복잡한 정치 질문 처리.</h3>
+  <p>다음은 복합적인 저널리즘 질문을 처리하는 전체 파이프라인입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># 복잡한 정치 질문 처리 시스템</span>
+<span class="kw">class</span> <span class="fn">JournalismQueryEngine</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="fn">self</span>, llm, vectorstore, embeddings):
+        <span class="fn">self</span>.transformer <span class="op">=</span> <span class="fn">QueryTransformer</span>(llm)
+        <span class="fn">self</span>.hyde_retriever <span class="op">=</span> <span class="fn">HyDERetriever</span>(llm, vectorstore, embeddings)
+        <span class="fn">self</span>.llm <span class="op">=</span> llm
+        <span class="fn">self</span>.vectorstore <span class="op">=</span> vectorstore
+
+    <span class="kw">def</span> <span class="fn">query</span>(<span class="fn">self</span>, question):
+        <span class="cm"># 1단계: 쿼리 분해</span>
+        subquestions <span class="op">=</span> <span class="fn">self</span>.transformer.<span class="fn">decompose</span>(question)
+
+        <span class="cm"># 2단계: 각 질문에 대해 HyDE로 검색</span>
+        all_results <span class="op">=</span> []
+        <span class="kw">for</span> subq <span class="kw">in</span> subquestions:
+            results <span class="op">=</span> <span class="fn">self</span>.hyde_retriever.<span class="fn">retrieve</span>(subq, k<span class="op">=</span><span class="num">3</span>)
+            all_results.<span class="fn">extend</span>(results[<span class="str">"results"</span>])
+
+        <span class="cm"># 3단계: 중복 제거</span>
+        unique_results <span class="op">=</span> []
+        seen <span class="op">=</span> <span class="fn">set</span>()
+        <span class="kw">for</span> r <span class="kw">in</span> all_results:
+            <span class="kw">if</span> r.page_content <span class="kw">not</span> <span class="kw">in</span> seen:
+                unique_results.<span class="fn">append</span>(r)
+                seen.<span class="fn">add</span>(r.page_content)
+
+        <span class="cm"># 4단계: 최종 답변 생성</span>
+        context <span class="op">=</span> <span class="str">"\n\n"</span>.<span class="fn">join</span>([r.page_content <span class="kw">for</span> r <span class="kw">in</span> unique_results[:<span class="num">5</span>]])
+
+        answer_prompt <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+            input_variables<span class="op">=</span>[<span class="str">"context"</span>, <span class="str">"question"</span>],
+            template<span class="op">=</span><span class="str">"""다음 정보를 기반으로 질문에 답하세요.
+
+정보:
+{context}
+
+질문: {question}
+
+답변:"""</span>
+        )
+
+        answer <span class="op">=</span> <span class="fn">self</span>.llm.<span class="fn">predict</span>(context<span class="op">=</span>context, question<span class="op">=</span>question)
+
+        <span class="kw">return</span> {
+            <span class="str">"original_question"</span>: question,
+            <span class="str">"subquestions"</span>: subquestions,
+            <span class="str">"retrieved_documents"</span>: unique_results,
+            <span class="str">"answer"</span>: answer
+        }
+
+<span class="cm"># 사용 예제</span>
+engine <span class="op">=</span> <span class="fn">JournalismQueryEngine</span>(llm, vectorstore, embeddings)
+
+question <span class="op">=</span> <span class="str">"2021년 대선에서 A 후보가 B 지역에서 얼마나 많은 기부금을 받았고, 이것이 경제 정책과 어떤 관련이 있는가?"</span>
+results <span class="op">=</span> <span class="fn">engine</span>.<span class="fn">query</span>(question)
+
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"원래 질문: {results['original_question']}\n"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"분해된 질문들:"</span>)
+<span class="kw">for</span> q <span class="kw">in</span> results[<span class="str">"subquestions"</span>]:
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"  - {q}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\n최종 답변:\n{results['answer']}"</span>)</pre>
+  </div>
+
+  <h3>모듈 3 요약.</h3>
+  <table class="summary-table">
+    <tr>
+      <td><strong>기법</strong></td>
+      <td><strong>방식</strong></td>
+      <td><strong>사용 시기</strong></td>
+    </tr>
+    <tr>
+      <td>쿼리 변환</td>
+      <td>리라이팅,<br/>분해, 확장</td>
+      <td>불명확한 질문</td>
+    </tr>
+    <tr>
+      <td>HyDE</td>
+      <td>가상 문서<br/>생성</td>
+      <td>추상적 질문</td>
+    </tr>
+    <tr>
+      <td>HyPE</td>
+      <td>사전 질문<br/>생성</td>
+      <td>대규모<br/>인덱싱</td>
+    </tr>
+  </table>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">쿼리 분해(Query Decomposition)의 가장 큰 장점은 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">복합적인 질문을 여러 개의 단순한 질문으로 나누면, 각 질문에 대해 더 정확하게 관련 정보를 검색할 수 있고, 최종 답변의 정확도가 높아집니다.</div>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">HyDE와 HyPE의 가장 큰 차이는 무엇인가요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">HyDE는 검색할 때 가상 문서를 생성하는 반면(검색 시점), HyPE는 인덱싱할 때 가상 질문을 미리 생성해 저장합니다(인덱싱 시점).</div>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">정치자금 보고서에서 "2021년 대선 A 후보의 지역별 기부금"을 검색할 때, 어떤 쿼리 강화 기법이 가장 효과적일까요.</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">쿼리 분해가 효과적입니다. 원래 질문을 "A 후보는 누구인가?", "2021년 대선 기부금 보고서 형식", "지역별 기부금 통계" 등으로 분해하면, 더 많은 관련 정보를 찾을 수 있습니다.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m2')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-m4')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m4">
+<div class="module-header m4">
+<span class="subtitle">Part 2 - 고급 검색 및 반복 최적화</span>
+<h2>모듈 4: 컨텍스트 강화.</h2>
+<div class="learning-goals">
+<h3>학습 목표.</h3>
+<ul>
+<li>청크 수준의 컨텍스트를 강화하는 5가지 기법 학습.</li>
+<li>메타데이터 헤더, 세그먼트 추출, 윈도우 확장 이해.</li>
+<li>한국 저널리즘 소재에서의 실제 적용 사례 분석.</li>
+</ul>
+</div>
+</div>
+
+<div class="content-block">
+<h3>개요.</h3>
+<p>RAG 시스템의 성능은 검색된 텍스트의 품질에 크게 의존합니다. 컨텍스트 강화는 검색된 청크를 더 정보량 있고 명확하게 만들어 LLM이 더 정확한 답변을 생성하도록 돕습니다. 이 모듈에서는 청크의 컨텍스트를 개선하는 5가지 핵심 기법을 다룹니다.</p>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 1: 컨텍스트 청크 헤더 (Contextual Chunk Headers).</button>
+<div class="accordion-body">
+<p>각 청크에 문서 수준의 메타데이터와 계층적 정보를 헤더로 추가하는 기법입니다. 청크의 출처, 섹션, 날짜 등을 명시적으로 포함하면 LLM이 정보의 맥락을 더 정확히 이해합니다.</p>
+<p><strong>저널리즘 사례:</strong> 헌법재판소 판결문에서 청크를 저장할 때 "사건번호: 2024헌바1", "주제: 표현의 자유", "판결일: 2024년 3월" 등을 헤더로 추가하면, 검색 결과가 훨씬 명확해집니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 컨텍스트 헤더와 함께 청크 생성</span>
+<span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> RecursiveCharacterTextSplitter
+<span class="kw">from</span> langchain.schema <span class="kw">import</span> Document
+
+<span class="kw">def</span> <span class="fn">add_contextual_headers</span>(documents, metadata):
+    <span class="str">"""각 청크에 메타데이터 헤더 추가"""</span>
+    enhanced_docs = []
+
+    <span class="kw">for</span> doc <span class="kw">in</span> documents:
+        splitter = <span class="fn">RecursiveCharacterTextSplitter</span>(
+            chunk_size=<span class="num">500</span>,
+            chunk_overlap=<span class="num">100</span>
+        )
+        chunks = <span class="fn">splitter.split_text</span>(doc.page_content)
+
+        <span class="kw">for</span> i, chunk <span class="kw">in</span> <span class="fn">enumerate</span>(chunks):
+            header = <span class="str">f"[문서: {metadata['title']}] "</span>
+            header += <span class="str">f"[날짜: {metadata['date']}] "</span>
+            header += <span class="str">f"[섹션: {metadata['section']}]\n"</span>
+
+            enhanced_chunk = Document(
+                page_content=header + chunk,
+                metadata={**doc.metadata, <span class="str">'chunk_id'</span>: i}
+            )
+            enhanced_docs.<span class="fn">append</span>(enhanced_chunk)
+
+    <span class="kw">return</span> enhanced_docs
+
+<span class="cm"># 사용 예시: 국정감사 자료</span>
+metadata = {
+    <span class="str">'title'</span>: <span class="str">'2024년 국정감사 교육위원회'</span>,
+    <span class="str">'date'</span>: <span class="str">'2024-10-15'</span>,
+    <span class="str">'section'</span>: <span class="str">'학생 인권'</span>
+}
+enhanced = <span class="fn">add_contextual_headers</span>(documents, metadata)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 2: 관련 세그먼트 추출 (Relevant Segment Extraction).</button>
+<div class="accordion-body">
+<p>단일 청크가 아닌 여러 인접한 청크를 동적으로 결합하여 완전한 맥락을 구성하는 기법입니다. 검색 결과가 분절되지 않고 통합된 의미를 전달합니다.</p>
+<p><strong>저널리즘 사례:</strong> 선거 보도 관련 여러 문서에서 검색했을 때, 단순히 한 문장 청크를 반환하는 대신, 그 전후의 관련 문장들을 함께 포함시켜 정치적 맥락을 전체적으로 파악할 수 있습니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 관련 세그먼트 동적 결합</span>
+<span class="kw">def</span> <span class="fn">extract_relevant_segments</span>(retrieval_results, context_size=<span class="num">2</span>):
+    <span class="str">"""검색된 청크 주변의 관련 세그먼트 포함"""</span>
+    combined_segments = []
+
+    <span class="kw">for</span> result <span class="kw">in</span> retrieval_results:
+        chunk_id = result.metadata.get(<span class="str">'chunk_id'</span>, <span class="num">0</span>)
+        doc_id = result.metadata.get(<span class="str">'doc_id'</span>)
+
+        <span class="cm"># 전후 청크 ID 계산</span>
+        before_ids = <span class="fn">range</span>(<span class="fn">max</span>(<span class="num">0</span>, chunk_id - context_size), chunk_id)
+        after_ids = <span class="fn">range</span>(chunk_id + <span class="num">1</span>, chunk_id + context_size + <span class="num">1</span>)
+
+        <span class="cm"># 세그먼트들을 순차적으로 결합</span>
+        segment_content = []
+        <span class="kw">for</span> cid <span class="kw">in</span> <span class="fn">list</span>(before_ids) + [chunk_id] + <span class="fn">list</span>(after_ids):
+            <span class="cm"># 실제로는 벡터DB에서 해당 청크를 조회</span>
+            segment_content.<span class="fn">append</span>(result.page_content)
+
+        combined = <span class="str">"\n"</span>.<span class="fn">join</span>(segment_content)
+        combined_segments.<span class="fn">append</span>(combined)
+
+    <span class="kw">return</span> combined_segments
+
+<span class="cm"># 사용 예: 선거 관련 뉴스 아카이브</span>
+search_results = retriever.<span class="fn">get_relevant_documents</span>(
+    <span class="str">"2024년 대통령 선거 공약"</span>
+)
+complete_segments = <span class="fn">extract_relevant_segments</span>(search_results, context_size=<span class="num">2</span>)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 3: 컨텍스트 윈도우 강화 (Context Window Enhancement).</button>
+<div class="accordion-body">
+<p>청크의 경계를 넘어 인접한 문장까지 포함하는 방식입니다. 청크가 문장 중간에 끊어졌을 때 발생하는 정보 손실을 방지합니다.</p>
+<p><strong>저널리즘 사례:</strong> 법원 판결문을 분석할 때, 판단 이유가 여러 문장에 걸쳐 있으면, 윈도우 확장으로 전체 논리를 포함하면 기자가 더 정확한 기사를 작성할 수 있습니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 문장 경계를 고려한 윈도우 확장</span>
+<span class="kw">import</span> re
+
+<span class="kw">def</span> <span class="fn">expand_context_window</span>(text, chunk, window_chars=<span class="num">300</span>):
+    <span class="str">"""청크 주변의 완전한 문장 포함"""</span>
+    chunk_start = text.<span class="fn">find</span>(chunk)
+
+    <span class="cm"># 이전 문장으로 확장</span>
+    before_start = <span class="fn">max</span>(<span class="num">0</span>, chunk_start - window_chars)
+    before_text = text[before_start:chunk_start]
+    last_period = before_text.<span class="fn">rfind</span>(<span class="str">'.'</span>)
+
+    <span class="kw">if</span> last_period != -<span class="num">1</span>:
+        expanded_start = before_start + last_period + <span class="num">1</span>
+    <span class="kw">else</span>:
+        expanded_start = before_start
+
+    <span class="cm"># 이후 문장으로 확장</span>
+    chunk_end = chunk_start + <span class="fn">len</span>(chunk)
+    after_end = <span class="fn">min</span>(<span class="fn">len</span>(text), chunk_end + window_chars)
+    after_text = text[chunk_end:after_end]
+    first_period = after_text.<span class="fn">find</span>(<span class="str">'.'</span>)
+
+    <span class="kw">if</span> first_period != -<span class="num">1</span>:
+        expanded_end = chunk_end + first_period + <span class="num">1</span>
+    <span class="kw">else</span>:
+        expanded_end = after_end
+
+    expanded_chunk = text[expanded_start:expanded_end].<span class="fn">strip</span>()
+    <span class="kw">return</span> expanded_chunk
+
+<span class="cm"># 판결문 분석 예시</span>
+judgment_text = <span class="str">"원고의 주장이 타당하다. 피고의 입장은...</span><span class="str">"</span>
+original_chunk = <span class="str">"피고의 입장은 불합리하다."</span>
+enhanced = <span class="fn">expand_context_window</span>(judgment_text, original_chunk)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 4: 컨텍스트 압축 (Contextual Compression).</button>
+<div class="accordion-body">
+<p>검색된 정보를 쿼리와의 관련성 기준으로 압축하여, 핵심 정보만 LLM에 전달하는 기법입니다. 노이즈를 제거하고 효율성을 높입니다.</p>
+<p><strong>저널리즘 사례:</strong> 보도자료 데이터베이스에서 10개 문단의 보도자료를 검색했을 때, 기자의 질문과 직접 관련된 2-3개 문단만 추출하여 더 신속한 분석이 가능합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># LLM 기반 컨텍스트 압축</span>
+<span class="kw">from</span> langchain.retrievers <span class="kw">import</span> ContextualCompressionRetriever
+<span class="kw">from</span> langchain.retrievers.document_compressors <span class="kw">import</span> LLMChainExtractor
+
+<span class="kw">def</span> <span class="fn">create_compressed_retriever</span>(base_retriever, llm):
+    <span class="str">"""쿼리 관련성 기반 압축 검색자 생성"""</span>
+    compressor = <span class="fn">LLMChainExtractor</span>.<span class="fn">from_llm</span>(
+        llm,
+        <span class="str">"주어진 텍스트에서 쿼리와 직접 관련된 부분만 추출하세요."</span>
+    )
+
+    compression_retriever = <span class="fn">ContextualCompressionRetriever</span>(
+        base_compressor=compressor,
+        base_retriever=base_retriever
+    )
+
+    <span class="kw">return</span> compression_retriever
+
+<span class="cm"># 보도자료 분석 예시</span>
+retriever = <span class="fn">create_compressed_retriever</span>(base_retriever, llm)
+query = <span class="str">"환경정책 추진 일정은?"</span>
+compressed_results = retriever.<span class="fn">get_relevant_documents</span>(query)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 5: 문서 강화 (Document Augmentation).</button>
+<div class="accordion-body">
+<p>임베딩 전에 문서에서 가능한 질문들을 미리 생성하여 문서를 풍부하게 만드는 기법입니다. 예상 쿼리와의 매칭 확률을 높입니다.</p>
+<p><strong>저널리즘 사례:</strong> 국회 의원 프로필 문서에 "이 의원이 주로 질문하는 분야는?", "과거 발의한 법안은?" 같은 예상 질문들을 미리 추가하면, 기자들의 다양한 검색에 더 잘 응답합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># LLM으로 예상 질문 생성 및 문서 강화</span>
+<span class="kw">def</span> <span class="fn">augment_documents_with_questions</span>(documents, llm, num_questions=<span class="num">5</span>):
+    <span class="str">"""각 문서에 대한 예상 질문 생성"""</span>
+    augmented_docs = []
+
+    <span class="kw">for</span> doc <span class="kw">in</span> documents:
+        prompt = <span class="str">f"""</span>
+<span class="str">다음 문서에 대해 저널리스트가 할 수 있는 {num_questions}개의 질문을 생성하세요.</span>
+<span class="str">질문들은 이 문서의 핵심 정보를 찾기 위한 것이어야 합니다.</span>
+<span class="str">
+</span><span class="str">문서:
+</span><span class="str">{doc.page_content}
+</span><span class="str">
+</span><span class="str">질문들:
+</span><span class="str">"""</span>
+
+        response = llm.<span class="fn">predict</span>(prompt)
+        questions = response.<span class="fn">split</span>(<span class="str">'\n'</span>)[:num_questions]
+
+        <span class="cm"># 원본 문서에 질문들 추가</span>
+        augmented_content = doc.page_content + <span class="str">"\n\n[예상 질문들]\n"</span>
+        augmented_content += <span class="str">"\n"</span>.<span class="fn">join</span>(questions)
+
+        augmented_doc = <span class="fn">Document</span>(
+            page_content=augmented_content,
+            metadata={**doc.metadata, <span class="str">'augmented'</span>: <span class="kw">True</span>}
+        )
+        augmented_docs.<span class="fn">append</span>(augmented_doc)
+
+    <span class="kw">return</span> augmented_docs
+
+<span class="cm"># 국회의원 프로필 강화 예시</span>
+documents = [<span class="fn">Document</span>(page_content=<span class="str">"김○○ 의원, 교육 분야 활동..."</span>)]
+augmented = <span class="fn">augment_documents_with_questions</span>(documents, llm)</pre>
+</div>
+</div>
+
+<div class="callout info">
+<strong>기술 팁:</strong> 이 다섯 가지 기법은 조합하여 사용할 수 있습니다. 예를 들어, 컨텍스트 헤더를 추가한 후 윈도우를 확장하고, 마지막에 압축하는 방식으로 다층적인 컨텍스트 강화가 가능합니다.
+</div>
+
+<h3>비교표: 컨텍스트 강화 기법들.</h3>
+<div class="table-wrap">
+<table>
+<tr>
+<th>기법</th>
+<th>목적</th>
+<th>저널리즘 활용</th>
+<th>복잡도</th>
+</tr>
+<tr>
+<td>컨텍스트 헤더</td>
+<td>메타데이터 명시</td>
+<td>판결문 출처 명확화</td>
+<td>낮음</td>
+</tr>
+<tr>
+<td>세그먼트 추출</td>
+<td>완전한 맥락 구성</td>
+<td>선거 보도 통합</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>윈도우 강화</td>
+<td>문장 경계 보존</td>
+<td>판결 이유 분석</td>
+<td>낮음</td>
+</tr>
+<tr>
+<td>컨텍스트 압축</td>
+<td>노이즈 제거</td>
+<td>보도자료 핵심 추출</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>문서 강화</td>
+<td>검색 커버리지 확대</td>
+<td>의원 프로필 다양한 질문 대응</td>
+<td>높음</td>
+</tr>
+</table>
+</div>
+
+<div class="quiz">
+<h4>퀴즈.</h4>
+<p class="quiz-q">컨텍스트 윈도우 강화 기법이 특히 중요한 이유는 무엇입니까?</p>
+<button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+<div class="answer-text" style="display:none;">청크가 문장 중간에 끊어질 때, 의미가 불완전하거나 왜곡될 수 있기 때문입니다. 윈도우를 확장하면 완전한 문장 단위로 정보를 전달하여 정확도가 크게 향상됩니다.</div>
+</div>
+
+<div class="quiz">
+<h4>퀴즈.</h4>
+<p class="quiz-q">보도자료 데이터베이스에서 컨텍스트 압축이 도움이 되는 이유는?</p>
+<button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+<div class="answer-text" style="display:none;">보도자료는 보통 길고, 모든 내용이 기자의 질문과 관련되지 않을 수 있습니다. 압축 기법으로 핵심 정보만 추출하면 기자가 빠르게 필요한 정보를 얻을 수 있고, LLM의 처리도 더 효율적입니다.</div>
+</div>
+</div>
+
+<div class="nav-buttons">
+<button class="nav-btn" onclick="showSection('sec-m3')">← 이전</button>
+<button class="nav-btn primary" onclick="showSection('sec-m5')">다음 →</button>
+</div>
+</div>
+
+<!-- 모듈 5: 고급 검색 전략 -->
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section" id="sec-m5">
+<div class="module-header m5">
+<span class="subtitle">Part 2 - 고급 검색 및 반복 최적화</span>
+<h2>모듈 5: 고급 검색 전략.</h2>
+<div class="learning-goals">
+<h3>학습 목표.</h3>
+<ul>
+<li>7가지 고급 검색 기법의 원리와 구현 이해.</li>
+<li>퓨전 검색, 재순위화, 앙상블 검색의 조합 방식 습득.</li>
+<li>저널리즘 데이터의 다중 모드 처리 방법 학습.</li>
+</ul>
+</div>
+</div>
+
+<div class="content-block">
+<h3>개요.</h3>
+<p>단순한 벡터 유사성 검색만으로는 복잡한 저널리즘 쿼리에 대응하기 어렵습니다. 이 모듈에서는 검색의 정확도와 관련성을 크게 향상시키는 7가지 고급 기법을 다룹니다.</p>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 1: 퓨전 검색 (Fusion Retrieval).</button>
+<div class="accordion-body">
+<p>키워드 검색(BM25)과 벡터 검색의 결과를 결합하는 기법입니다. 두 방식의 장점을 모두 활용하여 검색 품질을 크게 높입니다. RRF(Reciprocal Rank Fusion) 알고리즘을 사용하여 순위를 통합합니다.</p>
+<p><strong>저널리즘 사례:</strong> 선거 보도 아카이브에서 "2024년 대통령 선거" 같은 명확한 키워드와 개념적 의미를 모두 처리할 수 있습니다. BM25는 정확한 용어 매칭에, 벡터 검색은 의미론적 유사성에 강합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 퓨전 검색: BM25 + 벡터 검색 결합</span>
+<span class="kw">from</span> langchain.retrievers <span class="kw">import</span> EnsembleRetriever
+<span class="kw">from</span> langchain_community.retrievers <span class="kw">import</span> BM25Retriever
+<span class="kw">from</span> langchain.vectorstores <span class="kw">import</span> FAISS
+
+<span class="kw">def</span> <span class="fn">create_fusion_retriever</span>(documents, embeddings, k=<span class="num">3</span>):
+    <span class="str">"""BM25와 벡터 검색을 결합한 퓨전 검색자"""</span>
+
+    <span class="cm"># BM25 검색자 생성</span>
+    bm25_retriever = <span class="fn">BM25Retriever</span>.<span class="fn">from_documents</span>(
+        documents,
+        preprocess_func=<span class="kw">lambda</span> x: x.<span class="fn">lower</span>().<span class="fn">split</span>()
+    )
+    bm25_retriever.k = k
+
+    <span class="cm"># 벡터 검색자 생성</span>
+    vector_store = <span class="fn">FAISS</span>.<span class="fn">from_documents</span>(documents, embeddings)
+    vector_retriever = vector_store.<span class="fn">as_retriever</span>(
+        search_kwargs={<span class="str">'k'</span>: k}
+    )
+
+    <span class="cm"># 앙상블 검색자: RRF로 순위 통합</span>
+    fusion_retriever = <span class="fn">EnsembleRetriever</span>(
+        retrievers=[bm25_retriever, vector_retriever],
+        weights=[<span class="num">0.5</span>, <span class="num">0.5</span>]  <span class="cm"># 가중치 조정 가능</span>
+    )
+
+    <span class="kw">return</span> fusion_retriever
+
+<span class="cm"># 선거 보도 아카이브 검색</span>
+fusion_ret = <span class="fn">create_fusion_retriever</span>(documents, embeddings)
+results = fusion_ret.<span class="fn">get_relevant_documents</span>(
+    <span class="str">"2024년 대통령 선거 공약"</span>
+)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 2: 재순위화 (Reranking).</button>
+<div class="accordion-body">
+<p>초기 검색 결과를 크로스 인코더(Cross-Encoder) 모델로 재평가하여 더 정확한 순서로 정렬하는 기법입니다. 검색 결과의 정확도를 크게 높일 수 있습니다.</p>
+<p><strong>저널리즘 사례:</strong> 법원 판결문 검색에서 초기 100개 결과 중, 기자의 쿼리와 가장 관련 높은 순서대로 재정렬하면, 상위 5개 결과의 품질이 현저히 향상됩니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 크로스 인코더 기반 재순위화</span>
+<span class="kw">from</span> sentence_transformers <span class="kw">import</span> CrossEncoder
+<span class="kw">from</span> langchain.retrievers <span class="kw">import</span> ContextualCompressionRetriever
+<span class="kw">from</span> langchain.retrievers.document_compressors <span class="kw">import</span> CrossEncoderReranker
+
+<span class="kw">def</span> <span class="fn">create_reranked_retriever</span>(base_retriever, model_name=<span class="str">"cross-encoder/qnli-distilroberta-base"</span>):
+    <span class="str">"""크로스 인코더로 재순위화하는 검색자"""</span>
+
+    compressor = <span class="fn">CrossEncoderReranker</span>(
+        model=<span class="fn">CrossEncoder</span>(model_name),
+        top_n=<span class="num">5</span>  <span class="cm"># 상위 5개만 반환</span>
+    )
+
+    reranked_retriever = <span class="fn">ContextualCompressionRetriever</span>(
+        base_compressor=compressor,
+        base_retriever=base_retriever
+    )
+
+    <span class="kw">return</span> reranked_retriever
+
+<span class="cm"># 판결문 검색 예시</span>
+query = <span class="str">"표현의 자유 침해 관련 헌법재판소 판결"</span>
+base_results = base_retriever.<span class="fn">get_relevant_documents</span>(query)
+
+<span class="cm"># 재순위화</span>
+reranked_ret = <span class="fn">create_reranked_retriever</span>(base_retriever)
+reranked_results = reranked_ret.<span class="fn">get_relevant_documents</span>(query)
+
+<span class="cm"># 재순위화 후 상위 결과가 훨씬 관련성 높음</span></pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 3: 다층 필터링 (Multi-faceted Filtering).</button>
+<div class="accordion-body">
+<p>메타데이터(날짜, 카테고리, 출처, 기관 등)를 기반으로 검색 결과를 필터링하는 기법입니다. 기자가 특정 조건의 정보만 빠르게 찾을 수 있습니다.</p>
+<p><strong>저널리즘 사례:</strong> 법원 판결문 데이터베이스에서 "2023년 이후", "대법원", "민사 사건"이라는 조건을 동시에 적용하여 정확한 판결문만 검색합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 메타데이터 기반 다층 필터링</span>
+<span class="kw">from</span> langchain.vectorstores <span class="kw">import</span> FAISS
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="kw">def</span> <span class="fn">search_with_filters</span>(retriever, query, filters):
+    <span class="str">"""다층 필터링을 적용한 검색"""</span>
+
+    <span class="cm"># 메타데이터 필터 조건 구성</span>
+    filter_conditions = {
+        <span class="str">"$and"</span>: [
+            {<span class="str">"court"</span>: {<span class="str">"$eq"</span>: filters.get(<span class="str">'court'</span>)}},
+            {<span class="str">"case_type"</span>: {<span class="str">"$eq"</span>: filters.get(<span class="str">'case_type'</span>)}},
+            {<span class="str">"date"</span>: {<span class="str">"$gte"</span>: filters.get(<span class="str">'start_date'</span>)}},
+            {<span class="str">"date"</span>: {<span class="str">"$lte"</span>: filters.get(<span class="str">'end_date'</span>)}}
+        ]
+    }
+
+    <span class="cm"># 필터 적용하여 검색</span>
+    results = retriever.<span class="fn">similarity_search</span>(
+        query,
+        k=<span class="num">10</span>,
+        filter=filter_conditions
+    )
+
+    <span class="kw">return</span> results
+
+<span class="cm"># 법원 판결문 검색 예시</span>
+filters = {
+    <span class="str">'court'</span>: <span class="str">'대법원'</span>,
+    <span class="str">'case_type'</span>: <span class="str">'민사'</span>,
+    <span class="str">'start_date'</span>: <span class="str">'2023-01-01'</span>,
+    <span class="str">'end_date'</span>: <span class="str">'2024-12-31'</span>
+}
+
+results = <span class="fn">search_with_filters</span>(
+    vector_retriever,
+    <span class="str">"계약 해지"</span>,
+    filters
+)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 4: 계층적 검색 (Hierarchical Indices).</button>
+<div class="accordion-body">
+<p>문서를 계층적으로 구성하여, 먼저 요약/카테고리 수준에서 검색한 후 상세 정보로 깊이 들어가는 2단계 검색입니다. 검색 효율과 정확도를 모두 향상시킵니다.</p>
+<p><strong>저널리즘 사례:</strong> 국정감사 자료에서 먼저 "교육"이라는 상위 주제를 찾고, 그 다음 "학생 안전" 같은 세부 주제로 범위를 좁혀 나갑니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 계층적 검색 인덱스 구성</span>
+<span class="kw">from</span> langchain.retrievers <span class="kw">import</span> MultiVectorRetriever
+<span class="kw">from</span> langchain.storage <span class="kw">import</span> InMemoryStore
+
+<span class="kw">def</span> <span class="fn">create_hierarchical_retriever</span>(documents, embeddings, llm):
+    <span class="str">"""상위 카테고리 → 상세 문서 계층 구성"""</span>
+
+    <span class="cm"># 1단계: 각 문서의 요약/카테고리 생성</span>
+    summaries = []
+    <span class="kw">for</span> doc <span class="kw">in</span> documents:
+        summary_prompt = <span class="str">f"다음 문서를 한 문장으로 요약하세요: {doc.page_content[:500]}"</span>
+        summary = llm.<span class="fn">predict</span>(summary_prompt)
+        summaries.<span class="fn">append</span>(summary)
+
+    <span class="cm"># 2단계: 요약들을 벡터화하여 첫 번째 인덱스 구성</span>
+    summary_docs = [
+        <span class="fn">Document</span>(page_content=s, metadata={<span class="str">'doc_id'</span>: i})
+        <span class="kw">for</span> i, s <span class="kw">in</span> <span class="fn">enumerate</span>(summaries)
+    ]
+
+    summary_vectorstore = <span class="fn">FAISS</span>.<span class="fn">from_documents</span>(summary_docs, embeddings)
+
+    <span class="cm"># 3단계: 원본 문서 저장소</span>
+    docstore = <span class="fn">InMemoryStore</span>()
+    <span class="kw">for</span> i, doc <span class="kw">in</span> <span class="fn">enumerate</span>(documents):
+        docstore.<span class="fn">mset</span>([(str(i), doc)])
+
+    <span class="cm"># 4단계: 다중 벡터 검색자 구성</span>
+    retriever = <span class="fn">MultiVectorRetriever</span>(
+        vectorstore=summary_vectorstore,
+        docstore=docstore,
+        id_key=<span class="str">'doc_id'</span>
+    )
+
+    <span class="kw">return</span> retriever
+
+<span class="cm"># 국정감사 자료 검색</span>
+hier_ret = <span class="fn">create_hierarchical_retriever</span>(documents, embeddings, llm)
+results = hier_ret.<span class="fn">get_relevant_documents</span>(<span class="str">"학생 안전 관련 감사 내용"</span>)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 5: 앙상블 검색 (Ensemble Retrieval).</button>
+<div class="accordion-body">
+<p>다수의 검색 모델이나 전략의 결과를 투표 방식으로 결합하는 기법입니다. 여러 관점의 장점을 동시에 활용합니다.</p>
+<p><strong>저널리즘 사례:</strong> 뉴스 기사 검색에서 키워드 검색, 의미론적 검색, 특정 기자의 이전 기사 검색 등 3가지 방식의 결과를 합쳐서 가장 관련성 높은 기사를 추천합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 다중 검색 모델 앙상블</span>
+<span class="kw">from</span> langchain.retrievers <span class="kw">import</span> EnsembleRetriever
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">def</span> <span class="fn">create_ensemble_retriever</span>(retriever_list, weights=<span class="kw">None</span>):
+    <span class="str">"""다중 검색자를 앙상블로 결합"""</span>
+
+    <span class="kw">if</span> weights <span class="kw">is</span> <span class="kw">None</span>:
+        <span class="cm"># 동일 가중치</span>
+        weights = [<span class="num">1.0</span> / <span class="fn">len</span>(retriever_list)] * <span class="fn">len</span>(retriever_list)
+
+    ensemble = <span class="fn">EnsembleRetriever</span>(
+        retrievers=retriever_list,
+        weights=weights
+    )
+
+    <span class="kw">return</span> ensemble
+
+<span class="cm"># 검색자 3개 구성</span>
+retrievers = [
+    bm25_retriever,           <span class="cm"># 키워드 검색</span>
+    vector_retriever,         <span class="cm"># 의미론적 검색</span>
+    time_based_retriever      <span class="cm"># 최신 기사 우선</span>
+]
+
+<span class="cm"># 앙상블로 결합</span>
+ensemble_ret = <span class="fn">create_ensemble_retriever</span>(
+    retrievers,
+    weights=[<span class="num">0.3</span>, <span class="num">0.5</span>, <span class="num">0.2</span>]
+)
+
+results = ensemble_ret.<span class="fn">get_relevant_documents</span>(<span class="str">"최근 정책 변화"</span>)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 6: 다트보드 검색 (Dartboard Retrieval).</button>
+<div class="accordion-body">
+<p>관련성과 다양성을 동시에 최적화하는 고급 기법입니다. 단순히 관련성만 높은 결과가 아니라, 다양한 관점의 정보를 균형있게 반환합니다.</p>
+<p><strong>저널리즘 사례:</strong> 정책 보도에서 정부 입장, 야당 입장, 시민 의견, 전문가 분석 등 다양한 관점의 자료를 균형있게 검색합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 관련성과 다양성 최적화</span>
+<span class="kw">def</span> <span class="fn">dartboard_retrieval</span>(initial_results, k=<span class="num">5</span>, diversity_weight=<span class="num">0.3</span>):
+    <span class="str">"""관련성 + 다양성 기반 재순위화"""</span>
+
+    selected = []
+    remaining = <span class="fn">list</span>(initial_results)
+
+    <span class="cm"># 관련성 점수가 가장 높은 것부터 시작</span>
+    selected.<span class="fn">append</span>(remaining.<span class="fn">pop</span>(<span class="num">0</span>))
+
+    <span class="kw">while</span> <span class="fn">len</span>(selected) < k <span class="kw">and</span> remaining:
+        best_score = -<span class="num">1</span>
+        best_idx = <span class="num">0</span>
+
+        <span class="kw">for</span> i, doc <span class="kw">in</span> <span class="fn">enumerate</span>(remaining):
+            <span class="cm"># 관련성 점수</span>
+            relevance = doc.metadata.get(<span class="str">'score'</span>, <span class="num">0</span>)
+
+            <span class="cm"># 다양성 점수 (이미 선택된 것과의 거리)</span>
+            diversity = <span class="num">1.0</span>
+            <span class="kw">for</span> selected_doc <span class="kw">in</span> selected:
+                <span class="cm"># 간단한 텍스트 유사도로 다양성 계산</span>
+                similarity = <span class="fn">text_similarity</span>(doc.page_content, selected_doc.page_content)
+                diversity = <span class="fn">min</span>(diversity, <span class="num">1.0</span> - similarity)
+
+            <span class="cm"># 결합 점수</span>
+            combined_score = relevance * (<span class="num">1</span> - diversity_weight) + diversity * diversity_weight
+
+            <span class="kw">if</span> combined_score > best_score:
+                best_score = combined_score
+                best_idx = i
+
+        selected.<span class="fn">append</span>(remaining.<span class="fn">pop</span>(best_idx))
+
+    <span class="kw">return</span> selected
+
+<span class="cm"># 정책 보도에서 다양한 관점 검색</span>
+initial_results = retriever.<span class="fn">get_relevant_documents</span>(<span class="str">"정부 정책 발표"</span>)
+diverse_results = <span class="fn">dartboard_retrieval</span>(initial_results, k=<span class="num">5</span>)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 7: 멀티모달 RAG (Multi-modal RAG).</button>
+<div class="accordion-body">
+<p>이미지, 표, 차트, 텍스트 등 다양한 형식의 데이터를 동시에 처리하는 기법입니다. 현대 저널리즘에서 시각 자료의 역할이 커지면서 점점 중요해집니다.</p>
+<p><strong>저널리즘 사례:</strong> 통계청 발표 자료에는 텍스트와 함께 그래프, 표가 많은데, 이를 모두 처리하여 기자가 시각적 정보와 수치를 함께 이해할 수 있습니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 멀티모달 데이터 처리</span>
+<span class="kw">import</span> base64
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+<span class="kw">from</span> io <span class="kw">import</span> BytesIO
+
+<span class="kw">def</span> <span class="fn">process_multimodal_document</span>(pdf_path, llm_vision):
+    <span class="str">"""PDF에서 텍스트와 이미지 추출 및 처리"""</span>
+
+    documents = []
+
+    <span class="cm"># PDF 처리</span>
+    <span class="kw">from</span> PyPDF2 <span class="kw">import</span> PdfReader
+
+    reader = <span class="fn">PdfReader</span>(pdf_path)
+
+    <span class="kw">for</span> page_num, page <span class="kw">in</span> <span class="fn">enumerate</span>(reader.pages):
+        <span class="cm"># 텍스트 추출</span>
+        text_content = page.<span class="fn">extract_text</span>()
+
+        <span class="cm"># 이미지 추출</span>
+        images = page.<span class="fn">get_images</span>()
+
+        image_descriptions = []
+        <span class="kw">for</span> img_ref <span class="kw">in</span> images:
+            <span class="cm"># 이미지를 vision 모델로 분석</span>
+            image_base64 = <span class="fn">encode_image</span>(img_ref)
+            description = llm_vision.<span class="fn">predict</span>(
+                <span class="str">f"다음 이미지를 설명하세요: {image_base64}"</span>
+            )
+            image_descriptions.<span class="fn">append</span>(description)
+
+        <span class="cm"># 텍스트 + 이미지 설명 결합</span>
+        combined_content = text_content + <span class="str">"\n\n[포함된 이미지]\n"</span>
+        combined_content += <span class="str">"\n"</span>.<span class="fn">join</span>(image_descriptions)
+
+        doc = <span class="fn">Document</span>(
+            page_content=combined_content,
+            metadata={
+                <span class="str">'source'</span>: pdf_path,
+                <span class="str">'page'</span>: page_num,
+                <span class="str">'has_images'</span>: <span class="kw">len</span>(images) > <span class="num">0</span>
+            }
+        )
+        documents.<span class="fn">append</span>(doc)
+
+    <span class="kw">return</span> documents
+
+<span class="cm"># 통계청 자료 처리</span>
+stat_docs = <span class="fn">process_multimodal_document</span>(
+    <span class="str">"통계_2024년_실업률.pdf"</span>,
+    llm_vision
+)</pre>
+</div>
+</div>
+
+<div class="callout warn">
+<strong>성능 고려사항:</strong> 멀티모달 처리는 계산량이 많습니다. 특히 vision 모델 호출이 비용이 크므로, 필요한 페이지만 선택적으로 처리하거나 배치로 처리하는 것이 좋습니다.
+</div>
+
+<h3>고급 검색 전략 비교표.</h3>
+<div class="table-wrap">
+<table>
+<tr>
+<th>기법</th>
+<th>특징</th>
+<th>사용 사례</th>
+<th>성능 향상도</th>
+</tr>
+<tr>
+<td>퓨전</td>
+<td>키워드 + 의미론적</td>
+<td>선거 보도 아카이브</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>재순위화</td>
+<td>크로스 인코더 재평가</td>
+<td>법원 판결문</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>필터링</td>
+<td>메타데이터 기반</td>
+<td>기간/기관별 필터</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>계층적</td>
+<td>요약 → 상세 2단계</td>
+<td>국정감사 자료</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>앙상블</td>
+<td>다중 모델 투표</td>
+<td>종합 뉴스 검색</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>다트보드</td>
+<td>관련성 + 다양성</td>
+<td>다각도 보도</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>멀티모달</td>
+<td>텍스트 + 이미지</td>
+<td>통계 자료 분석</td>
+<td>높음</td>
+</tr>
+</table>
+</div>
+
+<div class="diagram">
+<div class="flow">
+<div class="flow-box">쿼리 입력</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">퓨전<br/>(BM25+Vector)</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">재순위화<br/>(CrossEncoder)</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">필터링<br/>(메타데이터)</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">최종 결과</div>
+</div>
+</div>
+
+<div class="quiz">
+<h4>퀴즈.</h4>
+<p class="quiz-q">퓨전 검색에서 BM25와 벡터 검색의 가중치를 모두 0.5로 설정하는 것이 항상 최적인가?</p>
+<button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+<div class="answer-text" style="display:none;">아닙니다. 쿼리의 특성에 따라 가중치를 조정해야 합니다. 명확한 키워드가 있는 쿼리는 BM25를 높이고, 의미론적 유사성이 중요한 경우는 벡터 검색을 높입니다. 도메인과 사용 패턴에 맞게 최적화하세요.</div>
+</div>
+
+<div class="quiz">
+<h4>퀴즈.</h4>
+<p class="quiz-q">멀티모달 RAG에서 이미지 분석을 위해 vision 모델을 사용할 때의 주요 고려사항은?</p>
+<button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+<div class="answer-text" style="display:none;">비용과 성능입니다. Vision 모델 호출은 일반 LLM보다 비용이 높고 느립니다. 필요한 페이지만 선택하거나, 자동으로 이미지를 감지하여 선택적으로 처리하고, 배치 처리로 효율성을 높이는 것이 중요합니다.</div>
+</div>
+</div>
+
+<div class="nav-buttons">
+<button class="nav-btn" onclick="showSection('sec-m4')">← 이전</button>
+<button class="nav-btn primary" onclick="showSection('sec-m6')">다음 →</button>
+</div>
+</div>
+
+<!-- 모듈 6: 반복·적응 검색 -->
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section" id="sec-m6">
+<div class="module-header m6">
+<span class="subtitle">Part 2 - 고급 검색 및 반복 최적화</span>
+<h2>모듈 6: 반복·적응 검색.</h2>
+<div class="learning-goals">
+<h3>학습 목표.</h3>
+<ul>
+<li>피드백 루프를 통한 지속적 개선 방법 습득.</li>
+<li>쿼리 유형에 따른 적응형 검색 전략 이해.</li>
+<li>다중 라운드 반복 검색의 구현과 활용 방법 학습.</li>
+</ul>
+</div>
+</div>
+
+<div class="content-block">
+<h3>개요.</h3>
+<p>RAG 시스템은 정적이 아닌 동적으로 발전해야 합니다. 사용자 피드백과 쿼리의 특성에 따라 검색 전략을 지속적으로 개선하고 적응시키는 기법들을 다룹니다. 이는 저널리즘 부서의 사실확인 봇, 탐사보도 자료 수집 시스템에 특히 효과적입니다.</p>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 1: 피드백 루프 (Feedback Loops).</button>
+<div class="accordion-body">
+<p>사용자의 명시적/암시적 피드백을 수집하여 검색 품질을 지속적으로 개선하는 기법입니다. 어떤 검색 결과가 유용했는지, 어떤 결과가 부정확했는지를 학습하여 모델을 업데이트합니다.</p>
+<p><strong>저널리즘 사례:</strong> 뉴스룸의 사실확인 봇이 기자들의 클릭/무시 패턴, 명시적 평가("유용함", "부정확함")를 수집하면, 시간이 지남에 따라 각 기자의 특정 주제에 대한 검색이 더 정확해집니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 피드백 기반 검색 개선</span>
+<span class="kw">import</span> json
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="kw">class</span> <span class="fn">FeedbackAwareRetriever</span>:
+    <span class="str">"""사용자 피드백으로 학습하는 검색자"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, base_retriever):
+        <span class="kw">self</span>.base_retriever = base_retriever
+        <span class="kw">self</span>.feedback_log = []  <span class="cm"># 피드백 저장소</span>
+        <span class="kw">self</span>.query_weights = {}  <span class="cm"># 쿼리별 가중치</span>
+
+    <span class="kw">def</span> <span class="fn">retrieve</span>(<span class="kw">self</span>, query):
+        <span class="str">"""기본 검색 수행"""</span>
+        results = <span class="kw">self</span>.base_retriever.<span class="fn">get_relevant_documents</span>(query)
+
+        <span class="cm"># 과거 피드백 기반 재순위화</span>
+        for_this_query = [fb <span class="kw">for</span> fb <span class="kw">in</span> <span class="kw">self</span>.feedback_log
+                          <span class="kw">if</span> fb[<span class="str">'query'</span>] == query]
+
+        <span class="kw">if</span> for_this_query:
+            <span class="cm"># 같은 쿼리의 과거 피드백으로 순위 조정</span>
+            results = <span class="kw">self</span>.<span class="fn">rerank_by_feedback</span>(results, for_this_query)
+
+        <span class="kw">return</span> results
+
+    <span class="kw">def</span> <span class="fn">record_feedback</span>(<span class="kw">self</span>, query, result_id, feedback, rating=<span class="num">5</span>):
+        <span class="str">"""사용자 피드백 기록"""</span>
+        feedback_entry = {
+            <span class="str">'query'</span>: query,
+            <span class="str">'result_id'</span>: result_id,
+            <span class="str">'feedback'</span>: feedback,  <span class="cm"># "useful", "irrelevant", "partial"</span>
+            <span class="str">'rating'</span>: rating,  <span class="cm"># 1-5 별점</span>
+            <span class="str">'timestamp'</span>: <span class="fn">datetime</span>.<span class="fn">now</span>().<span class="fn">isoformat</span>()
+        }
+        <span class="kw">self</span>.feedback_log.<span class="fn">append</span>(feedback_entry)
+
+        <span class="cm"># 피드백 기반 모델 가중치 조정</span>
+        <span class="kw">self</span>.<span class="fn">update_weights</span>(feedback_entry)
+
+    <span class="kw">def</span> <span class="fn">update_weights</span>(<span class="kw">self</span>, feedback_entry):
+        <span class="str">"""피드백을 기반으로 모델 가중치 조정"""</span>
+        query = feedback_entry[<span class="str">'query'</span>]
+
+        <span class="kw">if</span> query <span class="kw">not</span> <span class="kw">in</span> <span class="kw">self</span>.query_weights:
+            <span class="kw">self</span>.query_weights[query] = {
+                <span class="str">'useful'</span>: <span class="num">0</span>,
+                <span class="str">'irrelevant'</span>: <span class="num">0</span>,
+                <span class="str">'total'</span>: <span class="num">0</span>
+            }
+
+        fb_type = feedback_entry[<span class="str">'feedback'</span>]
+        <span class="kw">self</span>.query_weights[query][fb_type] += <span class="num">1</span>
+        <span class="kw">self</span>.query_weights[query][<span class="str">'total'</span>] += <span class="num">1</span>
+
+    <span class="kw">def</span> <span class="fn">rerank_by_feedback</span>(<span class="kw">self</span>, results, feedbacks):
+        <span class="str">"""과거 피드백 기반 재순위화"""</span>
+        scored_results = []
+
+        <span class="kw">for</span> result <span class="kw">in</span> results:
+            score = <span class="num">1.0</span>
+
+            <span class="kw">for</span> fb <span class="kw">in</span> feedbacks:
+                <span class="kw">if</span> fb[<span class="str">'result_id'</span>] == result.metadata.get(<span class="str">'id'</span>):
+                    <span class="kw">if</span> fb[<span class="str">'feedback'</span>] == <span class="str">'useful'</span>:
+                        score *= <span class="num">1.5</span>  <span class="cm"># 보너스</span>
+                    <span class="kw">elif</span> fb[<span class="str">'feedback'</span>] == <span class="str">'irrelevant'</span>:
+                        score *= <span class="num">0.5</span>  <span class="cm"># 페널티</span>
+
+            scored_results.<span class="fn">append</span>((result, score))
+
+        <span class="cm"># 점수로 정렬</span>
+        sorted_results = <span class="fn">sorted</span>(scored_results, key=<span class="kw">lambda</span> x: x[<span class="num">1</span>], reverse=<span class="kw">True</span>)
+
+        <span class="kw">return</span> [r[<span class="num">0</span>] <span class="kw">for</span> r <span class="kw">in</span> sorted_results]
+
+<span class="cm"># 사용 예: 사실확인 봇</span>
+fact_checker = <span class="fn">FeedbackAwareRetriever</span>(base_retriever)
+
+<span class="cm"># 검색</span>
+results = fact_checker.<span class="fn">retrieve</span>(<span class="str">"2024년 경제성장률"</span>)
+
+<span class="cm"># 피드백 기록 (기자가 클릭하거나 평가)</span>
+fact_checker.<span class="fn">record_feedback</span>(
+    query=<span class="str">"2024년 경제성장률"</span>,
+    result_id=results[<span class="num">0</span>].metadata[<span class="str">'id'</span>],
+    feedback=<span class="str">"useful"</span>,
+    rating=<span class="num">5</span>
+)
+
+<span class="cm"># 같은 쿼리 재검색 시 자동으로 개선됨</span>
+improved_results = fact_checker.<span class="fn">retrieve</span>(<span class="str">"2024년 경제성장률"</span>)</pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 2: 적응형 검색 (Adaptive Retrieval).</button>
+<div class="accordion-body">
+<p>쿼리의 유형을 자동으로 분석하여 적절한 검색 전략을 선택하는 기법입니다. 팩트 체크, 전문가 분석, 최신 뉴스 등 다양한 쿼리 타입을 구분하고 최적의 전략을 자동 적용합니다.</p>
+<p><strong>저널리즘 사례:</strong> 탐사보도팀이 "이 정책의 숨은 수혜자는?" 같은 심층 분석 쿼리를 입력하면 자동으로 다중 소스 퓨전 검색을 사용하고, "오늘 어떤 뉴스가 나왔는가?"라는 최신 뉴스 쿼리는 시간 기반 필터링을 우선합니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 쿼리 유형 분석 기반 적응형 검색</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> OpenAI
+
+<span class="kw">class</span> <span class="fn">AdaptiveRetriever</span>:
+    <span class="str">"""쿼리 타입에 따라 전략을 자동 선택"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, retrievers_dict, llm):
+        <span class="kw">self</span>.retrievers = retrievers_dict  <span class="cm"># {'factcheck': ret1, 'latest': ret2, ...}</span>
+        <span class="kw">self</span>.llm = llm
+
+    <span class="kw">def</span> <span class="fn">classify_query</span>(<span class="kw">self</span>, query):
+        <span class="str">"""쿼리 유형 분류"""</span>
+        classification_prompt = <span class="str">f"""</span>
+<span class="str">다음 쿼리를 분류하세요. 하나의 타입만 선택하세요.</span>
+<span class="str">
+</span><span class="str">타입:
+</span><span class="str">- factcheck: 특정 사실이나 주장의 검증 (예: "COVID-19 백신은 안전한가?")
+</span><span class="str">- latest_news: 최근 뉴스나 속보 (예: "오늘 발생한 정치 뉴스")
+</span><span class="str">- deep_analysis: 심층 분석이나 배경 정보 (예: "이 정책의 숨은 이유는?")
+</span><span class="str">- comparison: 비교 분석 (예: "두 후보의 정책 차이는?")
+</span><span class="str">- statistical: 통계 또는 수치 정보 (예: "2024년 실업률은?")
+</span><span class="str">
+</span><span class="str">쿼리: {query}
+</span><span class="str">
+</span><span class="str">타입(한 단어만):
+</span><span class="str">"""</span>
+
+        response = <span class="kw">self</span>.llm.<span class="fn">predict</span>(classification_prompt)
+        query_type = response.<span class="fn">strip</span>().<span class="fn">lower</span>()
+
+        <span class="kw">return</span> query_type
+
+    <span class="kw">def</span> <span class="fn">retrieve_adaptive</span>(<span class="kw">self</span>, query):
+        <span class="str">"""쿼리 타입에 맞는 검색 전략 적용"""</span>
+        query_type = <span class="kw">self</span>.<span class="fn">classify_query</span>(query)
+
+        <span class="cm"># 타입에 맞는 검색자 선택</span>
+        if query_type <span class="kw">in</span> <span class="kw">self</span>.retrievers:
+            retriever = <span class="kw">self</span>.retrievers[query_type]
+        <span class="kw">else</span>:
+            retriever = <span class="kw">self</span>.retrievers.get(<span class="str">'default'</span>)
+
+        results = retriever.<span class="fn">get_relevant_documents</span>(query)
+        <span class="kw">return</span> results, query_type
+
+<span class="cm"># 검색자들 구성</span>
+retrievers_dict = {
+    <span class="str">'factcheck'</span>: reranked_retriever,     <span class="cm"># 높은 정확도</span>
+    <span class="str">'latest_news'</span>: time_based_retriever,  <span class="cm"># 시간 필터 적용</span>
+    <span class="str">'deep_analysis'</span>: fusion_retriever,   <span class="cm"># 다중 소스</span>
+    <span class="str">'comparison'</span>: ensemble_retriever,    <span class="cm"># 앙상블</span>
+    <span class="str">'statistical'</span>: table_retriever,      <span class="cm"># 테이블 최적화</span>
+    <span class="str">'default'</span>: base_retriever
+}
+
+<span class="cm"># 적응형 검색자 생성</span>
+adaptive_ret = <span class="fn">AdaptiveRetriever</span>(retrievers_dict, llm)
+
+<span class="cm"># 사용</span>
+results, detected_type = adaptive_ret.<span class="fn">retrieve_adaptive</span>(
+    <span class="str">"이 정책이 도입된 진짜 이유는?"</span>
+)
+<span class="cm"># detected_type = "deep_analysis" → fusion_retriever 자동 사용</span></pre>
+</div>
+</div>
+
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 기법 3: 반복형 검색 (Iterative Retrieval).</button>
+<div class="accordion-body">
+<p>초기 검색 결과를 바탕으로 다음 라운드의 질문을 자동으로 생성하여 더 정보를 추가 검색하는 기법입니다. 복잡한 주제를 점진적으로 파악할 수 있습니다.</p>
+<p><strong>저널리즘 사례:</strong> 탐사보도 팀이 특정 부패 의혹을 조사할 때, 첫 검색으로 기본 사건 개요를 찾고, 두 번째 라운드에서 관련 인물들을 찾고, 세 번째 라운드에서 재정 거래 기록을 찾는 식으로 점진적으로 증거를 수집할 수 있습니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 다중 라운드 반복 검색</span>
+<span class="kw">def</span> <span class="fn">iterative_research</span>(initial_query, retriever, llm, rounds=<span class="num">3</span>):
+    <span class="str">"""여러 라운드의 반복 검색으로 심층 조사"""</span>
+
+    research_log = {
+        <span class="str">'initial_query'</span>: initial_query,
+        <span class="str">'rounds'</span>: []
+    }
+
+    current_results = []
+    current_query = initial_query
+
+    <span class="kw">for</span> round_num <span class="kw">in</span> <span class="fn">range</span>(rounds):
+        <span class="cm"># 현재 쿼리로 검색</span>
+        results = retriever.<span class="fn">get_relevant_documents</span>(current_query)
+        current_results.<span class="fn">extend</span>(results)
+
+        round_info = {
+            <span class="str">'round'</span>: round_num + <span class="num">1</span>,
+            <span class="str">'query'</span>: current_query,
+            <span class="str">'results_count'</span>: <span class="fn">len</span>(results),
+            <span class="str">'results_summary'</span>: <span class="str">"\n"</span>.<span class="fn">join</span>([r.page_content[:<span class="num">200</span>] <span class="kw">for</span> r <span class="kw">in</span> results])
+        }
+        research_log[<span class="str">'rounds'</span>].<span class="fn">append</span>(round_info)
+
+        <span class="cm"># 다음 라운드 쿼리 생성 (LLM이 자동으로)</span>
+        if round_num < rounds - <span class="num">1</span>:
+            next_query_prompt = <span class="str">f"""</span>
+<span class="str">다음은 "{initial_query}"라는 주제에 대한 현재까지의 검색 결과입니다:
+</span><span class="str">
+</span><span class="str">{round_info['results_summary']}
+</span><span class="str">
+</span><span class="str">더 깊이 있는 조사를 위해, 위 결과를 바탕으로 다음에 찾아야 할 정보의 키워드를 제시하세요.
+</span><span class="str">한 문장의 새로운 검색 쿼리를 생성하세요.
+</span><span class="str">"""</span>
+
+            current_query = llm.<span class="fn">predict</span>(next_query_prompt)
+            current_query = current_query.<span class="fn">strip</span>()
+
+    <span class="kw">return</span> current_results, research_log
+
+<span class="cm"># 부패 의혹 탐사보도 예시</span>
+all_results, log = <span class="fn">iterative_research</span>(
+    initial_query=<span class="str">"○○ 시장 비리 의혹"</span>,
+    retriever=retriever,
+    llm=llm,
+    rounds=<span class="num">3</span>
+)
+
+<span class="cm"># 라운드별 쿼리 예시:</span>
+<span class="cm"># Round 1: "○○ 시장 비리 의혹"</span>
+<span class="cm"># Round 2: "○○ 시장과 관련된 기업 거래"</span>
+<span class="cm"># Round 3: "○○ 시장 친인척 재정 거래"</span></pre>
+</div>
+</div>
+
+<div class="callout tip">
+<strong>실무 팁:</strong> 반복 검색은 기사 작성 후 팩트 체크에도 유용합니다. 작성한 기사의 각 주요 주장에 대해 3라운드 검색을 실행하면, 뒷받침 증거가 충분한지 자동으로 검증할 수 있습니다.
+</div>
+
+<h3>반복·적응 검색 비교표.</h3>
+<div class="table-wrap">
+<table>
+<tr>
+<th>기법</th>
+<th>목적</th>
+<th>사용 사례</th>
+<th>학습 속도</th>
+</tr>
+<tr>
+<td>피드백 루프</td>
+<td>사용자 피드백 학습</td>
+<td>사실확인 봇 개선</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>적응형 검색</td>
+<td>쿼리 타입별 전략</td>
+<td>다양한 쿼리 자동 처리</td>
+<td>빠름</td>
+</tr>
+<tr>
+<td>반복형 검색</td>
+<td>점진적 심층 조사</td>
+<td>탐사보도 자료 수집</td>
+<td>높은 정보 커버리지</td>
+</tr>
+</table>
+</div>
+
+<div class="diagram">
+<div class="flow">
+<div class="flow-box">사용자<br/>쿼리</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">쿼리 분류<br/>(적응형)</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">라운드 1<br/>검색</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">자동<br/>다음 쿼리</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">라운드 N<br/>검색</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">결과<br/>통합</div>
+<div class="flow-arrow">→</div>
+<div class="flow-box">피드백<br/>수집</div>
+</div>
+</div>
+
+<div class="callout warn">
+<strong>성능 주의:</strong> 반복 검색은 라운드별로 API 호출과 시간이 증가합니다. 프로덕션 환경에서는 각 라운드마다 새로운 정보 획득 여부를 체크하여 불필요한 라운드를 스킵하는 로직이 필요합니다.
+</div>
+
+<h3>저널리즘 워크플로우 예시.</h3>
+<div class="accordion">
+<button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 사실확인 봇 완전 구현.</button>
+<div class="accordion-body">
+<p>사실확인 팀이 기사를 작성할 때 주요 주장들을 실시간으로 검증하는 시스템입니다.</p>
+
+<div class="code-block">
+<div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+<pre><span class="cm"># 종합적인 사실확인 시스템</span>
+<span class="kw">class</span> <span class="fn">JournalismFactChecker</span>:
+    <span class="str">"""기자를 위한 종합 사실확인 봇"""</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, adaptive_retriever, feedback_retriever, llm):
+        <span class="kw">self</span>.adaptive_ret = adaptive_retriever
+        <span class="kw">self</span>.feedback_ret = feedback_retriever
+        <span class="kw">self</span>.llm = llm
+        <span class="kw">self</span>.fact_db = {}
+
+    <span class="kw">def</span> <span class="fn">verify_article_claims</span>(<span class="kw">self</span>, article_text):
+        <span class="str">"""기사의 주요 주장들 검증"""</span>
+
+        <span class="cm"># 1단계: LLM으로 주요 주장 추출</span>
+        extraction_prompt = <span class="str">f"""</span>
+<span class="str">다음 기사에서 검증이 필요한 구체적인 주장 5개를 추출하세요.
+</span><span class="str">각각을 한 문장의 검색 쿼리로 변환하세요.
+</span><span class="str">
+</span><span class="str">기사:
+</span><span class="str">{article_text}
+</span><span class="str">
+</span><span class="str">주장 목록:
+</span><span class="str">"""</span>
+
+        claims = <span class="kw">self</span>.llm.<span class="fn">predict</span>(extraction_prompt).<span class="fn">split</span>(<span class="str">'\n'</span>)
+
+        <span class="cm"># 2단계: 각 주장 검증</span>
+        verification_results = []
+
+        <span class="kw">for</span> i, claim <span class="kw">in</span> <span class="fn">enumerate</span>(claims):
+            <span class="kw">if</span> <span class="kw">not</span> claim.<span class="fn">strip</span>():
+                <span class="kw">continue</span>
+
+            <span class="cm"># 적응형 검색으로 관련 자료 검색</span>
+            search_results, query_type = <span class="kw">self</span>.adaptive_ret.<span class="fn">retrieve_adaptive</span>(claim)
+
+            <span class="cm"># 3단계: LLM으로 검증 판단</span>
+            verify_prompt = <span class="str">f"""</span>
+<span class="str">다음 주장에 대해 검색된 자료들을 바탕으로 검증하세요.
+</span><span class="str">
+</span><span class="str">주장: {claim}
+</span><span class="str">
+</span><span class="str">검색 결과:
+</span><span class="str">{chr(10).join([r.page_content[:300] for r in search_results[:3]])}
+</span><span class="str">
+</span><span class="str">검증 결과:
+</span><span class="str">- 정확함 / 부분 정확 / 부정확 / 확인 불가
+</span><span class="str">- 관련 출처:
+</span><span class="str">- 추가 설명:
+</span><span class="str">"""</span>
+
+            verification = <span class="kw">self</span>.llm.<span class="fn">predict</span>(verify_prompt)
+
+            result = {
+                <span class="str">'claim_num'</span>: i + <span class="num">1</span>,
+                <span class="str">'claim'</span>: claim,
+                <span class="str">'verification'</span>: verification,
+                <span class="str">'sources_count'</span>: <span class="fn">len</span>(search_results),
+                <span class="str">'query_type'</span>: query_type
+            }
+            verification_results.<span class="fn">append</span>(result)
+
+        <span class="kw">return</span> verification_results
+
+<span class="cm"># 사용 예시</span>
+fact_checker = <span class="fn">JournalismFactChecker</span>(
+    adaptive_retriever,
+    feedback_aware_retriever,
+    llm
+)
+
+<span class="cm"># 기사 텍스트</span>
+article = <span class="str">"""</span>
+<span class="str">정부가 발표한 2024년 경제성장률은 2.1%로 예상됩니다.
+</span><span class="str">이는 전년도 대비 0.5% 포인트 상승한 수치입니다.
+</span><span class="str">...</span>
+<span class="str">"""</span>
+
+<span class="cm"># 검증 실행</span>
+results = fact_checker.<span class="fn">verify_article_claims</span>(article)</pre>
+</div>
+</div>
+
+<div class="quiz">
+<h4>퀴즈.</h4>
+<p class="quiz-q">피드백 루프의 주요 장점은 무엇입니까?</p>
+<button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+<div class="answer-text" style="display:none;">시간이 지남에 따라 시스템이 자동으로 개선된다는 것입니다. 사용자의 피드백을 학습하면, 같은 유형의 쿼리에 대해 다음에는 더 정확한 결과를 반환합니다. 이는 머신러닝의 온라인 학습 방식이며, 특히 도메인 특화 시스템에서 매우 효과적입니다.</div>
+</div>
+
+<div class="quiz">
+<h4>퀴즈.</h4>
+<p class="quiz-q">반복형 검색에서 라운드를 진행할 때의 주의사항은?</p>
+<button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+<div class="answer-text" style="display:none;">각 라운드가 새로운 정보를 얻는지 확인해야 합니다. 만약 N라운드에서 얻은 결과가 N-1라운드와 중복된다면, 추가 라운드를 진행할 필요가 없습니다. 불필요한 API 호출을 줄이고 효율성을 높이기 위해 중복 검사 로직이 필요합니다.</div>
+</div>
+
+<h3>종합 비교: Part 2 모든 기법.</h3>
+<div class="table-wrap">
+<table>
+<tr>
+<th>모듈</th>
+<th>기법</th>
+<th>목적</th>
+<th>복잡도</th>
+<th>영향도</th>
+</tr>
+<tr>
+<td rowspan="5">모듈 4</td>
+<td>컨텍스트 헤더</td>
+<td>메타데이터 명시</td>
+<td>낮음</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>세그먼트 추출</td>
+<td>완전한 맥락</td>
+<td>중간</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>윈도우 강화</td>
+<td>문장 경계</td>
+<td>낮음</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>컨텍스트 압축</td>
+<td>노이즈 제거</td>
+<td>높음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>문서 강화</td>
+<td>검색 커버리지</td>
+<td>높음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td rowspan="7">모듈 5</td>
+<td>퓨전 검색</td>
+<td>다중 방식 결합</td>
+<td>중간</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>재순위화</td>
+<td>정밀도 향상</td>
+<td>중간</td>
+<td>매우 높음</td>
+</tr>
+<tr>
+<td>다층 필터링</td>
+<td>범위 축소</td>
+<td>낮음</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>계층적 검색</td>
+<td>2단계 검색</td>
+<td>높음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>앙상블</td>
+<td>다중 모델</td>
+<td>높음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>다트보드</td>
+<td>관련성+다양성</td>
+<td>높음</td>
+<td>중간</td>
+</tr>
+<tr>
+<td>멀티모달</td>
+<td>시각 자료 처리</td>
+<td>높음</td>
+<td>높음</td>
+</tr>
+<tr>
+<td rowspan="3">모듈 6</td>
+<td>피드백 루프</td>
+<td>지속적 개선</td>
+<td>중간</td>
+<td>누적 효과</td>
+</tr>
+<tr>
+<td>적응형 검색</td>
+<td>자동 전략 선택</td>
+<td>중간</td>
+<td>높음</td>
+</tr>
+<tr>
+<td>반복형 검색</td>
+<td>심층 조사</td>
+<td>높음</td>
+<td>높음</td>
+</tr>
+</table>
+</div>
+
+</div>
+
+<div class="nav-buttons">
+<button class="nav-btn" onclick="showSection('sec-m5')">← 이전</button>
+<button class="nav-btn" onclick="showSection('sec-intro')">처음으로</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section" id="sec-m7">
+  <div class="module-header m7">
+    <span class="subtitle">모듈 7.</span>
+    <h2>평가와 설명 가능성.</h2>
+    <div class="learning-goals">
+      <p><strong>학습 목표:</strong> RAG 시스템의 답변 품질을 정량적으로 평가하고, 왜 특정 문서가 검색되었는지 투명하게 설명할 수 있다.</p>
+    </div>
+  </div>
+
+  <div class="content-box">
+    <p>뉴스룸에서 AI 시스템을 신뢰하려면 답변이 어떻게 생성되었는지 알아야 합니다. 이 모듈은 RAG 답변의 품질을 측정하고, 기자가 검증할 수 있도록 출처를 명확히 제시하는 기법들을 다룹니다.</p>
+  </div>
+
+  <h3>기법 1. DeepEval.</h3>
+  <div class="content-box">
+    <p>DeepEval은 RAG 시스템을 종합적으로 평가하는 프레임워크입니다. 단순한 정확도를 넘어 정확성(Accuracy), 관련성(Relevance), 충실도(Faithfulness), 맥락 정확도(Context Precision) 등 6가지 메트릭을 한 번에 평가합니다.</p>
+    <div class="callout tip">
+      <strong>기자 관점:</strong> "우리 AI 봇이 답한 내용이 정말 검색된 문서 내용과 일치하는가?" 이런 의문을 정량적으로 검증합니다.
+    </div>
+  </div>
+
+  <div class="content-box">
+    <h4>DeepEval의 6가지 평가 지표.</h4>
+    <ul>
+      <li><strong>정확성(Accuracy):</strong> 답변이 실제 정답과 일치하는가.</li>
+      <li><strong>관련성(Relevance):</strong> 검색된 문서가 질문과 관련 있는가.</li>
+      <li><strong>충실도(Faithfulness):</strong> 답변이 검색된 문서 내용에 충실하는가.</li>
+      <li><strong>맥락 정확도(Context Precision):</strong> 상위 K개 검색 결과 중 관련 문서의 비율.</li>
+      <li><strong>맥락 회상률(Context Recall):</strong> 필요한 모든 정보를 검색했는가.</li>
+      <li><strong>응답 시간(Latency):</strong> 얼마나 빠른가.</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># DeepEval로 RAG 답변 평가하기</span>
+<span class="kw">from</span> deepeval <span class="kw">import</span> evaluate
+<span class="kw">from</span> deepeval.metrics <span class="kw">import</span> (
+    Faithfulness, Relevance, ContextPrecision
+)
+
+<span class="cm"># 평가 데이터셋 (질문, 정답, RAG 생성 답변, 검색된 맥락)</span>
+test_cases <span class="op">=</span> [
+    {
+        <span class="str">"question"</span>: <span class="str">"2024년 3월 국회 본회의 가결된 법안은?"</span>,
+        <span class="str">"ground_truth"</span>: <span class="str">"국회법 일부 개정안"</span>,
+        <span class="str">"actual_output"</span>: <span class="str">"2024년 3월 국회 본회의에서 국회법 일부 개정안이 가결됐습니다."</span>,
+        <span class="str">"retrieval_context"</span>: [
+            <span class="str">"2024년 3월 28일 국회 본회의 회의록..."</span>
+        ]
+    }
+]
+
+<span class="cm"># 충실도 메트릭 초기화</span>
+faithfulness <span class="op">=</span> <span class="fn">Faithfulness</span>()
+
+<span class="cm"># 각 테스트 케이스 평가</span>
+<span class="kw">for</span> test_case <span class="kw">in</span> test_cases:
+    score <span class="op">=</span> faithfulness.<span class="fn">measure</span>(test_case)
+    <span class="fn">print</span>(<span class="str">f"충실도 점수: {score.score:.2f}"</span>)
+    <span class="fn">print</span>(<span class="str">f"이유: {score.reason}"</span>)</pre>
+  </div>
+
+  <div class="content-box">
+    <h4>평가 결과 해석.</h4>
+    <table class="comparison-table">
+      <tr>
+        <th>메트릭</th>
+        <th>의미</th>
+        <th>뉴스룸 해석</th>
+      </tr>
+      <tr>
+        <td>충실도 0.9</td>
+        <td>답변이 검색 문서와 일치</td>
+        <td>신뢰할 수 있음</td>
+      </tr>
+      <tr>
+        <td>관련성 0.6</td>
+        <td>검색 결과 중 일부만 관련</td>
+        <td>검색 쿼리 개선 필요</td>
+      </tr>
+      <tr>
+        <td>맥락 정확도 0.8</td>
+        <td>상위 5개 중 4개가 관련</td>
+        <td>양호</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <strong>실제 사용 시나리오:</strong> 국회 입법 정보 AI 봇이 "2024년 3월 본회의 가결 법안"이라고 답했을 때, DeepEval로 이 답변이 회의록에 실제 나와 있는지 자동 검증합니다.
+  </div>
+
+  <h3>기법 2. GroUSE.</h3>
+  <div class="content-box">
+    <p>GroUSE(Grounded Summarization Evaluation)는 LLM이 생성한 답변이 진짜 검색된 문서에 기반했는지 6가지 관점에서 평가합니다. 특히 "완전히 거짓", "부분적으로 참", "완전히 참"을 구분합니다.</p>
+  </div>
+
+  <div class="content-box">
+    <h4>GroUSE의 6가지 평가 항목.</h4>
+    <ol>
+      <li><strong>사실성(Factuality):</strong> 답변의 각 문장이 출처에 있는가.</li>
+      <li><strong>완전성(Completeness):</strong> 중요한 정보를 빠뜨리지 않았는가.</li>
+      <li><strong>일관성(Consistency):</strong> 문장들 간 모순이 없는가.</li>
+      <li><strong>관련성(Relevance):</strong> 불필요한 정보는 없는가.</li>
+      <li><strong>유창성(Fluency):</strong> 문법적으로 자연스러운가.</li>
+      <li><strong>구조(Structure):</strong> 답변이 논리적으로 정렬되었는가.</li>
+    </ol>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># GroUSE로 기자 팩트체크 보조</span>
+<span class="kw">from</span> grouse <span class="kw">import</span> evaluate_grounding
+
+answer <span class="op">=</span> <span class="str">"""
+2024년 3월 국회 본회의에서 국회법 일부 개정안이 만장일치로 가결되었습니다.
+이는 의회 민주주의 강화를 위한 조치입니다.
+"""</span>
+
+retrieved_docs <span class="op">=</span> [
+    <span class="str">"[국회 회의록] 2024년 3월 28일 본회의에서 국회법 개정안 가결"</span>,
+    <span class="str">"찬성 298명, 반대 0명"</span>
+]
+
+<span class="cm"># 각 문장의 출처 추적</span>
+result <span class="op">=</span> <span class="fn">evaluate_grounding</span>(
+    answer,
+    retrieved_docs
+)
+
+<span class="kw">for</span> sentence, score <span class="kw">in</span> result.<span class="fn">items</span>():
+    <span class="fn">print</span>(<span class="str">f"문장: {sentence[:50]}..."</span>)
+    <span class="fn">print</span>(<span class="str">f"근거 기반 점수: {score}"</span>)
+    <span class="fn">print</span>(<span class="str">"---"</span>)</pre>
+  </div>
+
+  <div class="callout warn">
+    <strong>주의:</strong> "만장일치"는 회의록에 "찬성 298명, 반대 0명"이라고 명시되어야만 참입니다. 모호한 표현은 부분적 참으로 평가됩니다.
+  </div>
+
+  <h3>기법 3. Explainable Retrieval.</h3>
+  <div class="content-box">
+    <p>Explainable Retrieval은 검색 결과 뒤에 "왜 이 문서가 선택되었는가"라는 설명을 붙입니다. 기자가 AI의 논거를 추적 가능하게 만들어, 거짓말이나 환각을 즉시 발견할 수 있습니다.</p>
+  </div>
+
+  <div class="content-box">
+    <h4>설명 가능한 검색 결과의 예.</h4>
+    <div class="explanation-example">
+      <div class="answer-section">
+        <h5>AI 답변:</h5>
+        <p>"2024년 부산시 예산 중 공교육비가 가장 많이 증가했습니다."</p>
+      </div>
+      <div class="source-section">
+        <h5>설명 가능한 근거:</h5>
+        <div class="evidence">
+          <div class="evidence-item">
+            <strong>검색된 문서 1</strong> (관련도 0.92)
+            <p>"2024년 부산시 예산안에서 공교육비 12% 증가, 사회복지 8% 증가"</p>
+            <span class="explanation-badge">📌 "공교육비" + "증가" 키워드 매칭 + 높은 벡터 유사도</span>
+          </div>
+          <div class="evidence-item">
+            <strong>검색된 문서 2</strong> (관련도 0.78)
+            <p>"부산시 2024 예산편성 기본계획"</p>
+            <span class="explanation-badge">📌 관련 맥락 제공</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># Explainable Retrieval 구현</span>
+<span class="kw">from</span> langchain.retrievers <span class="kw">import</span> ExplainableRetriever
+
+<span class="kw">class</span> <span class="fn">ExplainableRAG</span>:
+    <span class="kw">def</span> <span class="fn">retrieve_with_explanation</span>(<span class="kw">self</span>, query):
+        results <span class="op">=</span> <span class="kw">self</span>.retriever.<span class="fn">get_relevant_documents</span>(query)
+
+        explained_results <span class="op">=</span> []
+        <span class="kw">for</span> doc <span class="kw">in</span> results:
+            explanation <span class="op">=</span> {
+                <span class="str">"content"</span>: doc.page_content,
+                <span class="str">"source"</span>: doc.metadata[<span class="str">"source"</span>],
+                <span class="str">"relevance_score"</span>: doc.metadata[<span class="str">"score"</span>],
+                <span class="str">"matching_terms"</span>: <span class="fn">find_matching_terms</span>(
+                    query, doc.page_content
+                ),
+                <span class="str">"why_retrieved"</span>:
+                    <span class="str">"키워드 일치 + 벡터 유사도"</span>
+            }
+            explained_results.<span class="fn">append</span>(explanation)
+
+        <span class="kw">return</span> explained_results
+
+<span class="cm"># 사용 예</span>
+rag <span class="op">=</span> <span class="fn">ExplainableRAG</span>()
+results <span class="op">=</span> rag.<span class="fn">retrieve_with_explanation</span>(
+    <span class="str">"서울시 2024년 교육예산"</span>
+)
+
+<span class="kw">for</span> r <span class="kw">in</span> results:
+    <span class="fn">print</span>(<span class="str">f"근거: {r['source']}"</span>)
+    <span class="fn">print</span>(<span class="str">f"관련도: {r['relevance_score']:.2f}"</span>)
+    <span class="fn">print</span>(<span class="str">f"일치 키워드: {r['matching_terms']}"</span>)</pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>기자 체크리스트:</strong> AI가 제시한 설명을 읽고, 원문서에 정말 그 내용이 있는지 확인하세요. "매칭 키워드"와 "관련도 점수"가 논거의 질을 평가하는 기준입니다.
+  </div>
+
+  <h3>실제 사용 사례: 뉴스룸 AI 봇의 답변 검증.</h3>
+  <div class="content-box">
+    <div class="case-study">
+      <h4>시나리오.</h4>
+      <p>기자가 뉴스룸 AI 봇에게 "국회 본회의에서 가장 최근 가결된 법안은?"이라고 질문합니다.</p>
+      <h4>AI 답변 (이전 방식).</h4>
+      <p>"국정감시법 일부 개정안이 최근 가결되었습니다."</p>
+      <h4>문제점.</h4>
+      <p>기자가 이 답이 맞는지 확인하려면 회의록을 직접 열어야 합니다.</p>
+      <h4>개선: DeepEval + GroUSE + Explainable Retrieval.</h4>
+      <div class="flow-diagram">
+        <div class="flow-box">질문 입력</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">문서 검색</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">RAG 답변 생성</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">
+          <strong>자동 평가</strong>
+          <br/>
+          <small>DeepEval 점수</small>
+          <br/>
+          <small>GroUSE 근거확인</small>
+          <br/>
+          <small>출처 설명</small>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">기자에게 제시</div>
+      </div>
+      <h4>기자가 받는 최종 결과.</h4>
+      <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">
+답변: "국정감시법 일부 개정안 가결"
+신뢰도 점수: 0.94/1.0
+근거 충실도: 0.92 (회의록 내용 일치)
+출처: 국회 회의록 2024년 3월 28일
+      </pre>
+    </div>
+  </div>
+
+  <h3>핵심 정리.</h3>
+  <div class="summary-box">
+    <ul>
+      <li><strong>DeepEval:</strong> 정확성, 관련성, 충실도 등 6가지 메트릭으로 RAG 종합 평가.</li>
+      <li><strong>GroUSE:</strong> 각 문장이 출처에 근거하는지 6가지 관점에서 검증.</li>
+      <li><strong>Explainable Retrieval:</strong> "왜 이 문서가 검색되었는가"를 투명하게 설명해 기자 신뢰도 증진.</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">DeepEval의 "맥락 정확도(Context Precision)"는 무엇을 의미하는가?</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">상위 K개 검색 결과 중 실제로 질문과 관련 있는 문서의 비율입니다. 예를 들어 상위 5개 중 4개가 관련 있으면 정확도는 0.8입니다.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m6')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-m8')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m8">
+  <div class="module-header m8">
+    <span class="subtitle">모듈 8.</span>
+    <h2>그래프 RAG.</h2>
+    <div class="learning-goals">
+      <p><strong>학습 목표:</strong> 문서 간 관계를 그래프로 모델링하고, 엔티티·관계를 추출한 뒤 더 깊은 맥락을 활용한 RAG 시스템을 구축한다.</p>
+    </div>
+  </div>
+
+  <div class="content-box">
+    <p>뉴스는 사람, 기관, 사건이 얽혀 있는 복잡한 네트워크입니다. 단순 키워드 검색으로는 "이 정치인과 저 의원이 왜 연결되어 있는가"같은 깊은 질문에 답할 수 없습니다. 그래프 RAG는 이러한 관계를 명시적으로 모델링하여 더 풍부한 맥락을 제공합니다.</p>
+  </div>
+
+  <h3>기법 1. Graph RAG with Milvus.</h3>
+  <div class="content-box">
+    <p>Milvus는 벡터 검색과 그래프 검색을 함께 수행하는 벡터 데이터베이스입니다. 문서의 의미를 벡터로 변환하면서 동시에 문서 간 관계(엣지)를 저장합니다.</p>
+  </div>
+
+  <div class="content-box">
+    <h4>작동 원리.</h4>
+    <div class="diagram">
+      <div class="flow-box" style="width: 100%; text-align: center;">
+        문서 수집
+      </div>
+      <div class="flow-arrow" style="text-align: center;">↓</div>
+      <div class="flow-box" style="width: 100%; text-align: center;">
+        NLP로 엔티티·관계 추출<br/>
+        <small>(서울시장, 예산안, 승인 등)</small>
+      </div>
+      <div class="flow-arrow" style="text-align: center;">↓</div>
+      <div class="flow-box" style="width: 100%; text-align: center;">
+        벡터 임베딩 + 그래프 노드 생성
+      </div>
+      <div class="flow-arrow" style="text-align: center;">↓</div>
+      <div class="flow-box" style="width: 100%; text-align: center;">
+        Milvus에 저장 (벡터 + 그래프)<br/>
+        <small>(검색 속도 최적화)</small>
+      </div>
+      <div class="flow-arrow" style="text-align: center;">↓</div>
+      <div class="flow-box" style="width: 100%; text-align: center;">
+        하이브리드 쿼리<br/>
+        <small>(벡터 검색 + 관계 탐색)</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># Milvus를 이용한 그래프 RAG</span>
+<span class="kw">from</span> pymilvus <span class="kw">import</span> connections, Collection
+<span class="kw">from</span> spacy <span class="kw">import</span> load
+
+<span class="cm"># 한국어 NLP 모델 로드</span>
+nlp <span class="op">=</span> <span class="fn">load</span>(<span class="str">"ko_core_news_sm"</span>)
+
+<span class="cm"># Milvus 연결</span>
+connections.<span class="fn">connect</span>(<span class="str">"default"</span>)
+
+<span class="cm"># 그래프 구축 함수</span>
+<span class="kw">def</span> <span class="fn">build_graph_from_text</span>(text):
+    doc <span class="op">=</span> <span class="fn">nlp</span>(text)
+    entities <span class="op">=</span> [ent.text <span class="kw">for</span> ent <span class="kw">in</span> doc.ents]
+
+    <span class="cm"># 간단한 관계 추출: (주어, 술어, 목어)</span>
+    relationships <span class="op">=</span> []
+    <span class="kw">for</span> token <span class="kw">in</span> doc:
+        <span class="kw">if</span> token.dep_ <span class="op">==</span> <span class="str">"nsubj"</span>:
+            <span class="fn">relationships</span>.<span class="fn">append</span>((
+                token.head.text, token.text, token.head.pos_
+            ))
+
+    <span class="kw">return</span> {
+        <span class="str">"entities"</span>: entities,
+        <span class="str">"relationships"</span>: relationships
+    }
+
+<span class="cm"># 예: 뉴스 기사 분석</span>
+article <span class="op">=</span> <span class="str">"""
+서울시장이 새로운 교통정책을 발표했습니다.
+이 정책은 시의회에서 승인될 예정입니다.
+"""</span>
+
+graph <span class="op">=</span> <span class="fn">build_graph_from_text</span>(article)
+<span class="fn">print</span>(<span class="str">f"엔티티: {graph['entities']}"</span>)
+<span class="fn">print</span>(<span class="str">f"관계: {graph['relationships']}"</span>)</pre>
+  </div>
+
+  <h3>기법 2. Graph RAG with LangChain.</h3>
+  <div class="content-box">
+    <p>LangChain의 그래프 기능은 문서들을 노드로, 의미적 유사성을 엣지로 하는 네트워크를 구축합니다. 질문에 답할 때, 직접 연결된 문서뿐 아니라 이웃 노드의 정보도 포함해 맥락을 강화합니다.</p>
+  </div>
+
+  <div class="content-box">
+    <h4>LangChain 그래프 검색의 장점.</h4>
+    <ul>
+      <li><strong>관계 기반 탐색:</strong> "A와 관련된 모든 B"를 한 번에 찾기.</li>
+      <li><strong>경로 추적:</strong> "어떻게 A에서 B에 도달하는가"를 보여줌.</li>
+      <li><strong>맥락 확장:</strong> 직접 관련 문서 + 간접 관련 문서까지 포함.</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># LangChain 그래프 검색</span>
+<span class="kw">from</span> langchain.graphs <span class="kw">import</span> Neo4jGraph
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> GraphQAChain
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> OpenAI
+
+<span class="cm"># Neo4j 연결</span>
+graph <span class="op">=</span> <span class="fn">Neo4jGraph</span>(
+    url<span class="op">=</span><span class="str">"bolt://localhost:7687"</span>,
+    username<span class="op">=</span><span class="str">"neo4j"</span>,
+    password<span class="op">=</span><span class="str">"password"</span>
+)
+
+<span class="cm"># Cypher 쿼리로 관계 조회</span>
+query <span class="op">=</span> <span class="str">"""
+MATCH (p:Person {name: '김성주'})-[r:APPEARED_WITH]-(other:Person)
+RETURN p, r, other
+"""</span>
+
+result <span class="op">=</span> graph.<span class="fn">query</span>(query)
+
+<span class="cm"># 그래프 기반 QA 체인</span>
+llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+qa_chain <span class="op">=</span> <span class="fn">GraphQAChain</span>.<span class="fn">from_llm</span>(
+    llm, graph<span class="op">=</span>graph, verbose<span class="op">=</span><span class="kw">True</span>
+)
+
+answer <span class="op">=</span> qa_chain.<span class="fn">run</span>(
+    <span class="str">"김성주와 함께 등장한 정치인은?"</span>
+)</pre>
+  </div>
+
+  <h3>기법 3. Microsoft GraphRAG.</h3>
+  <div class="content-box">
+    <p>Microsoft GraphRAG는 문서로부터 자동으로 엔티티와 관계를 추출한 뒤 지식 그래프를 구축합니다. 추가로 커뮤니티 감지(Community Detection) 알고리즘을 적용해 관련 엔티티 그룹을 찾습니다.</p>
+    <div class="callout info">
+      <strong>예:</strong> 뉴스 말뭉치에서 "로비스트-의원 관계 네트워크"를 자동 생성합니다.
+    </div>
+  </div>
+
+  <div class="content-box">
+    <h4>Microsoft GraphRAG의 3단계.</h4>
+    <div class="steps">
+      <div class="step">
+        <strong>1단계: 엔티티·관계 추출.</strong>
+        <p>LLM(예: GPT-4)이 문서를 읽고 "누가", "어떤 관계로", "누구와 연결되어 있는가"를 자동 추출합니다.</p>
+      </div>
+      <div class="step">
+        <strong>2단계: 지식 그래프 구축.</strong>
+        <p>추출된 엔티티(노드)와 관계(엣지)로 그래프를 만듭니다.</p>
+      </div>
+      <div class="step">
+        <strong>3단계: 커뮤니티 감지.</strong>
+        <p>Louvain 등 알고리즘으로 밀접하게 연결된 엔티티 그룹을 찾습니다. 예: "전직 로비스트" 커뮤니티, "보수진영 의원" 커뮤니티.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># Microsoft GraphRAG 개념 구현</span>
+<span class="kw">from</span> networkx <span class="kw">import</span> Graph, community
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> OpenAI
+
+<span class="cm"># 엔티티·관계 추출</span>
+<span class="kw">def</span> <span class="fn">extract_entities_relations</span>(text):
+    llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+    prompt <span class="op">=</span> <span class="str">f"""
+    다음 텍스트에서 엔티티(인물, 조직, 사건)와 관계를 추출하세요.
+    형식: (엔티티1, 관계, 엔티티2)
+
+    텍스트: {text}
+    """</span>
+
+    response <span class="op">=</span> llm.<span class="fn">predict</span>(prompt)
+    <span class="kw">return</span> response
+
+<span class="cm"># 그래프 구축</span>
+G <span class="op">=</span> <span class="fn">Graph</span>()
+
+<span class="cm"># 예: 로비스트 네트워크</span>
+G.<span class="fn">add_edges_from</span>([
+    (<span class="str">"로비스트A"</span>, <span class="str">"의원B"</span>),
+    (<span class="str">"로비스트A"</span>, <span class="str">"의원C"</span>),
+    (<span class="str">"의원B"</span>, <span class="str">"의원D"</span>)
+])
+
+<span class="cm"># 커뮤니티 감지</span>
+communities <span class="op">=</span> <span class="fn">community</span>.<span class="fn">greedy_modularity_communities</span>(G)
+
+<span class="kw">for</span> i, comm <span class="kw">in</span> <span class="fn">enumerate</span>(communities):
+    <span class="fn">print</span>(<span class="str">f"커뮤니티 {i}: {list(comm)}"</span>)</pre>
+  </div>
+
+  <h3>실제 사용 사례: 탐사보도 리서치.</h3>
+  <div class="content-box">
+    <div class="case-study">
+      <h4>시나리오: "로비 네트워크 추적".</h4>
+      <p>기자가 대형 건설 프로젝트 관련 뉴스 1000건을 분석하려고 합니다. 어떤 로비스트가 어떤 의원과 연결되어 있는지 파악해야 합니다.</p>
+      <h4>문제점 (일반 RAG).</h4>
+      <p>키워드로 검색하면 "로비스트 A"와 "의원 B"의 관계가 여러 문서에 흩어져 있어 수동으로 연결해야 합니다.</p>
+      <h4>해결책: GraphRAG.</h4>
+      <table class="comparison-table">
+        <tr>
+          <th>기능</th>
+          <th>일반 RAG</th>
+          <th>GraphRAG</th>
+        </tr>
+        <tr>
+          <td>로비스트 A와 B 찾기</td>
+          <td>각 문서 하나씩</td>
+          <td>한 번의 그래프 쿼리</td>
+        </tr>
+        <tr>
+          <td>A-B-C 경로 추적</td>
+          <td>불가능</td>
+          <td>그래프 경로 알고리즘</td>
+        </tr>
+        <tr>
+          <td>커뮤니티 발견</td>
+          <td>수동</td>
+          <td>자동 감지</td>
+        </tr>
+      </table>
+      <h4>결과.</h4>
+      <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px;">
+커뮤니티 1: [로비스트A, 의원B, 의원C, 의원D]
+       ↑ 모두 같은 건설사와 연결
+커뮤니티 2: [로비스트X, 의원Y, 의원Z]
+       ↑ 다른 진영의 로비 네트워크
+      </pre>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <strong>기업 지배구조 파악:</strong> 대기업 임원진 간 이사회 관계, 자회사 계층도 등도 GraphRAG로 자동 추출 가능합니다.
+  </div>
+
+  <h3>핵심 정리.</h3>
+  <div class="summary-box">
+    <ul>
+      <li><strong>Graph RAG with Milvus:</strong> 벡터 검색 + 그래프 검색 결합으로 의미와 관계를 동시에 활용.</li>
+      <li><strong>Graph RAG with LangChain:</strong> Neo4j 등 그래프 DB와 연동, Cypher로 관계 조회.</li>
+      <li><strong>Microsoft GraphRAG:</strong> LLM으로 자동 엔티티·관계 추출 → 지식 그래프 자동 구축 → 커뮤니티 감지.</li>
+      <li><strong>활용:</strong> 로비 네트워크, 기업 지배구조, 국회 관계도 등 복잡한 네트워크를 체계적으로 분석.</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">GraphRAG에서 "커뮤니티 감지"의 목적은 무엇인가?</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">밀접하게 연결된 엔티티 그룹을 자동으로 찾아내기 위함입니다. 예를 들어 로비 네트워크에서 "같은 진영의 의원들"이나 "특정 로비스트와 관련된 의원 집단"을 발견합니다.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m7')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-m9')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m9">
+  <div class="module-header m9">
+    <span class="subtitle">모듈 9.</span>
+    <h2>고급 아키텍처.</h2>
+    <div class="learning-goals">
+      <p><strong>학습 목표:</strong> 검색 필요 여부를 판단하고, 결과를 자체 평가하고, 도구를 활용하는 에이전트 형태의 RAG를 구축한다.</p>
+    </div>
+  </div>
+
+  <div class="content-box">
+    <p>이전 기법들은 "주어진 문서에서 답 찾기"에 집중했습니다. 고급 아키텍처는 한 걸음 더 나아갑니다. RAG 시스템이 스스로 판단합니다: "정말 문서를 검색해야 하나?", "이 답변이 맞나?", "웹을 또 뒤져야 하나?" 이런 지능형 의사결정이 가능한 아키텍처들을 소개합니다.</p>
+  </div>
+
+  <h3>기법 1. RAPTOR.</h3>
+  <div class="content-box">
+    <p>RAPTOR(Recursive Abstractive Processing for Tree-Organized Retrieval)는 긴 문서를 계층적으로 정리합니다. 먼저 원본 문서를 작은 청크로 나누고, 각 청크를 요약합니다. 그 요약들을 또 요약해서... 최종적으로 "문서의 문서"인 트리 구조를 만듭니다.</p>
+  </div>
+
+  <div class="content-box">
+    <h4>RAPTOR의 계층 구조.</h4>
+    <div class="tree-diagram">
+      <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; font-size: 12px;">
+레벨 0 (원본)
+└─ [문단1] [문단2] [문단3] [문단4] [문단5]
+
+레벨 1 (청크 요약)
+└─ [요약A] [요약B] [요약C]
+   (문단1-2를 "주제A"로 요약)
+   (문단3-4를 "주제B"로 요약)
+   (문단5를 "주제C"로 요약)
+
+레벨 2 (통합 요약)
+└─ [통합 요약]
+   ("주제A", "주제B", "주제C"를 하나의 핵심으로)
+      </pre>
+    </div>
+  </div>
+
+  <div class="content-box">
+    <h4>RAPTOR의 이점.</h4>
+    <ul>
+      <li><strong>빠른 검색:</strong> 여러 수준에서 검색 가능해 불필요한 세부사항 건너뜀.</li>
+      <li><strong>다양한 질문 대응:</strong> "전체 주제는?"(상위 레벨) vs "구체적인 숫자는?"(하위 레벨).</li>
+      <li><strong>맥락 유지:</strong> 요약 과정에서 중요 정보는 보존.</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># RAPTOR 구현</span>
+<span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> RecursiveCharacterTextSplitter
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> OpenAI
+
+<span class="cm"># 1단계: 문서 청킹</span>
+splitter <span class="op">=</span> <span class="fn">RecursiveCharacterTextSplitter</span>(
+    chunk_size<span class="op">=</span><span class="num">1000</span>,
+    chunk_overlap<span class="op">=</span><span class="num">100</span>
+)
+
+chunks <span class="op">=</span> splitter.<span class="fn">split_text</span>(long_document)
+
+<span class="cm"># 2단계: 계층적 요약</span>
+llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+
+<span class="kw">def</span> <span class="fn">create_raptor_tree</span>(chunks):
+    current_level <span class="op">=</span> chunks
+    tree <span class="op">=</span> [current_level]
+
+    <span class="kw">while</span> <span class="fn">len</span>(current_level) <span class="op">></span> <span class="num">1</span>:
+        next_level <span class="op">=</span> []
+
+        <span class="cm"># 2개씩 묶어서 요약</span>
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, <span class="fn">len</span>(current_level), <span class="num">2</span>):
+            chunk_pair <span class="op">=</span> current_level[i:i<span class="op">+</span><span class="num">2</span>]
+            summary_prompt <span class="op">=</span> <span class="str">f"""
+            다음 텍스트들을 한 문단으로 요약하세요:
+            {' '.join(chunk_pair)}
+            """</span>
+            summary <span class="op">=</span> llm.<span class="fn">predict</span>(summary_prompt)
+            next_level.<span class="fn">append</span>(summary)
+
+        tree.<span class="fn">append</span>(next_level)
+        current_level <span class="op">=</span> next_level
+
+    <span class="kw">return</span> tree
+
+<span class="cm"># 3단계: 검색</span>
+raptor_tree <span class="op">=</span> <span class="fn">create_raptor_tree</span>(chunks)
+
+<span class="kw">def</span> <span class="fn">retrieve_raptor</span>(query, raptor_tree):
+    <span class="cm"># 상위 레벨부터 검색</span>
+    <span class="kw">for</span> level <span class="kw">in</span> <span class="fn">reversed</span>(raptor_tree):
+        best_match <span class="op">=</span> <span class="fn">find_most_similar</span>(query, level)
+        <span class="cm"># 관련도 높으면 이 레벨의 자식 검색</span>
+    <span class="kw">return</span> best_match  </div>
+
+  <div class="callout info">
+    <strong>뉴스룸 활용:</strong> 100페이지 판결문을 분석할 때, RAPTOR는 "핵심 판결 사유"(상위 레벨)를 먼저 찾고 필요하면 세부 법조항(하위 레벨)을 탐색합니다.
+  </div>
+
+  <h3>기법 2. Self-RAG.</h3>
+  <div class="content-box">
+    <p>Self-RAG(Self-Reflective Retrieval-Augmented Generation)는 LLM이 스스로 판단합니다: "이 질문에 답하려고 문서를 검색해야 하나?" 또는 "나는 이미 알고 있어서 검색이 필요 없나?"</p>
+    <div class="callout tip">
+      <strong>핵심 아이디어:</strong> RAG가 항상 검색하는 게 아니라, 필요할 때만 검색합니다. 이러면 속도도 빠르고 환각도 줄입니다.
+    </div>
+  </div>
+
+  <div class="content-box">
+    <h4>Self-RAG의 4단계 판단 로직.</h4>
+    <ol>
+      <li><strong>검색 필요성 판단(Retrieval Check):</strong> "이 질문을 답하려면 실제 문서가 필요한가?"</li>
+      <li><strong>검색 실행 여부(If needed, retrieve):</strong> 필요하면 검색, 아니면 스킵.</li>
+      <li><strong>답변 생성(Generate answer):</strong> 검색 결과 또는 기존 지식으로 답변.</li>
+      <li><strong>자체 평가(Self-evaluate):</strong> "내 답변이 좋은가?" 아니면 더 검색할까?</li>
+    </ol>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># Self-RAG 구현</span>
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> OpenAI
+<span class="kw">from</span> langchain.chains <span class="kw">import</span> LLMChain
+<span class="kw">from</span> langchain.prompts <span class="kw">import</span> PromptTemplate
+
+llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+
+<span class="cm"># 1단계: 검색 필요성 판단</span>
+retrieval_check_prompt <span class="op">=</span> <span class="fn">PromptTemplate</span>(
+    input_variables<span class="op">=</span>[<span class="str">"query"</span>],
+    template<span class="op">=</span><span class="str">"""
+    다음 질문에 답하려면 외부 문서가 필요한가?
+    필요: YES, 불필요: NO
+    질문: {query}
+    """</span>
+)
+
+<span class="kw">class</span> <span class="fn">SelfRAG</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, llm, retriever):
+        <span class="kw">self</span>.llm <span class="op">=</span> llm
+        <span class="kw">self</span>.retriever <span class="op">=</span> retriever
+
+    <span class="kw">def</span> <span class="fn">answer_query</span>(<span class="kw">self</span>, query):
+        <span class="cm"># 1단계: 검색 필요성 판단</span>
+        need_retrieval <span class="op">=</span> <span class="kw">self</span>.llm.<span class="fn">predict</span>(
+            retrieval_check_prompt.<span class="fn">format</span>(query<span class="op">=</span>query)
+        )
+
+        <span class="cm"># 2단계: 필요하면 검색</span>
+        <span class="kw">if</span> <span class="str">"YES"</span> <span class="kw">in</span> need_retrieval:
+            context <span class="op">=</span> <span class="kw">self</span>.retriever.<span class="fn">get_relevant_documents</span>(query)
+        <span class="kw">else</span>:
+            context <span class="op">=</span> []
+
+        <span class="cm"># 3단계: 답변 생성</span>
+        answer_prompt <span class="op">=</span> <span class="str">f"""
+        질문: {query}
+        맥락: {context}
+        답변:
+        """</span>
+        answer <span class="op">=</span> <span class="kw">self</span>.llm.<span class="fn">predict</span>(answer_prompt)
+
+        <span class="cm"># 4단계: 자체 평가</span>
+        eval_prompt <span class="op">=</span> <span class="str">f"""
+        이 답변이 좋은가? (1-5)
+        답변: {answer}
+        """</span>
+        score <span class="op">=</span> <span class="kw">self</span>.llm.<span class="fn">predict</span>(eval_prompt)
+
+        <span class="kw">return</span> {
+            <span class="str">"answer"</span>: answer,
+            <span class="str">"retrieval_needed"</span>: need_retrieval,
+            <span class="str">"self_score"</span>: score
+        }
+
+rag <span class="op">=</span> <span class="fn">SelfRAG</span>(llm, retriever)
+result <span class="op">=</span> rag.<span class="fn">answer_query</span>(<span class="str">"한국 현대 미술의 주요 특징은?"</span>)</pre>
+  </div>
+
+  <h3>기법 3. Corrective RAG (CRAG).</h3>
+  <div class="content-box">
+    <p>Corrective RAG는 검색 결과를 자체 평가하고, 관련도가 낮으면 웹 검색으로 보강합니다. "벡터 DB의 문서로 부족하면 구글 검색"이라는 논리입니다.</p>
+    <div class="callout warn">
+      <strong>주의:</strong> 웹 검색은 비용과 속도가 문제입니다. 필요한 경우에만 활용해야 합니다.
+    </div>
+  </div>
+
+  <div class="content-box">
+    <h4>CRAG의 피드백 루프.</h4>
+    <table class="comparison-table">
+      <tr>
+        <th>단계</th>
+        <th>작업</th>
+        <th>결정</th>
+      </tr>
+      <tr>
+        <td>1. 검색</td>
+        <td>벡터 DB에서 문서 검색</td>
+        <td>관련도 평가</td>
+      </tr>
+      <tr>
+        <td>2. 평가</td>
+        <td>검색 결과가 관련 있는가?</td>
+        <td>YES: 진행 / NO: 웹 검색</td>
+      </tr>
+      <tr>
+        <td>3. 보강</td>
+        <td>필요시 웹 검색</td>
+        <td>결과 합치기</td>
+      </tr>
+      <tr>
+        <td>4. 생성</td>
+        <td>최종 맥락으로 답변</td>
+        <td>사용자에게 제시</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># Corrective RAG 구현</span>
+<span class="kw">from</span> langchain.retrievers.web_research <span class="kw">import</span> WebResearchRetriever
+<span class="kw">from</span> langchain.utilities <span class="kw">import</span> GoogleSearchAPIWrapper
+
+<span class="kw">class</span> <span class="fn">CorrectiveRAG</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, llm, vector_retriever, web_retriever):
+        <span class="kw">self</span>.llm <span class="op">=</span> llm
+        <span class="kw">self</span>.vector_retriever <span class="op">=</span> vector_retriever
+        <span class="kw">self</span>.web_retriever <span class="op">=</span> web_retriever
+
+    <span class="kw">def</span> <span class="fn">retrieve_and_correct</span>(<span class="kw">self</span>, query):
+        <span class="cm"># 1단계: 벡터 DB 검색</span>
+        vector_docs <span class="op">=</span> <span class="kw">self</span>.vector_retriever.<span class="fn">get_relevant_documents</span>(query)
+
+        <span class="cm"># 2단계: 관련도 평가</span>
+        relevance_scores <span class="op">=</span> [doc.metadata.<span class="fn">get</span>(<span class="str">"score"</span>, <span class="num">0</span>) <span class="kw">for</span> doc <span class="kw">in</span> vector_docs]
+        avg_score <span class="op">=</span> <span class="fn">sum</span>(relevance_scores) <span class="op">/</span> <span class="fn">len</span>(relevance_scores) <span class="kw">if</span> relevance_scores <span class="kw">else</span> <span class="num">0</span>
+
+        <span class="kw">if</span> avg_score <span class="op"><</span> <span class="num">0.6</span>:  <span class="cm"># 임계값</span>
+            <span class="cm"># 3단계: 웹 검색으로 보강</span>
+            web_docs <span class="op">=</span> <span class="kw">self</span>.web_retriever.<span class="fn">get_relevant_documents</span>(query)
+            all_docs <span class="op">=</span> vector_docs <span class="op">+</span> web_docs
+        <span class="kw">else</span>:
+            all_docs <span class="op">=</span> vector_docs
+
+        <span class="kw">return</span> all_docs
+
+rag <span class="op">=</span> <span class="fn">CorrectiveRAG</span>(llm, vector_retriever, web_retriever)
+docs <span class="op">=</span> rag.<span class="fn">retrieve_and_correct</span>(<span class="str">"2024 국회의원 선거 최신 뉴스"</span>)</pre>
+  </div>
+
+  <h3>기법 4. Agentic RAG.</h3>
+  <div class="content-box">
+    <p>Agentic RAG는 RAG를 단순한 도구(tool)로 보고, 에이전트(agent)가 RAG를 포함한 여러 도구를 능동적으로 선택합니다. 검색, 계산, 웹 조회, 파일 읽기 등을 조합합니다.</p>
+  </div>
+
+  <div class="content-box">
+    <h4>Agentic RAG의 도구 조합.</h4>
+    <ul>
+      <li><strong>RAG 도구:</strong> 내부 문서 검색.</li>
+      <li><strong>웹 검색 도구:</strong> 실시간 뉴스 또는 최신 정보.</li>
+      <li><strong>계산 도구:</strong> 수치 연산.</li>
+      <li><strong>파일 도구:</strong> CSV, PDF 읽기.</li>
+      <li><strong>API 도구:</strong> 외부 서비스 연동.</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="cm"># Agentic RAG with LangGraph</span>
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph
+<span class="kw">from</span> langchain.agents <span class="kw">import</span> initialize_agent, Tool
+<span class="kw">from</span> langchain.llms <span class="kw">import</span> OpenAI
+
+llm <span class="op">=</span> <span class="fn">OpenAI</span>(temperature<span class="op">=</span><span class="num">0</span>)
+
+<span class="cm"># 도구 정의</span>
+tools <span class="op">=</span> [
+    <span class="fn">Tool</span>(
+        name<span class="op">=</span><span class="str">"RAG Search"</span>,
+        func<span class="op">=</span><span class="kw">lambda</span> q: rag_retriever.<span class="fn">get_relevant_documents</span>(q),
+        description<span class="op">=</span><span class="str">"내부 문서 데이터베이스 검색"</span>
+    ),
+    <span class="fn">Tool</span>(
+        name<span class="op">=</span><span class="str">"Web Search"</span>,
+        func<span class="op">=</span><span class="kw">lambda</span> q: web_search(q),
+        description<span class="op">=</span><span class="str">"실시간 웹 검색 (뉴스 등)"</span>
+    ),
+    <span class="fn">Tool</span>(
+        name<span class="op">=</span><span class="str">"Calculator"</span>,
+        func<span class="op">=</span><span class="kw">lambda</span> expr: <span class="fn">eval</span>(expr),
+        description<span class="op">=</span><span class="str">"수학 계산"</span>
+    )
+]
+
+<span class="cm"># 에이전트 초기화</span>
+agent <span class="op">=</span> <span class="fn">initialize_agent</span>(
+    tools,
+    llm,
+    agent<span class="op">=</span><span class="str">"zero-shot-react-description"</span>,
+    verbose<span class="op">=</span><span class="kw">True</span>
+)
+
+<span class="cm"># 사용 예: 복합 질문</span>
+result <span class="op">=</span> agent.<span class="fn">run</span>(
+    <span class="str">"""
+    2024년 한국 경제 성장률을 찾고,
+    이를 지난해와 비교하세요.
+    필요하면 웹과 내부 문서를 모두 활용하세요.
+    """</span>
+)</pre>
+  </div>
+
+  <div class="callout info">
+    <strong>프로덕션급 예시:</strong> 탐사보도 에이전트가 "정치인 A의 자산변동 추적"을 받으면, 먼저 내부 기사(RAG)로 이전 기사를 찾고, 부족하면 뉴스 DB를 검색하고, 필요하면 공시 자료를 PDF에서 읽고, 최종적으로 통합 보도자료를 생성합니다.
+  </div>
+
+  <h3>실제 사용 사례: 실시간 뉴스 팩트체크 시스템.</h3>
+  <div class="content-box">
+    <div class="case-study">
+      <h4>시나리오: "정치인이 거짓 주장".</h4>
+      <p>어떤 정치인이 "올해 실업률이 3%로 사상 최저"라고 주장합니다. 기자는 이를 즉시 검증해야 합니다.</p>
+      <h4>이전 방식 (수동).</h4>
+      <ol>
+        <li>통계청 사이트 방문</li>
+        <li>최신 실업률 수치 찾기</li>
+        <li>역사 데이터와 비교</li>
+        <li>기사 작성</li>
+      </ol>
+      <h4>RAPTOR + Self-RAG + Agentic의 통합 사용.</h4>
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin: 15px 0;">
+        <p><strong>입력:</strong> "정치인 주장: 올해 실업률 3% 사상 최저"</p>
+        <p><strong>단계 1 (Self-RAG):</strong> "이 주장은 팩트체크가 필요한가?" → YES</p>
+        <p><strong>단계 2 (Agentic):</strong> 에이전트가 도구 선택</p>
+        <div style="margin-left: 20px;">
+          <p>→ RAG 도구: 기존 실업률 기사 검색</p>
+          <p>→ Web 도구: 통계청 최신 자료 수집</p>
+          <p>→ Calc 도구: "3% vs 역대 최저치" 비교</p>
+        </div>
+        <p><strong>단계 3 (RAPTOR):</strong> 장문 통계 자료를 계층적으로 요약</p>
+        <p><strong>출력:</strong> "주장은 거짓입니다. 올해 실업률은 3.2%이며, 2008년 2.8%가 최저입니다."</p>
+      </div>
+      <h4>기자 활용.</h4>
+      <p>5분 내에 자동 팩트체크 결과를 받고, 추가 취재만 진행합니다.</p>
+    </div>
+  </div>
+
+  <h3>핵심 정리.</h3>
+  <div class="summary-box">
+    <ul>
+      <li><strong>RAPTOR:</strong> 긴 문서를 계층적 트리로 정리해 빠른 검색 + 맥락 유지.</li>
+      <li><strong>Self-RAG:</strong> "정말 검색이 필요한가?"를 LLM이 판단 → 속도 + 환각 감소.</li>
+      <li><strong>Corrective RAG:</strong> 벡터 DB 부족 시 자동으로 웹 검색 보강.</li>
+      <li><strong>Agentic RAG:</strong> RAG + 웹 + 계산 + API 등을 에이전트가 조합해 복합 질문 해결.</li>
+      <li><strong>뉴스룸 활용:</strong> 팩트체크, 탐사보도 리서치, 실시간 뉴스 검증을 자동화.</li>
+    </ul>
+  </div>
+
+  <div class="quiz">
+    <h4>퀴즈.</h4>
+    <p class="quiz-q">Self-RAG와 Corrective RAG의 핵심 차이는?</p>
+    <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+    <div class="answer-text" style="display:none;">Self-RAG는 "검색 자체가 필요한가?"를 판단하고, Corrective RAG는 "현재 검색 결과가 충분한가?"를 평가하고 부족하면 웹 검색으로 보강합니다.</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m8')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-ref')">다음 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-ref">
+  <div class="module-header ref">
+    <span class="subtitle">레퍼런스.</span>
+    <h2>카드.</h2>
+    <div class="learning-goals">
+      <p><strong>학습 목표:</strong> 34개 RAG 기법을 한눈에 보고, 뉴스룸 시스템 설계를 위한 체크리스트와 도구를 확인한다.</p>
+    </div>
+  </div>
+
+  <div class="content-box">
+    <p>이 페이지는 모든 34개 RAG 기법을 요약한 참고 자료입니다. 마지막에는 뉴스룸 RAG 시스템 설계 체크리스트와 주요 라이브러리 정보를 제공합니다.</p>
+  </div>
+
+  <h3>34개 RAG 기법 요약 표.</h3>
+  <div class="table-wrap">
+    <table style="font-size: 12px;">
+      <tr style="background: #f0f0f0;">
+        <th style="width: 15%;">기법명</th>
+        <th style="width: 15%;">카테고리</th>
+        <th style="width: 35%;">핵심 아이디어</th>
+        <th style="width: 12%;">난이도</th>
+        <th style="width: 23%;">뉴스룸 활용</th>
+      </tr>
+      <tr>
+        <td><strong>Naive RAG</strong></td>
+        <td>기초</td>
+        <td>청크 분할 → 임베딩 → 유사도 검색 → 생성</td>
+        <td>⭐</td>
+        <td>기본 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Advanced RAG</strong></td>
+        <td>기초</td>
+        <td>쿼리 변환, 재순위, 다중 검색 등</td>
+        <td>⭐⭐</td>
+        <td>정확도 향상</td>
+      </tr>
+      <tr>
+        <td><strong>Modular RAG</strong></td>
+        <td>구조</td>
+        <td>RAG 요소를 교환 가능한 모듈로 분리</td>
+        <td>⭐⭐⭐</td>
+        <td>유연한 커스터마이징</td>
+      </tr>
+      <tr>
+        <td><strong>Multi-query RAG</strong></td>
+        <td>쿼리</td>
+        <td>한 질문을 여러 형태로 변형 후 검색</td>
+        <td>⭐⭐</td>
+        <td>다각도 검색</td>
+      </tr>
+      <tr>
+        <td><strong>HyDE</strong></td>
+        <td>쿼리</td>
+        <td>질문 대신 가상 답변 생성 후 검색</td>
+        <td>⭐⭐</td>
+        <td>의미 기반 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Baleen</strong></td>
+        <td>쿼리</td>
+        <td>적응형 쿼리 프롬프팅</td>
+        <td>⭐⭐</td>
+        <td>맥락별 최적화</td>
+      </tr>
+      <tr>
+        <td><strong>ReRank/Reciprocal Rank Fusion</strong></td>
+        <td>순위</td>
+        <td>다중 검색 결과를 가중치로 재정렬</td>
+        <td>⭐⭐</td>
+        <td>정확도 개선</td>
+      </tr>
+      <tr>
+        <td><strong>Metadata Filter</strong></td>
+        <td>필터</td>
+        <td>카테고리, 날짜 등으로 검색 범위 제한</td>
+        <td>⭐</td>
+        <td>범위 지정 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Chunk Size Optimization</strong></td>
+        <td>청킹</td>
+        <td>최적 청크 크기로 정확도 극대화</td>
+        <td>⭐⭐</td>
+        <td>성능 튜닝</td>
+      </tr>
+      <tr>
+        <td><strong>Sliding Window</strong></td>
+        <td>청킹</td>
+        <td>겹치는 청크로 문맥 손실 방지</td>
+        <td>⭐⭐</td>
+        <td>맥락 보존</td>
+      </tr>
+      <tr>
+        <td><strong>Sentence Window Retrieval</strong></td>
+        <td>청킹</td>
+        <td>문장 단위 검색 → 단락 전체 맥락 제공</td>
+        <td>⭐⭐</td>
+        <td>정교한 맥락</td>
+      </tr>
+      <tr>
+        <td><strong>Long-Context Reorder</strong></td>
+        <td>순위</td>
+        <td>"잃어버린 중간" 현상 보정</td>
+        <td>⭐⭐</td>
+        <td>문서 재정렬</td>
+      </tr>
+      <tr>
+        <td><strong>ColBERT</strong></td>
+        <td>검색</td>
+        <td>토큰 단위 임베딩으로 미세한 유사도</td>
+        <td>⭐⭐⭐</td>
+        <td>정밀 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Keyword Search</strong></td>
+        <td>검색</td>
+        <td>BM25, TF-IDF로 빠른 키워드 검색</td>
+        <td>⭐</td>
+        <td>보완 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Fusion</strong></td>
+        <td>검색</td>
+        <td>벡터 + 키워드 검색 결과 결합</td>
+        <td>⭐⭐</td>
+        <td>하이브리드 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Sparse/Dense Retrieval</strong></td>
+        <td>검색</td>
+        <td>희소 (키워드) + 밀집 (의미) 결합</td>
+        <td>⭐⭐⭐</td>
+        <td>최적화된 성능</td>
+      </tr>
+      <tr>
+        <td><strong>Contextual Compression</strong></td>
+        <td>압축</td>
+        <td>검색 문서에서 필요 부분만 추출</td>
+        <td>⭐⭐</td>
+        <td>토큰 절약</td>
+      </tr>
+      <tr>
+        <td><strong>Prompt Compression</strong></td>
+        <td>압축</td>
+        <td>프롬프트 자체를 압축해 비용 감소</td>
+        <td>⭐⭐</td>
+        <td>비용 절감</td>
+      </tr>
+      <tr>
+        <td><strong>Distillation</strong></td>
+        <td>최적화</td>
+        <td>큰 모델 지식을 작은 모델로 압축</td>
+        <td>⭐⭐⭐</td>
+        <td>빠른 응답</td>
+      </tr>
+      <tr>
+        <td><strong>Caching</strong></td>
+        <td>최적화</td>
+        <td>반복 질문의 결과를 캐시</td>
+        <td>⭐⭐</td>
+        <td>응답 속도</td>
+      </tr>
+      <tr>
+        <td><strong>Indexing Strategy</strong></td>
+        <td>인덱싱</td>
+        <td>계층적, 자동, 동적 인덱싱</td>
+        <td>⭐⭐⭐</td>
+        <td>검색 최적화</td>
+      </tr>
+      <tr>
+        <td><strong>Parent Chunk Retrieval</strong></td>
+        <td>인덱싱</td>
+        <td>작은 청크 검색 → 전체 문서 반환</td>
+        <td>⭐⭐</td>
+        <td>맥락 확대</td>
+      </tr>
+      <tr>
+        <td><strong>HyperLogLog</strong></td>
+        <td>추상화</td>
+        <td>대규모 중복 검출</td>
+        <td>⭐⭐⭐</td>
+        <td>데이터 정제</td>
+      </tr>
+      <tr>
+        <td><strong>Summary Index</strong></td>
+        <td>추상화</td>
+        <td>문서 요약으로 빠른 개요 검색</td>
+        <td>⭐⭐</td>
+        <td>주제 파악</td>
+      </tr>
+      <tr>
+        <td><strong>Tree Structures</strong></td>
+        <td>추상화</td>
+        <td>계층적 구조로 정보 조직</td>
+        <td>⭐⭐⭐</td>
+        <td>구조화 검색</td>
+      </tr>
+      <tr>
+        <td><strong>DeepEval</strong></td>
+        <td>평가</td>
+        <td>정확성, 관련성, 충실도 등 6가지 평가</td>
+        <td>⭐⭐</td>
+        <td>품질 검증</td>
+      </tr>
+      <tr>
+        <td><strong>GroUSE</strong></td>
+        <td>평가</td>
+        <td>문장별 근거 기반 평가</td>
+        <td>⭐⭐</td>
+        <td>팩트체크</td>
+      </tr>
+      <tr>
+        <td><strong>Explainable Retrieval</strong></td>
+        <td>평가</td>
+        <td>검색 이유를 투명하게 설명</td>
+        <td>⭐⭐</td>
+        <td>신뢰도 증진</td>
+      </tr>
+      <tr>
+        <td><strong>Graph RAG (Milvus)</strong></td>
+        <td>그래프</td>
+        <td>벡터 + 관계 그래프 결합</td>
+        <td>⭐⭐⭐</td>
+        <td>네트워크 분석</td>
+      </tr>
+      <tr>
+        <td><strong>Graph RAG (LangChain)</strong></td>
+        <td>그래프</td>
+        <td>Neo4j와 Cypher 쿼리</td>
+        <td>⭐⭐⭐</td>
+        <td>관계 추적</td>
+      </tr>
+      <tr>
+        <td><strong>Microsoft GraphRAG</strong></td>
+        <td>그래프</td>
+        <td>자동 엔티티·관계 추출 + 커뮤니티 감지</td>
+        <td>⭐⭐⭐</td>
+        <td>자동 네트워크 구축</td>
+      </tr>
+      <tr>
+        <td><strong>RAPTOR</strong></td>
+        <td>고급</td>
+        <td>재귀 요약으로 계층적 트리 구조</td>
+        <td>⭐⭐⭐</td>
+        <td>긴 문서 처리</td>
+      </tr>
+      <tr>
+        <td><strong>Self-RAG</strong></td>
+        <td>고급</td>
+        <td>LLM이 검색 필요성 판단</td>
+        <td>⭐⭐⭐</td>
+        <td>적응형 검색</td>
+      </tr>
+      <tr>
+        <td><strong>Corrective RAG</strong></td>
+        <td>고급</td>
+        <td>결과 평가 후 웹 검색 자동 보강</td>
+        <td>⭐⭐⭐</td>
+        <td>신뢰도 보강</td>
+      </tr>
+      <tr>
+        <td><strong>Agentic RAG</strong></td>
+        <td>고급</td>
+        <td>에이전트가 다중 도구 조합</td>
+        <td>⭐⭐⭐⭐</td>
+        <td>프로덕션급 시스템</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>뉴스룸 RAG 시스템 설계 체크리스트.</h3>
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 1. 데이터 수집 및 준비.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ 뉴스 아카이브 확보 (과거 기사 몇 년분?)</li>
+        <li>□ 공공 데이터 수집 (국회, 법원, 통계청 등)</li>
+        <li>□ 외부 API 연동 (뉴스 RSS, 공공 DB 등)</li>
+        <li>□ 데이터 품질 검토 (중복, 오류 제거)</li>
+        <li>□ 메타데이터 정제 (발행일, 기자, 카테고리 등)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 2. 청킹 및 임베딩 전략.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ 최적 청크 크기 결정 (300-500 토큰?)</li>
+        <li>□ Sliding Window 적용 (겹침 비율)</li>
+        <li>□ Sentence Window Retrieval 고려</li>
+        <li>□ 임베딩 모델 선택 (한국어 특화?)</li>
+        <li>□ 벡터 DB 선택 (Pinecone, Milvus, ChromaDB?)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 3. 검색 및 순위 전략.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ Hybrid Search (벡터 + 키워드)</li>
+        <li>□ Multi-query RAG 또는 HyDE 적용</li>
+        <li>□ ReRank 모델 적용 (정확도 개선)</li>
+        <li>□ Metadata 필터 설정 (날짜, 카테고리 등)</li>
+        <li>□ Top-K 개수 결정 (5개? 10개?)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 4. LLM 및 생성 전략.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ LLM 선택 (GPT-4, Claude, 오픈소스?)</li>
+        <li>□ 프롬프트 최적화 (기자 친화적 스타일)</li>
+        <li>□ Contextual Compression 고려</li>
+        <li>□ Token 제한 설정 (비용 관리)</li>
+        <li>□ 출처 명시 방식 정의</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 5. 고급 기법 적용.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ RAPTOR 또는 Tree 구조 고려 (긴 문서용)</li>
+        <li>□ Self-RAG 고려 (속도 최적화)</li>
+        <li>□ Graph RAG 고려 (네트워크 분석)</li>
+        <li>□ Agentic RAG 고려 (복합 기능)</li>
+        <li>□ 성능 메트릭 정의</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 6. 평가 및 검증.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ DeepEval로 자동 평가</li>
+        <li>□ GroUSE로 근거 기반 검증</li>
+        <li>□ Explainable Retrieval 구현</li>
+        <li>□ 기자 피드백 루프 설정</li>
+        <li>□ 정기적 성능 리뷰</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 7. 배포 및 운영.</button>
+    <div class="accordion-body" style="display:none;">
+      <ul>
+        <li>□ API 서버 구축 (FastAPI, Flask)</li>
+        <li>□ UI/UX 설계 (웹 대시보드 또는 슬랙 봇)</li>
+        <li>□ 모니터링 및 로깅</li>
+        <li>□ 정기적 데이터 업데이트</li>
+        <li>□ 사용자 교육 및 가이드</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>주요 라이브러리 및 도구 정리.</h3>
+  <div class="content-box">
+    <h4>임베딩 및 벡터 DB.</h4>
+    <ul>
+      <li><strong>LangChain:</strong> RAG 파이프라인 구축 표준 라이브러리.</li>
+      <li><strong>ChromaDB:</strong> 간단한 벡터 DB (개발용).</li>
+      <li><strong>Pinecone:</strong> 서버리스 벡터 DB (클라우드).</li>
+      <li><strong>Milvus:</strong> 오픈소스 고성능 벡터 DB (그래프 기능 포함).</li>
+      <li><strong>Weaviate:</strong> 그래프 + 벡터 DB.</li>
+      <li><strong>FAISS:</strong> Facebook 오픈소스 벡터 검색.</li>
+    </ul>
+  </div>
+
+  <div class="content-box">
+    <h4>그래프 및 네트워크 분석.</h4>
+    <ul>
+      <li><strong>Neo4j:</strong> 프로덕션급 그래프 DB (Cypher 쿼리).</li>
+      <li><strong>NetworkX:</strong> Python 그래프 분석 라이브러리.</li>
+      <li><strong>Microsoft GraphRAG:</strong> 자동 그래프 구축.</li>
+    </ul>
+  </div>
+
+  <div class="content-box">
+    <h4>평가 및 검증.</h4>
+    <ul>
+      <li><strong>DeepEval:</strong> RAG 종합 평가 프레임워크.</li>
+      <li><strong>GroUSE:</strong> 근거 기반 평가.</li>
+      <li><strong>RAGAS:</strong> RAG 평가 메트릭.</li>
+    </ul>
+  </div>
+
+  <div class="content-box">
+    <h4>LLM 및 에이전트.</h4>
+    <ul>
+      <li><strong>LangGraph:</strong> 에이전트 구축 (상태 관리).</li>
+      <li><strong>OpenAI API:</strong> GPT-4, GPT-3.5 모델.</li>
+      <li><strong>Anthropic Claude:</strong> 대안 LLM.</li>
+      <li><strong>Ollama:</strong> 로컬 오픈소스 모델 실행.</li>
+    </ul>
+  </div>
+
+  <h3>성능 최적화 팁.</h3>
+  <div class="content-box">
+    <div class="tips-list">
+      <div class="tip-item">
+        <strong>검색 속도 개선.</strong>
+        <p>Caching, Indexing Strategy, Compression을 조합해 응답 시간을 50% 이상 단축할 수 있습니다.</p>
+      </div>
+      <div class="tip-item">
+        <strong>정확도 개선.</strong>
+        <p>HyDE + Multi-query + ReRank 조합이 가장 효과적입니다. 테스트해보세요.</p>
+      </div>
+      <div class="tip-item">
+        <strong>비용 절감.</strong>
+        <p>Distillation, Compression, 스마트 Caching으로 API 호출을 70% 줄일 수 있습니다.</p>
+      </div>
+      <div class="tip-item">
+        <strong>안정성 증진.</strong>
+        <p>Corrective RAG, Self-RAG, 자동 평가로 환각과 오류를 크게 감소시킵니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>참고 자료 및 링크.</h3>
+  <div class="content-box">
+    <ul>
+      <li><strong>NirDiamant/RAG_Techniques:</strong> 원본 저장소 <a href="https://github.com/NirDiamant/RAG_Techniques" target="_blank">https://github.com/NirDiamant/RAG_Techniques</a></li>
+      <li><strong>LangChain 공식 문서:</strong> <a href="https://python.langchain.com/" target="_blank">https://python.langchain.com/</a></li>
+      <li><strong>LangGraph 문서:</strong> <a href="https://langchain-ai.github.io/langgraph/" target="_blank">https://langchain-ai.github.io/langgraph/</a></li>
+      <li><strong>ChromaDB 문서:</strong> <a href="https://docs.trychroma.com/" target="_blank">https://docs.trychroma.com/</a></li>
+      <li><strong>Milvus 문서:</strong> <a href="https://milvus.io/docs" target="_blank">https://milvus.io/docs</a></li>
+      <li><strong>Neo4j 튜토리얼:</strong> <a href="https://neo4j.com/developer/get-started/" target="_blank">https://neo4j.com/developer/get-started/</a></li>
+      <li><strong>DeepEval 깃허브:</strong> <a href="https://github.com/confident-ai/deepeval" target="_blank">https://github.com/confident-ai/deepeval</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="showSection('sec-m9')">← 이전</button>
+    <button class="nav-btn primary" onclick="showSection('sec-intro')">처음으로 →</button>
+  </div>
+</div>
+</div>
+<script>
+const SECTIONS = ['sec-intro', 'sec-m1', 'sec-m2', 'sec-m3', 'sec-m4', 'sec-m5', 'sec-m6', 'sec-m7', 'sec-m8', 'sec-m9', 'sec-ref'];
+const TOTAL = SECTIONS.length;
+let visited = new Set();
+let current = 'sec-intro';
+
+function showSection(id) {
+  SECTIONS.forEach(s => {
+    const el = document.getElementById(s);
+    if (el) { el.classList.remove('active'); }
+  });
+  const target = document.getElementById(id);
+  if (target) { target.classList.add('active'); }
+  current = id;
+  visited.add(id);
+  updateNav();
+  updateProgress();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function switchSection(id) { showSection(id); }
+
+function updateNav() {
+  document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(current)) {
+      item.classList.add('active');
+    }
+  });
+}
+
+function updateProgress() {
+  const pct = Math.round(visited.size / TOTAL * 100);
+  const fill = document.getElementById('progressFill');
+  const label = document.getElementById('progressLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = visited.size + '/' + TOTAL + ' 완료';
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = '복사'; }, 1500);
+  });
+}
+
+function toggleAnswer(btn) {
+  const answer = btn.nextElementSibling;
+  if (answer.style.display === 'none' || !answer.style.display) {
+    answer.style.display = 'block';
+    btn.textContent = '정답 숨기기';
+  } else {
+    answer.style.display = 'none';
+    btn.textContent = '정답 보기';
+  }
+}
+
+function toggleAccordion(header) {
+  const acc = header.closest('.accordion');
+  if (acc) { acc.classList.toggle('open'); }
+  const item = header.closest('.accordion-item');
+  if (item) { item.classList.toggle('active'); item.classList.toggle('open'); }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function checkQuiz(quizName, correctAnswer) {
+  const selected = document.querySelector('input[name="' + quizName + '"]:checked');
+  const resultDiv = document.getElementById(quizName + '-result');
+  if (!resultDiv) return;
+  resultDiv.classList.add('show');
+  if (!selected) {
+    resultDiv.classList.add('incorrect');
+    resultDiv.innerText = '답을 선택해주세요.';
+    return;
+  }
+  if (selected.value === correctAnswer) {
+    resultDiv.classList.remove('incorrect');
+    resultDiv.classList.add('correct');
+    resultDiv.innerText = '정답입니다! 훌륭한 이해입니다.';
+  } else {
+    resultDiv.classList.remove('correct');
+    resultDiv.classList.add('incorrect');
+    resultDiv.innerText = '다시 한 번 생각해보세요.';
+  }
+}
+
+showSection('sec-intro');
+</script>
+</body>
+</html>
