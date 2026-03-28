@@ -1,0 +1,3714 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뉴스룸을 위한 AI 에이전트 실전 가이드.</title>
+<style>
+
+  :root {
+    --bg: #fafaf9; --surface: #ffffff; --border: #e7e5e4;
+    --text: #1c1917; --text-secondary: #78716c;
+    --accent: #2563eb; --accent-light: #eff6ff; --accent-dark: #1d4ed8;
+    --green: #16a34a; --green-light: #f0fdf4;
+    --orange: #ea580c; --orange-light: #fff7ed;
+    --purple: #7c3aed; --purple-light: #f5f3ff;
+    --red: #dc2626; --red-light: #fef2f2;
+    --code-bg: #1e293b; --code-text: #e2e8f0;
+    --sidebar-w: 280px; --header-h: 64px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; font-size:16px; }
+  .header { position:fixed; top:0; left:0; right:0; z-index:100; height:var(--header-h); background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; }
+  .header h1 { font-size:20px; font-weight:700; }
+  .header .badge { font-size:11px; font-weight:600; background:var(--accent-light); color:var(--accent); padding:3px 10px; border-radius:12px; }
+  .menu-btn { display:none; background:none; border:none; cursor:pointer; font-size:24px; color:var(--text); }
+  .sidebar { position:fixed; top:var(--header-h); left:0; bottom:0; width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:20px 0; z-index:90; transition:transform 0.3s; }
+  .sidebar .nav-group { margin-bottom:8px; }
+  .sidebar .nav-group-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); padding:8px 20px 4px; }
+  .sidebar .nav-item { display:block; padding:8px 20px 8px 28px; font-size:13.5px; color:var(--text-secondary); text-decoration:none; border-left:3px solid transparent; cursor:pointer; transition:all 0.15s; }
+  .sidebar .nav-item:hover { color:var(--text); background:var(--bg); }
+  .sidebar .nav-item.active { color:var(--accent); font-weight:600; border-left-color:var(--accent); background:var(--accent-light); }
+  .sidebar .progress-bar { margin:16px 20px; padding:12px; background:var(--bg); border-radius:8px; }
+  .sidebar .progress-bar .bar-bg { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .sidebar .progress-bar .bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s; }
+  .sidebar .progress-bar .label { font-size:12px; color:var(--text-secondary); margin-top:6px; }
+  .main { margin-left:var(--sidebar-w); margin-top:var(--header-h); padding:40px 48px 80px; max-width:920px; }
+  .section { display:none; } .section.active { display:block; }
+  h2 { font-size:28px; font-weight:800; margin-bottom:8px; }
+  h3 { font-size:20px; font-weight:700; margin:32px 0 12px; }
+  h4 { font-size:16px; font-weight:700; margin:24px 0 8px; }
+  p { margin-bottom:16px; } ul,ol { margin:0 0 16px 20px; } li { margin-bottom:6px; }
+  a { color:var(--accent); }
+  .module-header { padding:24px 28px; border-radius:12px; margin-bottom:32px; }
+  .module-header.m1 { background:var(--accent-light); border-left:4px solid var(--accent); }
+  .module-header.m2 { background:var(--green-light); border-left:4px solid var(--green); }
+  .module-header.m3 { background:var(--purple-light); border-left:4px solid var(--purple); }
+  .module-header.m4 { background:var(--orange-light); border-left:4px solid var(--orange); }
+  .module-header.m5 { background:var(--red-light); border-left:4px solid var(--red); }
+  .module-header .subtitle { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .module-header .learning-goals { font-size:14px; color:var(--text-secondary); margin-top:8px; }
+  .tag { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; margin-right:4px; }
+  .tag.beginner { background:#dcfce7; color:#166534; } .tag.intermediate { background:#fef3c7; color:#92400e; }
+  .tag.advanced { background:#fce7f3; color:#9d174d; } .tag.time { background:#e0e7ff; color:#3730a3; }
+  .code-block { position:relative; margin:16px 0 24px; background:var(--code-bg); border-radius:10px; overflow:hidden; }
+  .code-block .code-header { display:flex; justify-content:space-between; align-items:center; padding:8px 16px; background:rgba(255,255,255,0.05); font-size:12px; color:#94a3b8; }
+  .code-block .copy-btn { background:rgba(255,255,255,0.1); border:none; color:#94a3b8; font-size:12px; padding:3px 10px; border-radius:4px; cursor:pointer; transition:all 0.15s; }
+  .code-block .copy-btn:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .code-block pre { padding:16px; overflow-x:auto; font-family:'JetBrains Mono','Fira Code',monospace; font-size:13.5px; line-height:1.6; color:var(--code-text); white-space:pre-wrap; word-wrap:break-word; }
+  .code-block pre .kw { color:#c084fc; } .code-block pre .fn { color:#67e8f9; }
+  .code-block pre .str { color:#86efac; } .code-block pre .cm { color:#64748b; font-style:italic; }
+  .code-block pre .num { color:#fbbf24; } .code-block pre .op { color:#f472b6; }
+  .callout { padding:16px 20px; border-radius:8px; margin:20px 0; font-size:14.5px; }
+  .callout.tip { background:#f0fdf4; border-left:3px solid var(--green); }
+  .callout.warn { background:#fffbeb; border-left:3px solid #f59e0b; }
+  .callout.info { background:var(--accent-light); border-left:3px solid var(--accent); }
+  .callout.danger { background:var(--red-light); border-left:3px solid var(--red); }
+  .callout.success { background:#f0fdf4; border-left:3px solid var(--green); }
+  .callout.warning { background:#fffbeb; border-left:3px solid #f59e0b; }
+  .callout.important { background:var(--accent-light); border-left:3px solid var(--accent); }
+  .callout .callout-title { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .accordion { border:1px solid var(--border); border-radius:8px; margin:16px 0; overflow:hidden; }
+  .accordion-header { padding:14px 20px; background:var(--surface); cursor:pointer; font-weight:600; font-size:15px; display:flex; justify-content:space-between; align-items:center; user-select:none; transition:background 0.15s; }
+  .accordion-header:hover { background:var(--bg); }
+  .accordion-header .arrow { transition:transform 0.25s; font-size:12px; }
+  .accordion.open .accordion-header .arrow { transform:rotate(90deg); }
+  .accordion-body { display:none; padding:16px 20px; border-top:1px solid var(--border); background:var(--bg); }
+  .accordion.open .accordion-body { display:block; }
+  button.accordion-header { border:none; width:100%; text-align:left; font-family:inherit; font-size:15px; }
+  .step { display:flex; gap:16px; margin:20px 0; align-items:flex-start; }
+  .step-num { flex-shrink:0; width:32px; height:32px; background:var(--accent); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+  .step-content { flex:1; } .step-content h4 { margin-top:4px; }
+  .table-wrap { overflow-x:auto; margin:16px 0 24px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  th { background:var(--bg); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-secondary); }
+  td code { background:#f1f5f9; padding:1px 6px; border-radius:4px; font-size:13px; }
+  code { background:#f1f5f9; padding:1px 6px; border-radius:4px; font-size:13px; font-family:'JetBrains Mono','Fira Code',monospace; }
+  .quiz { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin:24px 0; }
+  .quiz h4 { margin-top:0; }
+  .quiz-q { margin-bottom:8px; }
+  .quiz-answer { margin-bottom:16px; }
+  .quiz-btn { display:inline-block; padding:6px 16px; border:1px solid var(--accent); border-radius:6px; background:var(--accent-light); color:var(--accent-dark); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.15s; margin:4px 0; }
+  .quiz-btn:hover { background:var(--accent); color:white; }
+  .answer-text { margin-top:10px; padding:12px 16px; background:var(--green-light); border-left:3px solid var(--green); border-radius:6px; font-size:14px; }
+  .answer-text p { margin-bottom:6px; }
+  .answer-text p:last-child { margin-bottom:0; }
+  .diagram { text-align:center; margin:24px 0; padding:24px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .diagram .flow { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; }
+  .diagram .flow-box { background:var(--accent-light); border:1px solid #bfdbfe; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:600; color:var(--accent-dark); }
+  .diagram .flow-arrow { font-size:18px; color:var(--text-secondary); }
+  .nav-buttons { display:flex; justify-content:space-between; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+  .nav-btn { padding:10px 24px; border:1px solid var(--border); border-radius:8px; background:var(--surface); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; text-decoration:none; transition:all 0.15s; }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn.primary { background:var(--accent); color:white; border-color:var(--accent); }
+  .nav-btn.primary:hover { background:var(--accent-dark); }
+  .checklist { list-style:none; margin:12px 0; padding:0; }
+  .checklist li { padding:8px 12px; display:flex; align-items:center; gap:10px; border-radius:6px; cursor:pointer; font-size:14.5px; transition:background 0.15s; }
+  .checklist li:hover { background:var(--bg); }
+  .checklist li .check { width:20px; height:20px; border:2px solid var(--border); border-radius:4px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent; transition:all 0.2s; }
+  .checklist li.done .check { background:var(--accent); border-color:var(--accent); color:white; }
+  @media (max-width:768px) { .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)} .main{margin-left:0;padding:24px 16px 80px} .menu-btn{display:block} }
+  @media print { .sidebar,.header,.nav-buttons,.menu-btn{display:none!important} .main{margin:0;max-width:100%} .section{display:block!important;page-break-before:always} .code-block{break-inside:avoid} }
+
+
+  .module-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin:24px 0; }
+  .module-card { padding:20px; border-radius:10px; border:1px solid var(--border); background:var(--surface); }
+  .module-card.m1 { border-left:3px solid var(--accent); }
+  .module-card.m2 { border-left:3px solid var(--green); }
+  .module-card.m3 { border-left:3px solid var(--purple); }
+  .module-card.m4 { border-left:3px solid var(--orange); }
+  .module-num { font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+  .module-card h4 { font-size:15px; margin:6px 0 4px; }
+  .module-card p { font-size:13px; color:var(--text-secondary); margin-bottom:8px; }
+  .module-card .time, .module-card .level { font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; margin-right:4px; }
+  .module-card .time { background:#e0e7ff; color:#3730a3; }
+  .module-card .level { background:#dcfce7; color:#166534; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .tags .tag { font-size:11px; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--accent-light); color:var(--accent); }
+  .ref-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; }
+  .ref-card h4 { margin-top:0; }
+  .flow-diagram { text-align:center; margin:24px 0; padding:24px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .architecture-box { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0; }
+  .tool-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; margin:12px 0; }
+  .comparison-table { width:100%; border-collapse:collapse; margin:16px 0; }
+  .comparison-table th, .comparison-table td { padding:10px 14px; border:1px solid var(--border); font-size:14px; }
+  .comparison-table th { background:var(--bg); font-weight:700; }
+  .workflow-step { display:flex; gap:16px; margin:16px 0; align-items:flex-start; }
+  .workflow-num { flex-shrink:0; width:36px; height:36px; background:var(--accent); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; }
+  .workflow-content { flex:1; }
+  .agent-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; margin:12px 0; }
+  .agent-card h4 { margin-top:0; color:var(--accent); }
+  .quiz-option { display:block; padding:8px 12px; margin:4px 0; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-size:14px; transition:all 0.15s; }
+  .quiz-option:hover { border-color:var(--accent); background:var(--accent-light); }
+  .quiz-option input { margin-right:8px; }
+  .quiz-result { display:none; margin-top:10px; padding:12px; border-radius:6px; font-size:14px; }
+  .quiz-result.show { display:block; }
+  .quiz-result.correct { background:var(--green-light); border-left:3px solid var(--green); color:#166534; }
+  .quiz-result.incorrect { background:var(--red-light); border-left:3px solid var(--red); color:#991b1b; }
+  .accordion-item { border:1px solid var(--border); border-radius:8px; margin:12px 0; overflow:hidden; }
+  .accordion-item .accordion-header { padding:14px 20px; background:var(--surface); cursor:pointer; font-weight:600; font-size:15px; display:flex; justify-content:space-between; align-items:center; border:none; width:100%; text-align:left; font-family:inherit; }
+  .accordion-item .accordion-header:hover { background:var(--bg); }
+  .accordion-item .accordion-body { display:none; padding:16px 20px; border-top:1px solid var(--border); background:var(--bg); }
+  .accordion-item.active .accordion-body, .accordion-item.open .accordion-body { display:block; }
+  .accordion-item .accordion-header .arrow { transition:transform 0.25s; font-size:12px; }
+  .accordion-item.active .accordion-header .arrow, .accordion-item.open .accordion-header .arrow { transform:rotate(90deg); }
+
+</style>
+</head>
+<body>
+<div class="header">
+  <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+  <h1>AI 에이전트 실전 가이드.</h1>
+  <span class="badge">GenAI Agents 기반</span>
+</div>
+<nav class="sidebar" id="sidebar">
+  <div class="progress-bar">
+    <div class="bar-bg"><div class="bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="label" id="progressLabel">0/10 완료</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">시작하기</div>
+    <a class="nav-item active" onclick="showSection('sec-intro')">과정 소개</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">기초</div>
+    <a class="nav-item" onclick="showSection('sec-m1')">1. 에이전트 기초와 LangGraph</a>
+    <a class="nav-item" onclick="showSection('sec-m2')">2. 첫 대화형 에이전트</a>
+    <a class="nav-item" onclick="showSection('sec-m3')">3. 도구 사용 에이전트</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">실전</div>
+    <a class="nav-item" onclick="showSection('sec-m4')">4. 저널리즘 AI 어시스턴트</a>
+    <a class="nav-item" onclick="showSection('sec-m5')">5. 뉴스 자동 수집과 TLDR</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">고급</div>
+    <a class="nav-item" onclick="showSection('sec-m6')">6. 리서치 에이전트</a>
+    <a class="nav-item" onclick="showSection('sec-m7')">7. 멀티 에이전트 뉴스룸</a>
+    <a class="nav-item" onclick="showSection('sec-m8')">8. 배포와 운영</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">부록</div>
+    <a class="nav-item" onclick="showSection('sec-ref')">레퍼런스 카드</a>
+  </div>
+</nav>
+<div class="main">
+<div class="section" id="sec-intro">
+  <div class="module-header m1">
+    <h1>뉴스룸을 위한 AI 에이전트 실전 가이드.</h1>
+    <div class="tags">
+      <span class="tag">AI 에이전트</span>
+      <span class="tag">LangGraph</span>
+      <span class="tag">뉴스 자동화</span>
+      <span class="tag">실전</span>
+    </div>
+  </div>
+
+  <h2>과정 소개.</h2>
+
+  <div class="callout callout-info">
+    <strong>이 매뉴얼의 목표:</strong> AI 에이전트의 개념부터 뉴스룸 실무 적용까지, 46개의 실제 구현 예제를 통해 배웁니다.
+  </div>
+
+  <h3>AI 에이전트란?</h3>
+  <p>AI 에이전트는 단순 챗봇이 아닙니다. 스스로 판단하고, 도구를 사용하고, 여러 단계를 실행하는 AI 시스템입니다. 뉴스룸에서는 기자의 보조역으로 자동 취재, 팩트체크, 정보 수집을 수행합니다.</p>
+
+  <h3>8개 모듈 개요.</h3>
+  <div class="module-grid">
+    <div class="module-card m1">
+      <span class="module-num">모듈 1</span>
+      <h4>에이전트 기초와 LangGraph.</h4>
+      <p>에이전트의 개념, 핵심 구성 요소, 그래프 기반 워크플로우를 배웁니다.</p>
+      <span class="time">40분</span> <span class="level">초급</span>
+    </div>
+    <div class="module-card m2">
+      <span class="module-num">모듈 2</span>
+      <h4>첫 대화형 에이전트.</h4>
+      <p>메모리가 있는 대화형 에이전트를 만들고, 기자 도우미 챗봇을 구현합니다.</p>
+      <span class="time">35분</span> <span class="level">초급</span>
+    </div>
+    <div class="module-card m3">
+      <span class="module-num">모듈 3</span>
+      <h4>도구 사용 에이전트.</h4>
+      <p>에이전트가 웹 검색, 계산, API 호출 등 외부 도구를 자동으로 사용하도록 합니다.</p>
+      <span class="time">45분</span> <span class="level">중급</span>
+    </div>
+    <div class="module-card m1">
+      <span class="module-num">모듈 4</span>
+      <h4>저널리즘 AI 어시스턴트.</h4>
+      <p>취재 도우미, 편집 어시스턴트, 팩트체크 봇 등 뉴스룸 전문 에이전트를 만듭니다.</p>
+      <span class="time">50분</span> <span class="level">중급</span>
+    </div>
+    <div class="module-card m2">
+      <span class="module-num">모듈 5</span>
+      <h4>뉴스 자동 수집·요약.</h4>
+      <p>RSS 피드에서 기사를 자동으로 수집하고 요약하는 에이전트입니다.</p>
+      <span class="time">45분</span> <span class="level">중급</span>
+    </div>
+    <div class="module-card m3">
+      <span class="module-num">모듈 6</span>
+      <h4>리서치 에이전트.</h4>
+      <p>복잡한 조사 보도를 위해 여러 소스에서 자동으로 정보를 수집합니다.</p>
+      <span class="time">60분</span> <span class="level">고급</span>
+    </div>
+    <div class="module-card m1">
+      <span class="module-num">모듈 7</span>
+      <h4>멀티 에이전트 뉴스룸.</h4>
+      <p>여러 에이전트가 협력하여 기사 작성부터 검수까지 전체 프로세스를 자동화합니다.</p>
+      <span class="time">70분</span> <span class="level">고급</span>
+    </div>
+    <div class="module-card m2">
+      <span class="module-num">모듈 8</span>
+      <h4>실전 배포와 커스터마이징.</h4>
+      <p>에이전트를 실제 뉴스룸에 배포하고, 성능을 모니터링하고, 커스터마이징합니다.</p>
+      <span class="time">55분</span> <span class="level">고급</span>
+    </div>
+  </div>
+
+  <h3>프롬프트 vs 에이전트.</h3>
+  <table class="comparison-table">
+    <tr>
+      <th>구분</th>
+      <th>프롬프트</th>
+      <th>에이전트</th>
+    </tr>
+    <tr>
+      <td>질문</td>
+      <td>한 번</td>
+      <td>목표 설정</td>
+    </tr>
+    <tr>
+      <td>프로세스</td>
+      <td>질문 → 답변 (1회)</td>
+      <td>계획 → 도구 사용 → 결과 확인 → 다음 행동 결정 (반복)</td>
+    </tr>
+    <tr>
+      <td>뉴스룸 예시</td>
+      <td>"이 기사 요약해줘."</td>
+      <td>"이 사건을 취재해줘." (배경 조사 → 인물 검색 → 팩트체크 → 요약)</td>
+    </tr>
+    <tr>
+      <td>판단 능력</td>
+      <td>없음</td>
+      <td>있음 (중간 결과에 따라 다음 행동 결정)</td>
+    </tr>
+    <tr>
+      <td>도구 사용</td>
+      <td>불가능</td>
+      <td>자동 호출 가능</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-example">
+    <strong>구체적인 예시:</strong><br>
+    프롬프트: "삼성전자 반도체 부문 2025년 전망을 정리해줘." → AI가 학습 데이터로만 답변 (최신 정보 없음).<br>
+    에이전트: "삼성전자 반도체 부문 2025년 전망을 조사해줘." → 웹 검색 → 최신 뉴스 수집 → 기업 공시 조회 → 애널리스트 의견 검색 → 종합 요약.
+  </div>
+
+  <h3>준비물.</h3>
+  <ul>
+    <li><strong>Python 3.10 이상:</strong> <code>python --version</code> 으로 확인하세요.</li>
+    <li><strong>OpenAI API 키:</strong> <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a> 에서 발급받으세요.</li>
+    <li><strong>필수 라이브러리:</strong> LangChain, LangGraph, LangChain-OpenAI 등.</li>
+    <li><strong>편집기:</strong> Jupyter 노트북 (추천) 또는 VS Code.</li>
+  </ul>
+
+  <div class="callout callout-success">
+    <strong>코드 실행 팁:</strong> 이 매뉴얼의 모든 코드는 복사해서 Jupyter 노트북에 붙여넣으면 바로 실행됩니다. 위의 "복사" 버튼을 클릭하고 노트북 셀에 붙여넣으세요.
+  </div>
+
+  <h3>학습 흐름도.</h3>
+  <div class="flow-diagram">
+    <div class="flow-step">기초 (모듈 1-2)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">도구 활용 (모듈 3)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">뉴스룸 적용 (모듈 4-5)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">고급 활용 (모듈 6-7)</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">배포 (모듈 8)</div>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="nav-btn-next" onclick="scrollToSection('sec-m1')">다음: 모듈 1 시작 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m1">
+  <div class="module-header m1">
+    <h1>AI 에이전트 기초와 LangGraph.</h1>
+    <div class="tags">
+      <span class="tag">40분</span>
+      <span class="tag">초급</span>
+      <span class="tag">LangGraph</span>
+      <span class="tag">상태 관리</span>
+    </div>
+  </div>
+
+  <h2>AI 에이전트란?</h2>
+  <p>에이전트는 AI의 자율성을 한 단계 높인 시스템입니다. 목표를 받으면 스스로 계획을 세우고, 필요한 도구를 선택해 사용하고, 중간 결과를 확인한 후 다음 행동을 결정합니다.</p>
+
+  <h3>프롬프트와 에이전트의 본질적 차이.</h3>
+  <div class="comparison-box">
+    <div class="comparison-item">
+      <h4>프롬프트 (Prompt)</h4>
+      <p><strong>동작 원리:</strong> 사용자가 질문 → LLM이 학습 데이터 기반으로 즉시 답변.</p>
+      <p><strong>예시:</strong> "2024년 한국 경제 성장률은?"</p>
+      <p><strong>문제점:</strong> 학습 데이터의 최신 정보로만 답변. 최신 뉴스나 실시간 데이터 불가능.</p>
+    </div>
+    <div class="comparison-item">
+      <h4>에이전트 (Agent)</h4>
+      <p><strong>동작 원리:</strong> 목표 수신 → 계획 수립 → 도구 선택 → 실행 → 결과 확인 → 다음 행동 결정 (반복).</p>
+      <p><strong>예시:</strong> "2025년 한국 경제 전망을 조사하고 요약해줘."</p>
+      <p><strong>장점:</strong> 웹 검색, DB 조회, 계산 등 외부 도구를 자동으로 사용. 최신 정보 반영 가능.</p>
+    </div>
+  </div>
+
+  <h3>뉴스룸 비유로 이해하기.</h3>
+  <div class="callout callout-info">
+    <strong>프롬프트 기반 뉴스룸:</strong> 기자가 AI에게 "이 사건의 배경을 설명해줘"라고 물으면, AI가 아는 것만 답변. 최신 정보나 추가 자료 없음.<br><br>
+    <strong>에이전트 기반 뉴스룸:</strong> 기자가 AI에게 "이 사건을 취재해줘"라고 지시하면, AI가 자동으로 관련 기사 검색 → 등장인물 조사 → 과거 기록 확인 → 통계 데이터 수집 → 요약 작성을 수행. 기자는 완성된 배경자료를 받음.
+  </div>
+
+  <h2>에이전트의 핵심 구성 요소.</h2>
+  <p>모든 에이전트는 네 가지 핵심 요소로 구성됩니다.</p>
+
+  <h3>1. LLM (두뇌: 판단과 생성)</h3>
+  <p>LLM은 에이전트의 중추입니다. 현재 상태를 보고 "이제 어떤 도구를 써야 하나?" 또는 "답변이 충분한가?"를 판단합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+<span class="cm"># GPT-4o mini 모델로 에이전트의 두뇌 만들기</span>
+llm = ChatOpenAI(
+    model=<span class="str">"gpt-4o-mini"</span>,
+    temperature=<span class="num">0</span>,  <span class="cm"># 결정적 응답 (뉴스 작성 시 중요)</span>
+    api_key=<span class="str">"your-openai-api-key"</span>
+)
+
+<span class="cm"># LLM 호출 테스트</span>
+response = llm.invoke(<span class="str">"한국 뉴스룸에서 AI 에이전트의 역할은?"</span>)
+<span class="fn">print</span>(response.content)
+    </pre>
+  </div>
+
+  <h3>2. 도구 (Tools: 외부 액션)</h3>
+  <p>에이전트가 실제 작업을 수행하는 도구입니다. 웹 검색, 데이터베이스 조회, 파일 저장, 계산 등이 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langchain.tools <span class="kw">import</span> tool
+
+<span class="cm"># 웹 검색 도구</span>
+@tool
+<span class="kw">def</span> <span class="fn">search_news</span>(query: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""뉴스를 검색합니다. query에 검색어를 입력하세요."""</span>
+    <span class="kw">return</span> <span class="str">f"'{query}' 검색 결과를 반환합니다."</span>
+
+<span class="cm"># 계산 도구</span>
+@tool
+<span class="kw">def</span> <span class="fn">calculate</span>(expression: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""수학 계산을 수행합니다."""</span>
+    <span class="kw">return</span> <span class="str">str</span>(<span class="fn">eval</span>(expression))
+
+<span class="cm"># 도구 목록</span>
+tools = [search_news, calculate]
+    </pre>
+  </div>
+
+  <h3>3. 메모리 (Memory: 대화 기록 저장)</h3>
+  <p>에이전트가 이전 대화를 기억합니다. 맥락에 맞는 답변을 하려면 메모리가 필수입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage, AIMessage
+
+<span class="cm"># 메모리를 메시지 리스트로 관리</span>
+memory = [
+    HumanMessage(content=<span class="str">"삼성 뉴스를 찾아줘."</span>),
+    AIMessage(content=<span class="str">"삼성 관련 최신 뉴스를 검색했습니다."</span>),
+    HumanMessage(content=<span class="str">"그 중에서 반도체 뉴스만 필터링해줘."</span>),
+    AIMessage(content=<span class="str">"삼성 반도체 부문 뉴스 3개를 찾았습니다."</span>)
+]
+
+<span class="cm"># 메모리가 있으면 에이전트가 "반도체 뉴스"가 "삼성"의 서브셋임을 이해</span>
+    </pre>
+  </div>
+
+  <h3>4. 상태 (State: 현재 진행 상황)</h3>
+  <p>에이전트의 작업 진행 상황을 추적합니다. 어떤 단계에 있는지, 어떤 정보를 수집했는지 저장합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+
+<span class="cm"># 에이전트 상태 정의 (TypedDict 사용)</span>
+<span class="kw">class</span> NewsResearchState(TypedDict):
+    query: <span class="str">str</span>  <span class="cm"># 조사 주제</span>
+    search_results: <span class="str">str</span>  <span class="cm"># 검색한 뉴스</span>
+    analysis: <span class="str">str</span>  <span class="cm"># 분석 결과</span>
+    summary: <span class="str">str</span>  <span class="cm"># 최종 요약</span>
+
+<span class="cm"># 상태 초기값</span>
+initial_state = {
+    <span class="str">"query"</span>: <span class="str">"삼성전자 반도체 부문 2025년 전망"</span>,
+    <span class="str">"search_results"</span>: <span class="str">""</span>,
+    <span class="str">"analysis"</span>: <span class="str">""</span>,
+    <span class="str">"summary"</span>: <span class="str">""</span>
+}
+    </pre>
+  </div>
+
+  <h2>LangGraph 소개.</h2>
+  <p>LangGraph는 그래프 기반의 워크플로우 프레임워크입니다. 복잡한 에이전트 로직을 시각적으로 설계할 수 있습니다.</p>
+
+  <h3>핵심 개념: 노드와 엣지.</h3>
+  <div class="callout callout-info">
+    <strong>노드 (Node):</strong> 작업을 수행하는 단계. 예: "웹 검색하기", "결과 분석하기", "요약 작성하기".<br><br>
+    <strong>엣지 (Edge):</strong> 노드 간의 흐름. 한 노드가 끝나면 다음 노드로 이동.<br><br>
+    <strong>조건부 분기 (Conditional Edge):</strong> 중간 결과에 따라 다른 경로로 이동. 예: 검색 결과가 충분하면 요약으로 가고, 부족하면 다시 검색.
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="cm"># LangGraph의 기본 흐름도</span>
+<span class="cm"># [입력] → [검색 노드] → [분석 노드] → [요약 노드] → [출력]</span>
+<span class="cm">#            ↓          ↓</span>
+<span class="cm">#         [도구 호출] [조건 확인: 충분한가?]</span>
+<span class="cm">#            ↓          ↓</span>
+<span class="cm">#         [결과]   아니오 → 다시 검색</span>
+    </pre>
+  </div>
+
+  <h2>설치와 설정.</h2>
+
+  <h3>필수 라이브러리 설치.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Bash</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+pip install langchain langgraph langchain-openai python-dotenv duckduckgo-search
+    </pre>
+  </div>
+
+  <h3>환경 변수 설정.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">import</span> os
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv
+
+<span class="cm"># .env 파일에서 환경 변수 로드</span>
+<span class="fn">load_dotenv</span>()
+
+<span class="cm"># 또는 직접 설정 (주의: API 키 노출 위험)</span>
+os.environ[<span class="str">"OPENAI_API_KEY"</span>] = <span class="str">"sk-..."</span>
+
+<span class="cm"># 설정 확인</span>
+<span class="fn">print</span>(os.environ.get(<span class="str">"OPENAI_API_KEY"</span>)[:10] + <span class="str">"..."</span>)
+    </pre>
+  </div>
+
+  <div class="callout callout-warning">
+    <strong>보안 주의:</strong> API 키를 코드에 직접 입력하지 마세요. <code>.env</code> 파일을 사용하고, <code>.gitignore</code> 에 추가하세요.
+  </div>
+
+  <h2>LangGraph 기본 구조.</h2>
+  <p>간단한 에이전트부터 시작합니다. 사용자가 작업을 입력하면, 에이전트가 처리하고 결과를 반환합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+<span class="cm"># Step 1: 상태 정의</span>
+<span class="kw">class</span> AgentState(TypedDict):
+    task: <span class="str">str</span>
+    result: <span class="str">str</span>
+
+<span class="cm"># Step 2: LLM 초기화</span>
+llm = ChatOpenAI(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>)
+
+<span class="cm"># Step 3: 노드 함수 정의</span>
+<span class="kw">def</span> <span class="fn">process_node</span>(state: AgentState):
+    <span class="str">"""작업을 처리하는 노드"""</span>
+    result = llm.invoke(state[<span class="str">"task"</span>])
+    <span class="kw">return</span> {<span class="str">"result"</span>: result.content}
+
+<span class="cm"># Step 4: 그래프 생성</span>
+graph = StateGraph(AgentState)
+graph.add_node(<span class="str">"process"</span>, process_node)
+graph.set_entry_point(<span class="str">"process"</span>)
+graph.add_edge(<span class="str">"process"</span>, END)
+
+<span class="cm"># Step 5: 컴파일</span>
+app = graph.compile()
+
+<span class="cm"># Step 6: 실행</span>
+output = app.invoke({
+    <span class="str">"task"</span>: <span class="str">"서울시 예산안의 핵심 쟁점 3가지를 정리해줘."</span>
+})
+
+<span class="fn">print</span>(<span class="str">"결과:"</span>, output[<span class="str">"result"</span>])
+    </pre>
+  </div>
+
+  <div class="callout callout-example">
+    <strong>실행 결과:</strong><br>
+    결과: 1. 환경 사업 예산 감소에 대한 논쟁...<br>
+    2. 공공 주택 건설 자금 증액 필요성...<br>
+    3. 교육 부문 예산 재배분...
+  </div>
+
+  <h3>더 복잡한 워크플로우 (조건부 분기).</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="cm"># 상태 확장</span>
+<span class="kw">class</span> ResearchState(TypedDict):
+    topic: <span class="str">str</span>
+    search_count: <span class="num">int</span>
+    articles: <span class="str">str</span>
+    is_sufficient: <span class="kw">bool</span>
+    summary: <span class="str">str</span>
+
+<span class="cm"># 노드 1: 검색</span>
+<span class="kw">def</span> <span class="fn">search_node</span>(state: ResearchState):
+    <span class="str">"""뉴스 검색"""</span>
+    <span class="kw">return</span> {
+        <span class="str">"articles"</span>: <span class="str">"검색 결과 3개..."</span>,
+        <span class="str">"search_count"</span>: state[<span class="str">"search_count"</span>] + <span class="num">1</span>
+    }
+
+<span class="cm"># 노드 2: 결과 평가</span>
+<span class="kw">def</span> <span class="fn">evaluate_node</span>(state: ResearchState):
+    <span class="str">"""충분한 정보를 수집했는가?"""</span>
+    is_sufficient = <span class="fn">len</span>(state[<span class="str">"articles"</span>]) > <span class="num">100</span>
+    <span class="kw">return</span> {<span class="str">"is_sufficient"</span>: is_sufficient}
+
+<span class="cm"># 노드 3: 요약</span>
+<span class="kw">def</span> <span class="fn">summary_node</span>(state: ResearchState):
+    <span class="str">"""최종 요약"""</span>
+    summary = llm.invoke(
+        <span class="str">f"다음 기사들을 요약해줘: {state['articles']}"</span>
+    )
+    <span class="kw">return</span> {<span class="str">"summary"</span>: summary.content}
+
+<span class="cm"># 조건부 분기 함수</span>
+<span class="kw">def</span> <span class="fn">should_summarize</span>(state: ResearchState):
+    <span class="str">"""충분한 정보가 모였으면 요약, 아니면 다시 검색"""</span>
+    <span class="kw">if</span> state[<span class="str">"is_sufficient"</span>] <span class="op">or</span> state[<span class="str">"search_count"</span>] >= <span class="num">3</span>:
+        <span class="kw">return</span> <span class="str">"summary"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"search"</span>
+
+<span class="cm"># 그래프 구성</span>
+graph = StateGraph(ResearchState)
+graph.add_node(<span class="str">"search"</span>, search_node)
+graph.add_node(<span class="str">"evaluate"</span>, evaluate_node)
+graph.add_node(<span class="str">"summary"</span>, summary_node)
+
+graph.set_entry_point(<span class="str">"search"</span>)
+graph.add_edge(<span class="str">"search"</span>, <span class="str">"evaluate"</span>)
+<span class="cm"># 조건부 분기: evaluate 다음에 should_summarize 함수로 판단</span>
+graph.add_conditional_edges(<span class="str">"evaluate"</span>, should_summarize)
+graph.add_edge(<span class="str">"summary"</span>, END)
+
+app = graph.compile()
+    </pre>
+  </div>
+
+  <h2>상태(State) 관리 이해.</h2>
+  <p>LangGraph의 핵심은 상태 관리입니다. 각 노드가 상태를 읽고 업데이트하면서 정보가 흘러다닙니다.</p>
+
+  <h3>상태 업데이트 패턴.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">class</span> NewsState(TypedDict):
+    <span class="cm"># 입력</span>
+    event: <span class="str">str</span>  <span class="cm"># 뉴스 이벤트</span>
+    <span class="cm"># 중간 단계</span>
+    background: <span class="str">str</span>  <span class="cm"># 배경 정보</span>
+    key_points: <span class="str">str</span>  <span class="cm"># 핵심 포인트</span>
+    related_news: <span class="str">str</span>  <span class="cm"># 관련 뉴스</span>
+    <span class="cm"># 최종 결과</span>
+    article: <span class="str">str</span>  <span class="cm"># 완성된 기사</span>
+
+<span class="kw">def</span> <span class="fn">research_background</span>(state: NewsState):
+    <span class="str">"""배경 정보 수집"""</span>
+    background = <span class="str">"...</span> (배경 정보 조사) <span class="str">"</span>
+    <span class="kw">return</span> {<span class="str">"background"</span>: background}  <span class="cm"># background만 업데이트</span>
+
+<span class="kw">def</span> <span class="fn">extract_key_points</span>(state: NewsState):
+    <span class="str">"""핵심 포인트 추출"""</span>
+    <span class="cm"># 이전 노드가 설정한 background를 읽을 수 있음</span>
+    key_points = llm.invoke(
+        <span class="str">f"다음 배경에서 핵심 3가지를 추출해줘: {state['background']}"</span>
+    )
+    <span class="kw">return</span> {<span class="str">"key_points"</span>: key_points.content}
+
+<span class="kw">def</span> <span class="fn">find_related_news</span>(state: NewsState):
+    <span class="str">"""관련 뉴스 검색"""</span>
+    related = <span class="str">"...</span> (관련 뉴스 검색) <span class="str">"</span>
+    <span class="kw">return</span> {<span class="str">"related_news"</span>: related}
+
+<span class="kw">def</span> <span class="fn">write_article</span>(state: NewsState):
+    <span class="str">"""최종 기사 작성"""</span>
+    <span class="cm"># 모든 이전 정보에 접근</span>
+    article = llm.invoke(
+        <span class="fn">f</span><span class="str">"""
+주제: {state['event']}
+배경: {state['background']}
+핵심: {state['key_points']}
+관련뉴스: {state['related_news']}
+
+위 정보를 바탕으로 기사를 작성해줘."""</span>
+    )
+    <span class="kw">return</span> {<span class="str">"article"</span>: article.content}
+    </pre>
+  </div>
+
+  <h3>퀴즈: 상태 관리.</h3>
+  <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+  <div class="answer-text" style="display:none;">
+    <p><strong>문제:</strong> 다음 상태 정의에서 잘못된 부분은?</p>
+    <pre>
+class MyState(TypedDict):
+    user_input: str
+    search_results: str
+    final_answer: str
+
+def node_a(state):
+    return {"user_input": "수정된 입력"}  # 문제: 사용자 입력을 수정하면 안 됨
+
+def node_b(state):
+    return {"search_results": "검색 결과"}
+    </pre>
+    <p><strong>정답:</strong> 노드는 "입력"을 수정해서는 안 됩니다. 상태는 한 방향으로만 흘러야 합니다. node_a는 자신이 생성한 결과만 업데이트해야 합니다. 예를 들어 analysis_a 같은 새로운 필드를 추가해야 합니다.</p>
+  </div>
+
+  <h3>실전 예제: 기사 작성 에이전트.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+llm = ChatOpenAI(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>)
+
+<span class="kw">class</span> ArticleState(TypedDict):
+    topic: <span class="str">str</span>
+    outline: <span class="str">str</span>
+    draft: <span class="str">str</span>
+    final_article: <span class="str">str</span>
+
+<span class="kw">def</span> <span class="fn">create_outline</span>(state: ArticleState):
+    outline = llm.invoke(
+        <span class="str">f"'{state['topic']}'에 대한 기사 구성안 (제목, 리드, 본문 3단락, 결론)을 만들어줘."</span>
+    )
+    <span class="kw">return</span> {<span class="str">"outline"</span>: outline.content}
+
+<span class="kw">def</span> <span class="fn">write_draft</span>(state: ArticleState):
+    draft = llm.invoke(
+        <span class="str">f"다음 구성에 따라 기사 초안을 작성해줘:\n{state['outline']}"</span>
+    )
+    <span class="kw">return</span> {<span class="str">"draft"</span>: draft.content}
+
+<span class="kw">def</span> <span class="fn">edit_article</span>(state: ArticleState):
+    final = llm.invoke(
+        <span class="str">f"다음 기사를 교정하고 다듬어줘 (맞춤법, 문체, 명확성):\n{state['draft']}"</span>
+    )
+    <span class="kw">return</span> {<span class="str">"final_article"</span>: final.content}
+
+<span class="cm"># 그래프 구성</span>
+workflow = StateGraph(ArticleState)
+workflow.add_node(<span class="str">"outline"</span>, create_outline)
+workflow.add_node(<span class="str">"draft"</span>, write_draft)
+workflow.add_node(<span class="str">"edit"</span>, edit_article)
+
+workflow.set_entry_point(<span class="str">"outline"</span>)
+workflow.add_edge(<span class="str">"outline"</span>, <span class="str">"draft"</span>)
+workflow.add_edge(<span class="str">"draft"</span>, <span class="str">"edit"</span>)
+workflow.add_edge(<span class="str">"edit"</span>, END)
+
+agent = workflow.compile()
+
+<span class="cm"># 실행</span>
+result = agent.invoke({
+    <span class="str">"topic"</span>: <span class="str">"한국 AI 산업의 현황과 과제"</span>,
+    <span class="str">"outline"</span>: <span class="str">""</span>,
+    <span class="str">"draft"</span>: <span class="str">""</span>,
+    <span class="str">"final_article"</span>: <span class="str">""</span>
+})
+
+<span class="fn">print</span>(result[<span class="str">"final_article"</span>])
+    </pre>
+  </div>
+
+  <div class="callout callout-success">
+    <strong>실행 팁:</strong> 이 코드를 실행하면 단계별로 기사가 작성됩니다. 각 노드의 출력을 보려면 <code>result["outline"]</code>, <code>result["draft"]</code> 등을 확인하세요.
+  </div>
+
+  <h3>퀴즈: 에이전트 기초.</h3>
+  <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+  <div class="answer-text" style="display:none;">
+    <p><strong>문제:</strong> 다음 중 LangGraph의 조건부 분기(conditional edge)가 필요한 경우는?</p>
+    <ol>
+      <li>A에서 B로 항상 이동하는 경우</li>
+      <li>A 결과에 따라 B 또는 C로 이동하는 경우</li>
+      <li>A와 B를 동시에 실행하는 경우</li>
+    </ol>
+    <p><strong>정답:</strong> 2번. 조건부 분기는 "결과에 따라 다른 경로로 이동"할 때 사용합니다. 예: "검색 결과가 5개 이상이면 요약으로, 아니면 다시 검색으로".</p>
+  </div>
+
+  <h3>핵심 정리.</h3>
+  <ul>
+    <li><strong>에이전트:</strong> 목표를 받고 자율적으로 여러 단계를 실행하는 AI 시스템.</li>
+    <li><strong>4가지 구성 요소:</strong> LLM (두뇌), 도구 (액션), 메모리 (기억), 상태 (진행 상황).</li>
+    <li><strong>LangGraph:</strong> 노드와 엣지로 에이전트 워크플로우를 설계.</li>
+    <li><strong>상태 관리:</strong> TypedDict로 상태를 정의하고, 각 노드가 상태를 읽고 업데이트.</li>
+    <li><strong>조건부 분기:</strong> 중간 결과에 따라 다른 경로로 이동 가능.</li>
+  </ul>
+
+  <div class="nav-buttons">
+    <button class="nav-btn-prev" onclick="scrollToSection('sec-intro')">← 이전: 소개</button>
+    <button class="nav-btn-next" onclick="scrollToSection('sec-m2')">다음: 모듈 2 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m2">
+  <div class="module-header m2">
+    <h1>첫 대화형 에이전트.</h1>
+    <div class="tags">
+      <span class="tag">35분</span>
+      <span class="tag">초급</span>
+      <span class="tag">메모리</span>
+      <span class="tag">대화형</span>
+    </div>
+  </div>
+
+  <h2>메모리가 있는 대화형 에이전트.</h2>
+  <p>실용적인 뉴스룸 에이전트는 대화 기억력이 필수입니다. 기자와 여러 번 대화하면서 맥락을 유지해야 합니다.</p>
+
+  <h3>왜 대화형 에이전트가 필요한가?</h3>
+  <div class="callout callout-info">
+    <strong>시나리오 1 (메모리 없음):</strong><br>
+    기자: "삼성전자에 대해 알려줄래?"<br>
+    에이전트: "삼성전자는 한국 대기업입니다..."<br>
+    기자: "반도체 부문 매출은?"<br>
+    에이전트: "반도체 부문이 뭐예요?" (이전 맥락 잊음)<br><br>
+    <strong>시나리오 2 (메모리 있음):</strong><br>
+    기자: "삼성전자에 대해 알려줄래?"<br>
+    에이전트: "삼성전자는 한국 대기업입니다..."<br>
+    기자: "반도체 부문 매출은?"<br>
+    에이전트: "삼성전자의 반도체 부문은... (맥락 유지)
+  </div>
+
+  <h2>대화 기록 관리.</h2>
+  <p>메모리의 핵심은 메시지 리스트입니다. 사용자의 모든 질문과 AI의 모든 답변을 저장합니다.</p>
+
+  <h3>메시지 타입.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> (
+    HumanMessage,      <span class="cm"># 사용자 메시지</span>
+    AIMessage,         <span class="cm"># AI 응답</span>
+    SystemMessage      <span class="cm"># 시스템 지시</span>
+)
+
+<span class="cm"># 메시지 생성 예시</span>
+system = SystemMessage(content=<span class="str">"당신은 탐사보도 전문 취재 도우미입니다."</span>)
+human = HumanMessage(content=<span class="str">"삼성전자 뉴스를 찾아줘."</span>)
+ai = AIMessage(content=<span class="str">"삼성전자의 최신 뉴스를 검색했습니다..."</span>)
+
+<span class="cm"># 메모리에 추가</span>
+messages = [system, human, ai]
+    </pre>
+  </div>
+
+  <h3>대화형 에이전트 구현.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage, AIMessage, SystemMessage
+
+llm = ChatOpenAI(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>)
+
+<span class="cm"># 상태 정의: 메시지 리스트를 중심으로</span>
+<span class="kw">class</span> ChatState(TypedDict):
+    messages: <span class="fn">list</span>  <span class="cm"># 대화 기록</span>
+    context: <span class="str">str</span>  <span class="cm"># 추가 맥락 (선택사항)</span>
+
+<span class="cm"># 초기 시스템 메시지</span>
+SYSTEM_PROMPT = <span class="str">"""당신은 탐사보도 전문 취재 도우미입니다.
+- 기자의 질문에 배경 정보를 제공하세요.
+- 정확한 정보만 제시하세요.
+- 필요시 추가 조사가 필요한 부분을 명시하세요.
+- 한국어로 답변하세요."""</span>
+
+<span class="cm"># 대화 노드</span>
+<span class="kw">def</span> <span class="fn">chat_node</span>(state: ChatState):
+    <span class="str">"""사용자 질문에 대답"""</span>
+    <span class="cm"># 시스템 메시지 + 대화 기록으로 LLM 호출</span>
+    system_message = SystemMessage(content=SYSTEM_PROMPT)
+    all_messages = [system_message] + state[<span class="str">"messages"</span>]
+
+    response = llm.invoke(all_messages)
+
+    <span class="cm"># 새로운 AI 메시지를 메모리에 추가</span>
+    new_messages = state[<span class="str">"messages"</span>] + [AIMessage(content=response.content)]
+
+    <span class="kw">return</span> {<span class="str">"messages"</span>: new_messages}
+
+<span class="cm"># 그래프 구성</span>
+graph = StateGraph(ChatState)
+graph.add_node(<span class="str">"chat"</span>, chat_node)
+graph.set_entry_point(<span class="str">"chat"</span>)
+graph.add_edge(<span class="str">"chat"</span>, END)
+
+agent = graph.compile()
+
+<span class="cm"># 사용 예시</span>
+<span class="cm"># 첫 번째 질문</span>
+state1 = agent.invoke({
+    <span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"삼성 반도체 뉴스를 찾아줄래?"</span>)],
+    <span class="str">"context"</span>: <span class="str">""</span>
+})
+
+<span class="fn">print</span>(<span class="str">"AI 답변 1:"</span>, state1[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+
+<span class="cm"># 두 번째 질문 (메모리 유지)</span>
+state2 = agent.invoke({
+    <span class="str">"messages"</span>: state1[<span class="str">"messages"</span>] + [HumanMessage(content=<span class="str">"그 중 최신 뉴스 3개만 정리해줄래?"</span>)],
+    <span class="str">"context"</span>: <span class="str">""</span>
+})
+
+<span class="fn">print</span>(<span class="str">"AI 답변 2:"</span>, state2[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+    </pre>
+  </div>
+
+  <h2>시스템 프롬프트 설계.</h2>
+  <p>시스템 프롬프트는 에이전트의 인격과 역할을 정의합니다. 뉴스룸의 다양한 역할에 맞게 설계할 수 있습니다.</p>
+
+  <h3>역할별 시스템 프롬프트.</h3>
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 취재 도우미 (Reporter Assistant)</button>
+    <div class="accordion-body">
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre>
+REPORTER_PROMPT = <span class="str">"""당신은 경험 많은 탐사보도 저널리스트입니다.
+역할:
+- 기자의 취재 주제에 대한 배경 정보 제공
+- 관련 인물, 단체, 사건의 연결고리 파악
+- 팩트 확인이 필요한 부분 명시
+- 추가 조사 방향 제안
+
+답변 형식:
+1. 핵심 배경 (2-3문단)
+2. 주요 인물/단체
+3. 시간순 사건 정리
+4. 팩트 확인 필요 부분
+5. 추가 조사 방향"""</span>
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 편집 어시스턴트 (Editor Assistant)</button>
+    <div class="accordion-body">
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre>
+EDITOR_PROMPT = <span class="str">"""당신은 신문사의 편집실장입니다.
+역할:
+- 기사의 뉴스가치 평가
+- 제목과 구성 검토
+- 표현의 명확성과 정확성 확인
+- 편향성 및 균형 점검
+
+검토 항목:
+1. 뉴스가치: 중요도, 신선도, 영향도
+2. 제목: 핵심 전달, 정확성, 매력도
+3. 리드: 핵심 요약, 길이 적절성
+4. 구성: 논리적 흐름, 증거 제시
+5. 표현: 명확성, 통일성, 중립성"""</span>
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-header" onclick="toggleAccordion(this)"><span class="arrow">▶</span> 팩트체크 봇 (Fact-Checker)</button>
+    <div class="accordion-body">
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre>
+FACTCHECKER_PROMPT = <span class="str">"""당신은 전문 팩트체크 전문가입니다.
+역할:
+- 주장과 사실의 일치 확인
+- 통계 및 인용의 정확성 검증
+- 출처 신뢰도 평가
+
+팩트체크 프로토콜:
+1. 주장 추출: 검증 가능한 주장 찾기
+2. 출처 확인: 신뢰할 수 있는 출처 제시
+3. 판정: 참/거짓/부분참/확인불가
+4. 이유: 판정 근거 설명
+5. 신뢰도: 출처의 신뢰도 평가"""</span>
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <h2>대화 흐름 제어.</h2>
+  <p>사용자의 질문 유형에 따라 다른 처리를 할 수 있습니다.</p>
+
+  <h3>조건부 라우팅 예제.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+
+<span class="kw">class</span> RoutingChatState(TypedDict):
+    messages: <span class="fn">list</span>
+    query_type: <span class="str">str</span>  <span class="cm"># "factcheck", "summarize", "research", "general"</span>
+
+<span class="cm"># 질문 유형 분류</span>
+<span class="kw">def</span> <span class="fn">classify_query</span>(state: RoutingChatState):
+    <span class="str">"""마지막 사용자 메시지의 유형 분류"""</span>
+    last_msg = state[<span class="str">"messages"</span>][-<span class="num">1</span>].content.lower()
+
+    <span class="kw">if</span> <span class="str">"팩트"</span> <span class="kw">in</span> last_msg <span class="op">or</span> <span class="str">"확인"</span> <span class="kw">in</span> last_msg:
+        query_type = <span class="str">"factcheck"</span>
+    <span class="kw">elif</span> <span class="str">"요약"</span> <span class="kw">in</span> last_msg:
+        query_type = <span class="str">"summarize"</span>
+    <span class="kw">elif</span> <span class="str">"조사"</span> <span class="kw">in</span> last_msg <span class="op">or</span> <span class="str">"찾"</span> <span class="kw">in</span> last_msg:
+        query_type = <span class="str">"research"</span>
+    <span class="kw">else</span>:
+        query_type = <span class="str">"general"</span>
+
+    <span class="kw">return</span> {<span class="str">"query_type"</span>: query_type}
+
+<span class="cm"># 각 유형별 응답 노드</span>
+<span class="kw">def</span> <span class="fn">factcheck_node</span>(state: RoutingChatState):
+    system = SystemMessage(content=FACTCHECKER_PROMPT)
+    response = llm.invoke([system] + state[<span class="str">"messages"</span>])
+    new_messages = state[<span class="str">"messages"</span>] + [AIMessage(content=response.content)]
+    <span class="kw">return</span> {<span class="str">"messages"</span>: new_messages}
+
+<span class="kw">def</span> <span class="fn">summarize_node</span>(state: RoutingChatState):
+    system = SystemMessage(content=<span class="str">"주어진 텍스트를 명확하고 간결하게 요약해줘."</span>)
+    response = llm.invoke([system] + state[<span class="str">"messages"</span>])
+    new_messages = state[<span class="str">"messages"</span>] + [AIMessage(content=response.content)]
+    <span class="kw">return</span> {<span class="str">"messages"</span>: new_messages}
+
+<span class="kw">def</span> <span class="fn">research_node</span>(state: RoutingChatState):
+    system = SystemMessage(content=REPORTER_PROMPT)
+    response = llm.invoke([system] + state[<span class="str">"messages"</span>])
+    new_messages = state[<span class="str">"messages"</span>] + [AIMessage(content=response.content)]
+    <span class="kw">return</span> {<span class="str">"messages"</span>: new_messages}
+
+<span class="kw">def</span> <span class="fn">general_node</span>(state: RoutingChatState):
+    system = SystemMessage(content=<span class="str">"사용자의 질문에 도움이 되도록 답변해줘."</span>)
+    response = llm.invoke([system] + state[<span class="str">"messages"</span>])
+    new_messages = state[<span class="str">"messages"</span>] + [AIMessage(content=response.content)]
+    <span class="kw">return</span> {<span class="str">"messages"</span>: new_messages}
+
+<span class="cm"># 라우팅 함수</span>
+<span class="kw">def</span> <span class="fn">route_by_query_type</span>(state: RoutingChatState):
+    <span class="kw">return</span> state[<span class="str">"query_type"</span>]
+
+<span class="cm"># 그래프 구성</span>
+graph = StateGraph(RoutingChatState)
+graph.add_node(<span class="str">"classify"</span>, classify_query)
+graph.add_node(<span class="str">"factcheck"</span>, factcheck_node)
+graph.add_node(<span class="str">"summarize"</span>, summarize_node)
+graph.add_node(<span class="str">"research"</span>, research_node)
+graph.add_node(<span class="str">"general"</span>, general_node)
+
+graph.set_entry_point(<span class="str">"classify"</span>)
+graph.add_conditional_edges(<span class="str">"classify"</span>, route_by_query_type, {
+    <span class="str">"factcheck"</span>: <span class="str">"factcheck"</span>,
+    <span class="str">"summarize"</span>: <span class="str">"summarize"</span>,
+    <span class="str">"research"</span>: <span class="str">"research"</span>,
+    <span class="str">"general"</span>: <span class="str">"general"</span>
+})
+graph.add_edge(<span class="str">"factcheck"</span>, END)
+graph.add_edge(<span class="str">"summarize"</span>, END)
+graph.add_edge(<span class="str">"research"</span>, END)
+graph.add_edge(<span class="str">"general"</span>, END)
+
+agent = graph.compile()
+    </pre>
+  </div>
+
+  <h2>대화 저장과 불러오기.</h2>
+  <p>실무에서는 대화 기록을 파일이나 데이터베이스에 저장해야 합니다.</p>
+
+  <h3>JSON 파일로 저장.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">import</span> json
+<span class="kw">from</span> datetime <span class="kw">import</span> datetime
+
+<span class="cm"># 대화 저장</span>
+<span class="kw">def</span> <span class="fn">save_conversation</span>(messages, filename=<span class="str">"chat_history.json"</span>):
+    <span class="str">"""대화 메시지를 JSON으로 저장"""</span>
+    data = {
+        <span class="str">"timestamp"</span>: <span class="fn">str</span>(datetime.now()),
+        <span class="str">"messages"</span>: [
+            {
+                <span class="str">"role"</span>: msg.__class__.__name__,  <span class="cm"># "HumanMessage", "AIMessage"</span>
+                <span class="str">"content"</span>: msg.content
+            }
+            <span class="kw">for</span> msg <span class="kw">in</span> messages
+        ]
+    }
+    <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        json.dump(data, f, ensure_ascii=<span class="kw">False</span>, indent=<span class="num">2</span>)
+
+<span class="cm"># 대화 불러오기</span>
+<span class="kw">def</span> <span class="fn">load_conversation</span>(filename=<span class="str">"chat_history.json"</span>):
+    <span class="str">"""JSON에서 대화 메시지 불러오기"""</span>
+    <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"r"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        data = json.load(f)
+
+    messages = []
+    <span class="kw">for</span> msg_dict <span class="kw">in</span> data[<span class="str">"messages"</span>]:
+        <span class="kw">if</span> msg_dict[<span class="str">"role"</span>] == <span class="str">"HumanMessage"</span>:
+            messages.append(HumanMessage(content=msg_dict[<span class="str">"content"</span>]))
+        <span class="kw">elif</span> msg_dict[<span class="str">"role"</span>] == <span class="str">"AIMessage"</span>:
+            messages.append(AIMessage(content=msg_dict[<span class="str">"content"</span>]))
+
+    <span class="kw">return</span> messages
+
+<span class="cm"># 사용 예시</span>
+<span class="cm"># 첫 번째 세션: 대화 수행 후 저장</span>
+messages = [HumanMessage(content=<span class="str">"안녕?"</span>), AIMessage(content=<span class="str">"안녕하세요!"</span>)]
+<span class="fn">save_conversation</span>(messages)
+
+<span class="cm"># 두 번째 세션: 저장된 대화 불러오기 + 계속 진행</span>
+loaded_messages = <span class="fn">load_conversation</span>()
+loaded_messages.append(HumanMessage(content=<span class="str">"어제 대화를 기억해?"</span>))
+<span class="cm"># 계속 대화 진행...</span>
+    </pre>
+  </div>
+
+  <h2>실제 예제: 국회 법안 Q&A 봇.</h2>
+  <p>국회 회기 중 특정 법안에 대한 기자의 질문에 자동으로 답변하는 봇입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+
+<span class="kw">class</span> BillQAState(TypedDict):
+    bill_name: <span class="str">str</span>  <span class="cm"># 예: "디지털대전환법"</span>
+    messages: <span class="fn">list</span>
+    session_context: <span class="str">str</span>  <span class="cm"># 현재 국회 회기 정보</span>
+
+BILL_CONTEXT = <span class="str">"""
+법안명: AI산업 육성법
+발의: 2024년 3월 15일
+발의자: 정재훈 의원 (더불어민주당)
+주요 내용:
+- AI 스타트업에 세제 혜택 제공
+- AI 연구 인프라 투자 확대
+- AI 윤리 가이드라인 수립
+현재 상태: 상임위 심사 중
+"""</span>
+
+BILL_QA_PROMPT = <span class="fn">f</span><span class="str">"""당신은 국회 기자실 AI 어시스턴트입니다.
+현재 다루는 법안:
+{BILL_CONTEXT}
+
+기자의 질문에 답변할 때:
+1. 법안의 구체적 내용 설명
+2. 찬성/반대 입장 중립적 설명
+3. 경제적/사회적 영향 분석
+4. 유사 사례 (해외 입법 등) 언급
+5. 향후 진행 일정 제시"""</span>
+
+<span class="kw">def</span> <span class="fn">bill_qa_node</span>(state: BillQAState):
+    system = SystemMessage(content=BILL_QA_PROMPT)
+    response = llm.invoke([system] + state[<span class="str">"messages"</span>])
+    new_messages = state[<span class="str">"messages"</span>] + [AIMessage(content=response.content)]
+    <span class="kw">return</span> {<span class="str">"messages"</span>: new_messages}
+
+<span class="cm"># 그래프 구성 (간단함)</span>
+graph = StateGraph(BillQAState)
+graph.add_node(<span class="str">"qa"</span>, bill_qa_node)
+graph.set_entry_point(<span class="str">"qa"</span>)
+graph.add_edge(<span class="str">"qa"</span>, END)
+bill_qa_agent = graph.compile()
+
+<span class="cm"># 사용 예시</span>
+result = bill_qa_agent.invoke({
+    <span class="str">"bill_name"</span>: <span class="str">"AI산업 육성법"</span>,
+    <span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"이 법안의 핵심 내용이 뭐야?"</span>)],
+    <span class="str">"session_context"</span>: <span class="str">"2024년 상반기 정기회"</span>
+})
+
+<span class="fn">print</span>(result[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+    </pre>
+  </div>
+
+  <h3>퀴즈: 대화형 에이전트.</h3>
+  <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+  <div class="answer-text" style="display:none;">
+    <p><strong>문제:</strong> 다음 코드에서 메모리가 제대로 유지되지 않는 이유는?</p>
+    <pre>
+def chat_with_memory(user_input):
+    messages = [HumanMessage(content=user_input)]
+    response = llm.invoke(messages)
+    return response.content
+
+# 첫 번째 호출
+answer1 = chat_with_memory("삼성을 아니?")
+# 두 번째 호출
+answer2 = chat_with_memory("그 회사 반도체는?")
+    </pre>
+    <p><strong>정답:</strong> 매번 새로운 messages 리스트를 생성하므로 이전 대화가 사라집니다. 고정된 messages 리스트를 유지하고, 매 호출마다 새로운 메시지를 추가해야 합니다.</p>
+  </div>
+
+  <h3>핵심 정리.</h3>
+  <ul>
+    <li><strong>메모리:</strong> 메시지 리스트로 대화 기록을 유지.</li>
+    <li><strong>메시지 타입:</strong> HumanMessage (사용자), AIMessage (AI), SystemMessage (시스템 지시).</li>
+    <li><strong>시스템 프롬프트:</strong> 역할별 페르소나 정의 (취재 도우미, 편집, 팩트체크 등).</li>
+    <li><strong>조건부 라우팅:</strong> 질문 유형에 따라 다른 처리.</li>
+    <li><strong>저장/불러오기:</strong> JSON 파일로 대화 기록 영구 보존.</li>
+  </ul>
+
+  <div class="nav-buttons">
+    <button class="nav-btn-prev" onclick="scrollToSection('sec-m1')">← 이전: 모듈 1</button>
+    <button class="nav-btn-next" onclick="scrollToSection('sec-m3')">다음: 모듈 3 →</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m3">
+  <div class="module-header m3">
+    <h1>도구 사용 에이전트.</h1>
+    <div class="tags">
+      <span class="tag">45분</span>
+      <span class="tag">중급</span>
+      <span class="tag">도구</span>
+      <span class="tag">웹검색</span>
+    </div>
+  </div>
+
+  <h2>에이전트가 도구를 사용하는 원리.</h2>
+  <p>LLM은 자체로는 웹을 검색하거나 계산을 할 수 없습니다. 도구를 사용함으로써 외부 정보와 계산 능력을 얻습니다. 에이전트의 핵심은 "언제 어떤 도구를 써야 하는가"를 판단하는 것입니다.</p>
+
+  <h3>도구 사용의 흐름.</h3>
+  <div class="callout callout-info">
+    <strong>Step 1:</strong> 사용자가 작업을 요청. 예: "올해 최저임금 인상률을 검색하고, 월급으로 환산해줘."<br><br>
+    <strong>Step 2:</strong> LLM이 작업을 분석하고 필요한 도구 판단. 예: "search_news 도구를 먼저 사용해야 해."<br><br>
+    <strong>Step 3:</strong> 도구 호출. 예: search_news(query="2024 최저임금 인상률")<br><br>
+    <strong>Step 4:</strong> 도구 실행 결과 받음. 예: "최저임금이 10,410원으로 인상되었습니다."<br><br>
+    <strong>Step 5:</strong> 결과를 LLM에 제공하고 다음 도구 판단. 예: "이제 월급 계산 도구를 사용해야 해."<br><br>
+    <strong>Step 6:</strong> 최종 결과 도출. 예: "일일급 83,280원, 월급(240시간 기준) 2,499,600원"
+  </div>
+
+  <h2>도구 정의하기.</h2>
+  <p>도구는 Python 함수에 @tool 데코레이터를 붙여서 정의합니다. 도구는 명확한 입력과 출력을 가져야 합니다.</p>
+
+  <h3>기본 도구 정의.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langchain.tools <span class="kw">import</span> tool
+
+<span class="cm"># 예제 1: 웹 검색 도구</span>
+@tool
+<span class="kw">def</span> <span class="fn">search_news</span>(query: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""뉴스를 검색합니다. query에 검색어를 입력하세요.
+
+    Args:
+        query: 검색할 뉴스 키워드 (예: "삼성전자")
+
+    Returns:
+        검색 결과 문자열
+    """</span>
+    <span class="cm"># 실제 구현에서는 웹 검색 API 호출</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"'{query}'에 대한 최신 뉴스: [기사 1] ... [기사 5]"</span>
+
+<span class="cm"># 예제 2: 계산 도구</span>
+@tool
+<span class="kw">def</span> <span class="fn">calculate</span>(expression: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""수학 계산을 수행합니다.
+
+    Args:
+        expression: 계산 식 (예: "100 * 1.05")
+
+    Returns:
+        계산 결과
+    """</span>
+    <span class="kw">try</span>:
+        result = <span class="fn">eval</span>(expression)
+        <span class="kw">return</span> <span class="fn">str</span>(result)
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"계산 오류: {e}"</span>
+
+<span class="cm"># 예제 3: 파일 저장 도구</span>
+@tool
+<span class="kw">def</span> <span class="fn">save_to_file</span>(filename: <span class="str">str</span>, content: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""텍스트를 파일로 저장합니다."""</span>
+    <span class="kw">try</span>:
+        <span class="kw">with</span> <span class="fn">open</span>(filename, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+            f.write(content)
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"{filename}에 저장되었습니다."</span>
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"저장 오류: {e}"</span>
+
+<span class="cm"># 도구 목록 만들기</span>
+tools = [search_news, calculate, save_to_file]
+    </pre>
+  </div>
+
+  <h3>실제 웹 검색 도구 (DuckDuckGo).</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> duckduckgo_search <span class="kw">import</span> DDGS
+<span class="kw">from</span> langchain.tools <span class="kw">import</span> tool
+
+@tool
+<span class="kw">def</span> <span class="fn">search_korean_news</span>(query: <span class="str">str</span>, max_results: <span class="num">int</span> = <span class="num">5</span>) -> <span class="str">str</span>:
+    <span class="str">"""한국 뉴스를 DuckDuckGo에서 검색합니다.
+
+    Args:
+        query: 검색어
+        max_results: 반환할 결과 개수
+
+    Returns:
+        검색 결과 문자열
+    """</span>
+    <span class="kw">try</span>:
+        results = DDGS().news(query, region=<span class="str">"kr-kr"</span>, max_results=max_results)
+
+        <span class="kw">if</span> <span class="op">not</span> results:
+            <span class="kw">return</span> <span class="fn">f</span><span class="str">"'{query}'에 대한 검색 결과가 없습니다."</span>
+
+        output = <span class="fn">f</span><span class="str">"{query}' 검색 결과 ({len(results)}개):\n"</span>
+        <span class="kw">for</span> i, result <span class="kw">in</span> <span class="fn">enumerate</span>(results, <span class="num">1</span>):
+            output += <span class="fn">f</span><span class="str">"""
+{i}. 제목: {result['title']}
+   출처: {result['source']}
+   발행: {result['date']}
+   링크: {result['url']}
+"""</span>
+
+        <span class="kw">return</span> output
+
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"검색 오류: {e}"</span>
+
+<span class="cm"># 테스트</span>
+<span class="fn">print</span>(<span class="fn">search_korean_news</span>(<span class="str">"삼성전자 반도체"</span>))
+    </pre>
+  </div>
+
+  <h2>도구를 에이전트에 연결.</h2>
+  <p>LangChain의 pre-built ReAct 에이전트를 사용하면 간단하게 도구를 연결할 수 있습니다.</p>
+
+  <h3>ReAct 에이전트 기초.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> langgraph.prebuilt <span class="kw">import</span> create_react_agent
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> HumanMessage
+
+llm = ChatOpenAI(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>)
+
+<span class="cm"># 도구 정의 (위의 search_korean_news, calculate 사용)</span>
+tools = [search_korean_news, calculate]
+
+<span class="cm"># ReAct 에이전트 생성</span>
+<span class="cm"># ReAct = Reasoning + Acting</span>
+agent = create_react_agent(llm, tools)
+
+<span class="cm"># 에이전트 실행</span>
+response = agent.invoke({
+    <span class="str">"messages"</span>: [
+        HumanMessage(content=<span class="str">"올해 최저임금 인상률을 검색하고, 월급으로 환산해줘. (월 240시간 기준)"</span>)
+    ]
+})
+
+<span class="cm"># 결과 출력</span>
+<span class="fn">print</span>(response[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+    </pre>
+  </div>
+
+  <div class="callout callout-example">
+    <strong>에이전트 실행 로그:</strong><br>
+    <code>Thought: 최저임금 정보를 검색해야 한다.</code><br>
+    <code>Action: search_korean_news("2024 최저임금 인상률")</code><br>
+    <code>Observation: 최저임금이 10,410원으로 인상됨...</code><br>
+    <code>Thought: 이제 월급을 계산해야 한다. 240시간 * 10,410원</code><br>
+    <code>Action: calculate("240 * 10410")</code><br>
+    <code>Observation: 2498400</code><br>
+    <code>Final Answer: 올해 최저임금은 10,410원이고, 월급(240시간)은 2,498,400원입니다.</code>
+  </div>
+
+  <h2>웹 검색 에이전트 구축.</h2>
+  <p>특정 인물이나 사건에 대한 배경 조사를 자동화할 수 있습니다.</p>
+
+  <h3>배경 조사 에이전트.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+
+<span class="kw">class</span> BackgroundResearchState(TypedDict):
+    target: <span class="str">str</span>  <span class="cm"># 조사 대상 (인물, 회사, 사건)</span>
+    search_results: <span class="str">str</span>  <span class="cm"># 검색 결과</span>
+    analysis: <span class="str">str</span>  <span class="cm"># 분석 결과</span>
+
+<span class="kw">def</span> <span class="fn">search_step</span>(state: BackgroundResearchState):
+    <span class="str">"""배경 정보 검색"""</span>
+    target = state[<span class="str">"target"</span>]
+    results = search_korean_news(target, max_results=<span class="num">10</span>)
+    <span class="kw">return</span> {<span class="str">"search_results"</span>: results}
+
+<span class="kw">def</span> <span class="fn">analyze_step</span>(state: BackgroundResearchState):
+    <span class="str">"""검색 결과 분석"""</span>
+    analysis_prompt = <span class="fn">f</span><span class="str">"""
+다음 검색 결과를 분석해줘:
+주제: {state['target']}
+
+검색 결과:
+{state['search_results']}
+
+분석 내용:
+1. 주요 사건/뉴스 (최근순)
+2. 핵심 인물/단체
+3. 배경 및 원인
+4. 영향 및 결과
+5. 향후 전망
+"""</span>
+
+    response = llm.invoke(analysis_prompt)
+    <span class="kw">return</span> {<span class="str">"analysis"</span>: response.content}
+
+<span class="cm"># 그래프 구성</span>
+graph = StateGraph(BackgroundResearchState)
+graph.add_node(<span class="str">"search"</span>, search_step)
+graph.add_node(<span class="str">"analyze"</span>, analyze_step)
+
+graph.set_entry_point(<span class="str">"search"</span>)
+graph.add_edge(<span class="str">"search"</span>, <span class="str">"analyze"</span>)
+graph.add_edge(<span class="str">"analyze"</span>, END)
+
+research_agent = graph.compile()
+
+<span class="cm"># 사용</span>
+result = research_agent.invoke({
+    <span class="str">"target"</span>: <span class="str">"이재용 삼성전자 회장"</span>,
+    <span class="str">"search_results"</span>: <span class="str">""</span>,
+    <span class="str">"analysis"</span>: <span class="str">""</span>
+})
+
+<span class="fn">print</span>(result[<span class="str">"analysis"</span>])
+    </pre>
+  </div>
+
+  <h2>여러 도구 조합.</h2>
+  <p>복합적인 작업을 위해 여러 도구를 함께 사용할 수 있습니다.</p>
+
+  <h3>다중 도구 에이전트 예제.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="cm"># 추가 도구들</span>
+@tool
+<span class="kw">def</span> <span class="fn">search_stock_price</span>(company_name: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""회사의 현재 주가를 검색합니다."""</span>
+    <span class="cm"># 실제 구현에서는 금융 API 사용</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"{company_name} 주가: 70,000원 (전일비 +2.5%)"</span>
+
+@tool
+<span class="kw">def</span> <span class="fn">get_financial_data</span>(company_name: <span class="str">str</span>, year: <span class="num">int</span>) -> <span class="str">str</span>:
+    <span class="str">"""회사의 재무 데이터를 조회합니다."""</span>
+    <span class="cm"># 실제 구현에서는 재무 DB 쿼리</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"{company_name} {year}년: 매출 300조원, 영업이익 80조원"</span>
+
+<span class="cm"># 도구 목록</span>
+comprehensive_tools = [
+    search_korean_news,
+    search_stock_price,
+    get_financial_data,
+    calculate,
+    save_to_file
+]
+
+<span class="cm"># 에이전트 생성</span>
+agent = create_react_agent(llm, comprehensive_tools)
+
+<span class="cm"># 복합 작업: "삼성전자의 최신 뉴스를 검색하고, 주가와 재무 정보를 함께 수집해서 분석 결과를 파일로 저장해줘."</span>
+response = agent.invoke({
+    <span class="str">"messages"</span>: [
+        HumanMessage(content=<span class="str">"삼성전자의 최신 뉴스, 현재 주가, 2023년 재무정보를 수집해서 분석한 후, analysis.txt로 저장해줄래?"</span>)
+    ]
+})
+
+<span class="fn">print</span>(response[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+    </pre>
+  </div>
+
+  <h2>도구 실행 로그 확인.</h2>
+  <p>에이전트가 어떤 도구를 어떤 순서로 호출했는지 추적할 수 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="cm"># 실행 로그를 저장하기 위한 콜백</span>
+<span class="kw">class</span> ToolCallLogger:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>):
+        <span class="kw">self</span>.logs = []
+
+    <span class="kw">def</span> <span class="fn">log_tool_call</span>(<span class="kw">self</span>, tool_name: <span class="str">str</span>, input_args: <span class="op">dict</span>, output: <span class="str">str</span>):
+        <span class="str">"""도구 호출 로그"""</span>
+        <span class="kw">self</span>.logs.append({
+            <span class="str">"tool"</span>: tool_name,
+            <span class="str">"input"</span>: input_args,
+            <span class="str">"output"</span>: output[:<span class="num">100</span>]  <span class="cm"># 처음 100자만</span>
+        })
+
+    <span class="kw">def</span> <span class="fn">print_logs</span>(<span class="kw">self</span>):
+        <span class="fn">print</span>(<span class="str">"=== 도구 실행 로그 ==="</span>)
+        <span class="kw">for</span> i, log <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="kw">self</span>.logs, <span class="num">1</span>):
+            <span class="fn">print</span>(<span class="fn">f</span><span class="str">"""
+[Step {i}]
+도구: {log['tool']}
+입력: {log['input']}
+결과: {log['output']}..."""</span>)
+
+<span class="cm"># 사용</span>
+logger = ToolCallLogger()
+
+<span class="cm"># 단순한 방법: 응답 메시지에서 도구 호출 추출</span>
+<span class="cm"># (실제로는 에이전트 상태를 더 상세히 추적)</span>
+    </pre>
+  </div>
+
+  <h2>커스텀 도구 만들기.</h2>
+  <p>뉴스룸 업무에 맞춘 커스텀 도구를 만들 수 있습니다.</p>
+
+  <h3>공공데이터 API 도구.</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre>
+<span class="kw">import</span> requests
+<span class="kw">from</span> langchain.tools <span class="kw">import</span> tool
+
+@tool
+<span class="kw">def</span> <span class="fn">search_government_data</span>(keyword: <span class="str">str</span>, data_type: <span class="str">str</span> = <span class="str">"policy"</span>) -> <span class="str">str</span>:
+    <span class="str">"""정부 공공데이터를 검색합니다.
+
+    Args:
+        keyword: 검색 키워드 (예: "저출산", "기후변화")
+        data_type: 데이터 유형 ("policy", "statistics", "research")
+
+    Returns:
+        검색 결과
+    """</span>
+    <span class="kw">try</span>:
+        <span class="cm"># 실제 구현에서는 정부데이터포털 API 사용</span>
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"""
+정부 공공데이터 검색 결과: '{keyword}' ({data_type})
+1. [정책] 저출산 극복 비전 2045
+   - 출처: 대통령실
+   - 발행: 2024년 3월
+
+2. [통계] 2023년 합계출산율 0.72명
+   - 출처: 통계청
+   - 발행: 2024년 1월
+"""</span>
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"조회 오류: {e}"</span>
+
+@tool
+<span class="kw">def</span> <span class="fn">search_national_assembly</span>(bill_keyword: <span class="str">str</span>) -> <span class="str">str</span>:
+    <span class="str">"""국회 법안 정보를 검색합니다."""</span>
+    <span class="kw">try</span>:
+        <span class="cm"># 실제 구현에서는 국회 API 사용</span>
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"""
+국회 법안 검색: '{bill_keyword}'
+1. AI 산업 육성법 (발의자: 정재훈)
+   - 상태: 상임위 심사 중
+   - 발의일: 2024년 3월 15일
+
+2. 디지털 특화 세제 개정안 (발의자: 김혜경)
+   - 상태: 본회의 대기 중
+   - 발의일: 2024년 2월 20일
+"""</span>
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="kw">return</span> <span class="fn">f</span><span class="str">"조회 오류: {e}"</span>
+
+<span class="cm"># 사내 기사 DB 도구</span>
+@tool
+<span class="kw">def</span> <span class="fn">search_internal_archive</span>(query: <span class="str">str</span>, start_date: <span class="str">str</span> = <span class="str">""</span>) -> <span class="str">str</span>:
+    <span class="str">"""사내 기사 아카이브를 검색합니다."""</span>
+    <span class="kw">return</span> <span class="fn">f</span><span class="str">"""
+사내 기사 검색: '{query}' ({start_date} 이후)
+- 검색 결과: 127개
+
+[최근 기사]
+1. 삼성전자, 반도체 신기술 개발 (2024-03-25)
+2. 삼성전자, 美 공장 투자 확대 (2024-03-20)
+3. 삼성전자, 분기 실적 호조 (2024-03-15)
+"""</span>
+
+<span class="cm"># 도구 등록</span>
+custom_tools = [
+    search_korean_news,
+    search_government_data,
+    search_national_assembly,
+    search_internal_archive,
+    calculate
+]
+
+<span class="cm"># 에이전트 생성</span>
+newsroom_agent = create_react_agent(llm, custom_tools)
+
+<span class="cm"># 사용</span>
+response = newsroom_agent.invoke({
+    <span class="str">"messages"</span>: [
+        HumanMessage(content=<span class="str">"AI 산업 육성법의 최신 진전 상황과 관련 뉴스를 정리해줘."</span>)
+    ]
+})
+
+<span class="fn">print</span>(response[<span class="str">"messages"</span>][-<span class="num">1</span>].content)
+    </pre>
+  </div>
+
+  <h3>퀴즈: 도구 사용 에이전트.</h3>
+  <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+  <div class="answer-text" style="display:none;">
+    <p><strong>문제:</strong> 다음 도구 정의에서 문제점은?</p>
+    <pre>
+@tool
+def search(keyword):
+    # 키워드 문서화 없음
+    return DDGS().news(keyword)
+
+# 에이전트 호출
+agent.invoke({"messages": [HumanMessage(...)]}
+    </pre>
+    <p><strong>정답:</strong> 타입 힌팅과 docstring이 없습니다. LLM이 도구를 제대로 이해하려면:</p>
+    <pre>
+@tool
+def search(keyword: str) -> str:
+    """뉴스를 검색합니다.
+
+    Args:
+        keyword: 검색 키워드
+
+    Returns:
+        검색 결과
+    """
+    return DDGS().news(keyword)
+    </pre>
+  </div>
+
+  <h3>핵심 정리.</h3>
+  <ul>
+    <li><strong>도구 정의:</strong> @tool 데코레이터로 Python 함수를 도구로 변환.</li>
+    <li><strong>ReAct 에이전트:</strong> Reasoning과 Acting을 반복. LLM이 도구 호출을 판단.</li>
+    <li><strong>웹 검색:</strong> DuckDuckGo 또는 다른 검색 API로 실시간 정보 수집.</li>
+    <li><strong>여러 도구 조합:</strong> 검색, 계산, 파일 저장 등을 함께 사용.</li>
+    <li><strong>커스텀 도구:</strong> 공공데이터, 국회, 사내 DB 등 뉴스룸 맞춤 도구 개발.</li>
+  </ul>
+
+  <div class="nav-buttons">
+    <button class="nav-btn-prev" onclick="scrollToSection('sec-m2')">← 이전: 모듈 2</button>
+    <button class="nav-btn-next" onclick="scrollToSection('sec-intro')">처음으로 ↑</button>
+  </div>
+</div>
+
+<div class="section" id="sec-m4">
+                <div class="module-header m4">
+                    <div class="module-icon">📰</div>
+                    <div class="module-info">
+                        <h2>저널리즘 AI 어시스턴트</h2>
+                        <div class="module-meta">
+                            <span class="tag">⏱ 60분</span>
+                            <span class="tag">📊 중급-고급</span>
+                            <span class="tag">🔗 LangGraph</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>이 모듈에서는 저널리즘 전문가를 위한 AI 어시스턴트를 구축합니다. 기사 분석, 팩트체크, 편향성 탐지 등 6가지 핵심 기능을 통합한 에이전트를 만들어봅시다.</p>
+
+                <h3>저널리즘 전용 6기능 에이전트 구축</h3>
+                <p>다음 6가지 기능이 통합된 에이전트를 만듭니다.</p>
+
+                <div class="callout tip">
+                    <h4>✓ 6가지 핵심 기능</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>기사 요약 (Summarization)</strong>: 핵심 내용을 3줄로 압축.</li>
+                        <li><strong>팩트체크 (Fact-checking)</strong>: 검증 가능한 주장을 웹 검색으로 확인.</li>
+                        <li><strong>논조 분석 (Tone analysis)</strong>: 기사의 편향성과 감정 표현 분석.</li>
+                        <li><strong>인용문 추출 (Quote extraction)</strong>: 중요 인용문 자동 추출.</li>
+                        <li><strong>문법 교정 (Grammar check)</strong>: 띄어쓰기, 문법 오류 지적.</li>
+                        <li><strong>편향성 탐지 (Bias detection)</strong>: 표현의 객관성 평가.</li>
+                    </ul>
+                </div>
+
+                <h3>1단계: 상태 설계</h3>
+                <p>모든 기능의 결과를 담을 상태 클래스를 정의합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+
+<span class="kw">class</span> <span class="fn">JournalismState</span>(TypedDict):
+    <span class="str">article</span>: <span class="kw">str</span>
+    <span class="str">summary</span>: <span class="kw">str</span>
+    <span class="str">fact_check</span>: <span class="kw">str</span>
+    <span class="str">tone</span>: <span class="kw">str</span>
+    <span class="str">quotes</span>: <span class="kw">list</span>
+    <span class="str">grammar</span>: <span class="kw">str</span>
+    <span class="str">bias</span>: <span class="kw">str</span>
+    <span class="str">current_step</span>: <span class="kw">str</span></pre>
+                </div>
+
+                <p>각 필드는 기사 처리 과정에서 생성되는 결과를 저장합니다.</p>
+
+                <h3>2단계: 요약 노드 구현</h3>
+                <p>기사의 핵심 내용을 3줄로 요약하는 노드입니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">summarize_node</span>(state: JournalismState):
+    prompt = <span class="str">f"""다음 기사를 3줄로 요약하세요. 핵심 사실과 수치를 반드시 포함하세요.
+
+&lt;article&gt;{state['article']}&lt;/article&gt;"""</span>
+    result = llm.invoke(prompt)
+    <span class="kw">return</span> {<span class="str">"summary"</span>: result.content}</pre>
+                </div>
+
+                <h3>3단계: 팩트체크 노드 (DuckDuckGo 검색 연동)</h3>
+                <p>웹 검색을 통해 주요 주장을 실시간으로 검증합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">factcheck_node</span>(state: JournalismState):
+    <span class="kw">from</span> duckduckgo_search <span class="kw">import</span> DDGS
+
+    <span class="cm"># 기사에서 검증 가능한 주장 추출</span>
+    claims_prompt = <span class="str">f"""기사에서 사실 여부를 검증할 수 있는 주장을 추출하세요.
+&lt;article&gt;{state['article']}&lt;/article&gt;"""</span>
+    claims = llm.invoke(claims_prompt).content
+
+    <span class="cm"># 각 주장을 웹 검색으로 검증</span>
+    search = <span class="fn">DDGS</span>()
+    results = search.text(claims[:<span class="num">100</span>], region=<span class="str">"kr-kr"</span>, max_results=<span class="num">3</span>)
+
+    verify_prompt = <span class="str">f"""주장: {claims}
+검색 결과: {results}
+
+각 주장의 사실 여부를 [확인됨/미확인/반박됨]으로 판정하세요."""</span>
+    verification = llm.invoke(verify_prompt)
+    <span class="kw">return</span> {<span class="str">"fact_check"</span>: verification.content}</pre>
+                </div>
+
+                <div class="callout info">
+                    <h4>💡 팩트체크 노드의 이점</h4>
+                    <p>실시간 웹 검색을 통해 최신 정보를 기반으로 검증하므로, 모델의 학습 데이터에 의존하지 않습니다. 이를 통해 더욱 정확하고 신뢰성 높은 팩트체크가 가능합니다.</p>
+                </div>
+
+                <h3>4단계: 논조 분석 노드</h3>
+                <p>기사의 감정 표현, 편향성, 균형감각을 분석합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">tone_node</span>(state: JournalismState):
+    prompt = <span class="str">f"""기사의 논조를 분석하세요.
+    - 전체 톤: [중립/비판적/우호적/경고적]
+    - 감정적 표현 사용 여부.
+    - 특정 입장으로의 편향 여부.
+    - 균형잡힌 시각 제공 여부.
+
+&lt;article&gt;{state['article']}&lt;/article&gt;"""</span>
+    result = llm.invoke(prompt)
+    <span class="kw">return</span> {<span class="str">"tone"</span>: result.content}</pre>
+                </div>
+
+                <h3>5단계: 인용문 추출 노드</h3>
+                <p>기사에서 중요한 인용문을 자동으로 추출합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">quotes_node</span>(state: JournalismState):
+    prompt = <span class="str">f"""기사에서 다음 조건의 인용문을 추출하세요:
+    1. 따옴표로 명확하게 표시된 것.
+    2. 주요 인물의 의견이나 주장.
+    3. 최대 5개까지.
+
+    형식: [인용문], 출처: 인물명
+
+&lt;article&gt;{state['article']}&lt;/article&gt;"""</span>
+    result = llm.invoke(prompt)
+    <span class="cm"># 결과를 리스트로 변환</span>
+    quotes_list = result.content.split(<span class="str">"\n"</span>)
+    <span class="kw">return</span> {<span class="str">"quotes"</span>: quotes_list}</pre>
+                </div>
+
+                <h3>6단계: 문법 교정 노드</h3>
+                <p>띄어쓰기, 문법, 문체 오류를 지적합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">grammar_node</span>(state: JournalismState):
+    prompt = <span class="str">f"""다음 기사의 문법 오류를 지적하세요:
+    1. 띄어쓰기 오류.
+    2. 문법 오류 (주술 호응, 시제 일관성 등).
+    3. 문체 일관성 문제.
+    4. 중복 표현.
+
+    형식:
+    - [위치] 오류 유형: 현재 표현 → 수정 표현
+
+&lt;article&gt;{state['article']}&lt;/article&gt;"""</span>
+    result = llm.invoke(prompt)
+    <span class="kw">return</span> {<span class="str">"grammar"</span>: result.content}</pre>
+                </div>
+
+                <h3>7단계: 편향성 탐지 노드</h3>
+                <p>기사의 편향된 표현과 불공정한 프레이밍을 분석합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">bias_node</span>(state: JournalismState):
+    prompt = <span class="str">f"""다음 기사의 편향성을 분석하세요:
+    1. 편향된 용어 사용 (예: "~일 수밖에 없다", "명백하게").
+    2. 한쪽 입장만 강조.
+    3. 반대 의견의 소외.
+    4. 감정적 표현의 과다 사용.
+    5. 객관성 점수 (0-100).
+
+&lt;article&gt;{state['article']}&lt;/article&gt;"""</span>
+    result = llm.invoke(prompt)
+    <span class="kw">return</span> {<span class="str">"bias"</span>: result.content}</pre>
+                </div>
+
+                <h3>8단계: 워크플로우 그래프 조립</h3>
+                <p>모든 노드를 연결하여 완전한 에이전트를 만듭니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+
+graph = <span class="fn">StateGraph</span>(JournalismState)
+
+<span class="cm"># 모든 노드 추가</span>
+graph.add_node(<span class="str">"summarize"</span>, summarize_node)
+graph.add_node(<span class="str">"factcheck"</span>, factcheck_node)
+graph.add_node(<span class="str">"tone"</span>, tone_node)
+graph.add_node(<span class="str">"quotes"</span>, quotes_node)
+graph.add_node(<span class="str">"grammar"</span>, grammar_node)
+graph.add_node(<span class="str">"bias"</span>, bias_node)
+
+<span class="cm"># 엔트리 포인트 설정</span>
+graph.set_entry_point(<span class="str">"summarize"</span>)
+
+<span class="cm"># 순차 실행 엣지 추가</span>
+graph.add_edge(<span class="str">"summarize"</span>, <span class="str">"factcheck"</span>)
+graph.add_edge(<span class="str">"factcheck"</span>, <span class="str">"tone"</span>)
+graph.add_edge(<span class="str">"tone"</span>, <span class="str">"quotes"</span>)
+graph.add_edge(<span class="str">"quotes"</span>, <span class="str">"grammar"</span>)
+graph.add_edge(<span class="str">"grammar"</span>, <span class="str">"bias"</span>)
+graph.add_edge(<span class="str">"bias"</span>, END)
+
+<span class="cm"># 에이전트 컴파일</span>
+journalism_agent = graph.compile()</pre>
+                </div>
+
+                <h3>9단계: 실행과 결과 확인</h3>
+                <p>완성된 에이전트를 실제로 실행해봅시다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre>result = journalism_agent.invoke({
+    <span class="str">"article"</span>: <span class="str">"""서울시는 2026년 예산안을 45조원 규모로 편성했다고 15일 밝혔다.
+    이는 전년도 대비 3.2% 증가한 규모다. 시는 저출산 대책과 노후 인프라 개선에
+    중점을 두고 있다. 예산의 30%는 교육과 복지에 배정되며, 20%는 도시 재생에
+    사용될 예정이다."""</span>,
+    <span class="str">"current_step"</span>: <span class="str">"start"</span>
+})
+
+<span class="kw">print</span>(<span class="str">"=== 요약 ==="</span>)
+<span class="kw">print</span>(result[<span class="str">"summary"</span>])
+
+<span class="kw">print</span>(<span class="str">"=== 팩트체크 ==="</span>)
+<span class="kw">print</span>(result[<span class="str">"fact_check"</span>])
+
+<span class="kw">print</span>(<span class="str">"=== 논조 분석 ==="</span>)
+<span class="kw">print</span>(result[<span class="str">"tone"</span>])
+
+<span class="kw">print</span>(<span class="str">"=== 인용문 ==="</span>)
+<span class="kw">print</span>(result[<span class="str">"quotes"</span>])
+
+<span class="kw">print</span>(<span class="str">"=== 편향성 점수 ==="</span>)
+<span class="kw">print</span>(result[<span class="str">"bias"</span>])</pre>
+                </div>
+
+                <h3>10단계: 선택적 분석 (조건부 라우팅)</h3>
+                <p>사용자 선택에 따라 다른 분석을 수행할 수 있습니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">routing_logic</span>(state: JournalismState) <span class="op">-&gt;</span> <span class="kw">str</span>:
+    <span class="cm">"""분석 깊이에 따라 다른 경로 선택."""</span>
+    <span class="kw">if</span> state[<span class="str">"current_step"</span>] == <span class="str">"quick"</span>:
+        <span class="kw">return</span> <span class="str">"summary_only"</span>
+    <span class="kw">elif</span> state[<span class="str">"current_step"</span>] == <span class="str">"factcheck_priority"</span>:
+        <span class="kw">return</span> <span class="str">"factcheck_path"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"full_analysis"</span>
+
+<span class="cm"># 라우팅 추가</span>
+graph.add_conditional_edges(<span class="str">"summarize"</span>, routing_logic, {
+    <span class="str">"summary_only"</span>: END,
+    <span class="str">"factcheck_path"</span>: <span class="str">"factcheck"</span>,
+    <span class="str">"full_analysis"</span>: <span class="str">"factcheck"</span>
+})</pre>
+                </div>
+
+                <div class="callout warning">
+                    <h4>⚠️ 주의: API 비용</h4>
+                    <p>이 에이전트는 웹 검색 기능 때문에 인터넷 접근이 필요합니다. DuckDuckGo는 무료이지만, 대규모 운영 시에는 API 비용을 고려해야 합니다.</p>
+                </div>
+
+                <h3>실전 예제: 한국 뉴스 기사 분석</h3>
+                <p>실제 한국 정치 뉴스를 분석해봅시다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre>korean_article = <span class="str">"""국회는 새 부동산 정책 법안을 27일 본회의에서 가결했다.
+여당은 이번 법안이 '국민 주거 안정'을 위한 것이라고 주장했으나, 야당은
+'부유층만 우대하는 정책'이라며 강하게 반발했다. 시민 단체들도 "세입자
+보호 조항이 부족하다"고 지적했다. 다만 전문가들은 "단기적 효과는 제한적일
+것"이라는 의견을 냈다."""</span>
+
+result = journalism_agent.invoke({
+    <span class="str">"article"</span>: korean_article,
+    <span class="str">"current_step"</span>: <span class="str">"full_analysis"</span>
+})
+
+<span class="cm"># 결과를 구조화하여 출력</span>
+<span class="kw">print</span>(<span class="str">"【 한국 부동산 정책 뉴스 분석 】"</span>)
+<span class="kw">print</span>(<span class="str">"\n✓ 요약:"</span>, result[<span class="str">"summary"</span>])
+<span class="kw">print</span>(<span class="str">"\n✓ 팩트체크:", result["fact_check"</span>])
+<span class="kw">print</span>(<span class="str">"\n✓ 논조:", result["tone"</span>])</pre>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>▼ 한국 기사 분석 결과 예시 보기</span>
+                            <span class="accordion-toggle">⋮</span>
+                        </div>
+                        <div class="accordion-body">
+                            <p><strong>요약:</strong> 국회가 부동산 정책 법안을 가결했으나 야당과 시민 단체가 반발하고 있으며, 전문가들은 단기 효과를 제한적으로 평가합니다.</p>
+                            <p><strong>팩트체크:</strong></p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>국회 본회의 가결: [확인됨]</li>
+                                <li>여당의 "주거 안정" 주장: [확인됨]</li>
+                                <li>야당의 반발: [확인됨]</li>
+                                <li>시민 단체 지적: [미확인 - 특정 단체 미상]</li>
+                            </ul>
+                            <p><strong>논조 분석:</strong> 중립적이나 갈등 표현 강조. "강하게 반발", "우대한다" 등 감정적 표현 사용. 여러 입장을 균형있게 제시함.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>퀴즈: 에이전트 노드 설계</h3>
+                <div class="quiz">
+                    <h4>Q1. 저널리즘 에이전트에서 팩트체크 노드의 주요 기능은?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="a">
+                            기사의 문법 오류를 찾는 것.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="b">
+                            웹 검색을 통해 주요 주장을 실시간으로 검증하는 것.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="c">
+                            기사에서 인용문을 추출하는 것.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q1" value="d">
+                            기사의 감정 표현을 분석하는 것.
+                        </label>
+                    </div>
+                    <button onclick="checkQuiz('q1', 'b', '정답입니다. 팩트체크 노드는 DuckDuckGo를 사용하여 웹 검색을 수행하고 주요 주장을 검증합니다.')">답변 확인</button>
+                    <div class="quiz-result"></div>
+                </div>
+
+                <div class="quiz">
+                    <h4>Q2. 상태 클래스(JournalismState)에 반드시 포함되어야 하는 필드는?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="a">
+                            article, summary, fact_check, tone, quotes, grammar, bias, current_step.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="b">
+                            article, date, author만 필요.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="c">
+                            summary와 fact_check만 필요.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q2" value="d">
+                            상태 클래스가 없어도 됨.
+                        </label>
+                    </div>
+                    <button onclick="checkQuiz('q2', 'a', '정답입니다. 모든 6가지 분석 결과와 현재 단계를 추적하기 위해 모든 필드가 필요합니다.')">답변 확인</button>
+                    <div class="quiz-result"></div>
+                </div>
+
+            </div>
+
+<div class="section" id="sec-m5">
+                <div class="module-header m5">
+                    <div class="module-icon">📡</div>
+                    <div class="module-info">
+                        <h2>뉴스 자동 수집과 요약</h2>
+                        <div class="module-meta">
+                            <span class="tag">⏱ 50분</span>
+                            <span class="tag">📊 중급-고급</span>
+                            <span class="tag">🔗 LangGraph + NewsAPI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <p>이 모듈에서는 실시간 뉴스를 자동으로 수집하고, 종합 브리핑으로 생성하는 파이프라인을 구축합니다. 매일 아침 자동으로 뉴스 요약 브리핑을 받을 수 있습니다.</p>
+
+                <h3>뉴스 자동 수집 파이프라인</h3>
+                <p>뉴스 수집의 핵심은 신뢰할 수 있는 API를 통한 자동화입니다.</p>
+
+                <div class="callout info">
+                    <h4>💡 뉴스 소스 옵션</h4>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>NewsAPI:</strong> 전세계 140+ 언론사 데이터 (유료)</li>
+                        <li><strong>RSS 피드:</strong> 언론사 공식 RSS (무료)</li>
+                        <li><strong>네이버 뉴스 RSS:</strong> 한국 뉴스 전문 (무료)</li>
+                        <li><strong>연합뉴스 API:</strong> 공식 데이터 (승인 필요)</li>
+                    </ul>
+                </div>
+
+                <h3>1단계: NewsAPI 설정</h3>
+                <p>NewsAPI를 사용하여 뉴스를 수집합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">import</span> requests
+<span class="kw">import</span> os
+
+<span class="kw">def</span> <span class="fn">fetch_news</span>(query, api_key):
+    <span class="str">"""NewsAPI를 사용하여 뉴스 기사 수집."""</span>
+    url = <span class="str">"https://newsapi.org/v2/everything"</span>
+    params = {
+        <span class="str">"q"</span>: query,
+        <span class="str">"language"</span>: <span class="str">"ko"</span>,
+        <span class="str">"sortBy"</span>: <span class="str">"publishedAt"</span>,
+        <span class="str">"pageSize"</span>: <span class="num">10</span>,
+        <span class="str">"apiKey"</span>: api_key
+    }
+    response = requests.get(url, params=params)
+    <span class="kw">return</span> response.json()[<span class="str">"articles"</span>]
+
+<span class="cm"># 사용 예</span>
+api_key = os.getenv(<span class="str">"NEWSAPI_KEY"</span>)
+articles = <span class="fn">fetch_news</span>(<span class="str">"부동산 정책"</span>, api_key)</pre>
+                </div>
+
+                <h3>2단계: 상태 설계</h3>
+                <p>뉴스 수집부터 최종 브리핑까지의 상태를 정의합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> typing <span class="kw">import</span> TypedDict
+
+<span class="kw">class</span> <span class="fn">NewsTLDRState</span>(TypedDict):
+    <span class="str">query</span>: <span class="kw">str</span>
+    <span class="str">articles</span>: <span class="kw">list</span>
+    <span class="str">summaries</span>: <span class="kw">list</span>
+    <span class="str">final_briefing</span>: <span class="kw">str</span></pre>
+                </div>
+
+                <h3>3단계: 뉴스 수집 노드</h3>
+                <p>주어진 주제의 최신 뉴스를 수집하는 노드입니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">fetch_articles_node</span>(state: NewsTLDRState):
+    <span class="str">"""뉴스 API로부터 기사 수집."""</span>
+    api_key = os.getenv(<span class="str">"NEWSAPI_KEY"</span>)
+    articles = <span class="fn">fetch_news</span>(state[<span class="str">"query"</span>], api_key)
+
+    <span class="cm"># 기사 중 본문이 있는 것만 필터링</span>
+    filtered = [a <span class="kw">for</span> a <span class="kw">in</span> articles
+                <span class="kw">if</span> a.get(<span class="str">"content"</span>) <span class="kw">or</span> a.get(<span class="str">"description"</span>)]
+
+    <span class="kw">return</span> {<span class="str">"articles"</span>: filtered}</pre>
+                </div>
+
+                <h3>4단계: 개별 기사 요약 노드</h3>
+                <p>수집한 각 기사를 개별적으로 요약합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">summarize_articles</span>(state: NewsTLDRState):
+    <span class="str">"""각 기사를 2문장으로 요약."""</span>
+    summaries = []
+
+    <span class="kw">for</span> article <span class="kw">in</span> state[<span class="str">"articles"</span>]:
+        content = article.get(<span class="str">"content"</span>) <span class="kw">or</span> article.get(<span class="str">"description"</span>, <span class="str">""</span>)
+
+        <span class="kw">if</span> <span class="kw">not</span> content:
+            <span class="kw">continue</span>
+
+        prompt = <span class="str">f"""다음 기사를 2문장으로 요약하세요.
+        제목: {article['title']}
+        본문: {content[:<span class="num">500</span>]}"""</span>
+
+        summary = llm.invoke(prompt).content
+        summaries.append({
+            <span class="str">"title"</span>: article[<span class="str">"title"</span>],
+            <span class="str">"summary"</span>: summary,
+            <span class="str">"url"</span>: article[<span class="str">"url"</span>],
+            <span class="str">"source"</span>: article[<span class="str">"source"</span>].get(<span class="str">"name"</span>, <span class="str">"알 수 없음"</span>)
+        })
+
+    <span class="kw">return</span> {<span class="str">"summaries"</span>: summaries}</pre>
+                </div>
+
+                <h3>5단계: 종합 브리핑 생성 노드</h3>
+                <p>모든 요약을 바탕으로 최종 뉴스 브리핑을 작성합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">generate_briefing</span>(state: NewsTLDRState):
+    <span class="str">"""종합 뉴스 브리핑 생성."""</span>
+    summaries_text = <span class="str">"\n"</span>.join([
+        <span class="str">f"- 【{s['source']}】 {s['title']}: {s['summary']}"</span>
+        <span class="kw">for</span> s <span class="kw">in</span> state[<span class="str">"summaries"</span>]
+    ])
+
+    prompt = <span class="str">f"""다음 뉴스 요약들을 바탕으로 오늘의 뉴스 브리핑을 작성하세요.
+    주제: {state['query']}
+
+    {summaries_text}
+
+    브리핑 형식:
+    1. 핵심 동향 (3줄): 가장 중요한 변화와 트렌드.
+    2. 주요 뉴스 (번호별): 각 뉴스와 그 의미.
+    3. 주목할 점: 향후 영향과 관찰 사항."""</span>
+
+    result = llm.invoke(prompt)
+    <span class="kw">return</span> {<span class="str">"final_briefing"</span>: result.content}</pre>
+                </div>
+
+                <h3>6단계: 워크플로우 조립</h3>
+                <p>세 노드를 연결하여 완전한 파이프라인을 만듭니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+
+graph = <span class="fn">StateGraph</span>(NewsTLDRState)
+
+<span class="cm"># 노드 추가</span>
+graph.add_node(<span class="str">"fetch"</span>, fetch_articles_node)
+graph.add_node(<span class="str">"summarize"</span>, summarize_articles)
+graph.add_node(<span class="str">"briefing"</span>, generate_briefing)
+
+<span class="cm"># 순차 실행</span>
+graph.set_entry_point(<span class="str">"fetch"</span>)
+graph.add_edge(<span class="str">"fetch"</span>, <span class="str">"summarize"</span>)
+graph.add_edge(<span class="str">"summarize"</span>, <span class="str">"briefing"</span>)
+graph.add_edge(<span class="str">"briefing"</span>, END)
+
+<span class="cm"># 에이전트 컴파일</span>
+news_agent = graph.compile()</pre>
+                </div>
+
+                <h3>7단계: 재시도 로직</h3>
+                <p>API 오류나 타임아웃에 대응하는 재시도 로직을 추가합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">import</span> time
+<span class="kw">from</span> requests.exceptions <span class="kw">import</span> RequestException
+
+<span class="kw">def</span> <span class="fn">fetch_with_retry</span>(query, api_key, max_retries=<span class="num">3</span>):
+    <span class="str">"""최대 3회 재시도하며 뉴스 수집."""</span>
+    <span class="kw">for</span> attempt <span class="kw">in</span> <span class="fn">range</span>(max_retries):
+        <span class="kw">try</span>:
+            articles = <span class="fn">fetch_news</span>(query, api_key)
+            <span class="kw">if</span> articles:
+                <span class="kw">return</span> articles
+        <span class="kw">except</span> RequestException <span class="kw">as</span> e:
+            <span class="kw">print</span>(<span class="str">f"시도 {attempt + 1} 실패: {e}"</span>)
+            <span class="kw">if</span> attempt < max_retries - <span class="num">1</span>:
+                <span class="cm"># 지수 백오프: 1초, 2초, 4초</span>
+                wait_time = <span class="num">2</span> ** attempt
+                <span class="kw">print</span>(<span class="str">f"{wait_time}초 후 재시도..."</span>)
+                time.sleep(wait_time)
+
+    <span class="kw">return</span> []</pre>
+                </div>
+
+                <h3>8단계: 비동기 처리</h3>
+                <p>여러 기사를 동시에 요약하여 처리 속도를 높입니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">import</span> asyncio
+<span class="kw">import</span> aiohttp
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">summarize_article_async</span>(article, llm):
+    <span class="str">"""개별 기사를 비동기로 요약."""</span>
+    content = article.get(<span class="str">"content"</span>) <span class="kw">or</span> article.get(<span class="str">"description"</span>, <span class="str">""</span>)
+
+    prompt = <span class="str">f"""다음 기사를 2문장으로 요약하세요.
+    제목: {article['title']}
+    본문: {content[:<span class="num">500</span>]}"""</span>
+
+    summary = llm.invoke(prompt).content
+    <span class="kw">return</span> {
+        <span class="str">"title"</span>: article[<span class="str">"title"</span>],
+        <span class="str">"summary"</span>: summary,
+        <span class="str">"url"</span>: article[<span class="str">"url"</span>]
+    }
+
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">summarize_all_articles</span>(articles, llm):
+    <span class="str">"""모든 기사를 병렬로 요약."""</span>
+    tasks = [<span class="fn">summarize_article_async</span>(a, llm) <span class="kw">for</span> a <span class="kw">in</span> articles]
+    <span class="kw">return</span> <span class="kw">await</span> asyncio.gather(<span class="op">*</span>tasks)
+
+<span class="cm"># 사용 예</span>
+summaries = asyncio.run(<span class="fn">summarize_all_articles</span>(articles, llm))</pre>
+                </div>
+
+                <div class="callout tip">
+                    <h4>✓ 비동기 처리의 이점</h4>
+                    <p>10개 기사를 요약할 때 순차 처리는 약 50초가 소요되지만, 비동기 처리로는 약 5초로 10배 빨라집니다.</p>
+                </div>
+
+                <h3>9단계: 자동 실행 스케줄링</h3>
+                <p>매일 아침 자동으로 뉴스 브리핑을 생성합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">import</span> schedule
+<span class="kw">import</span> time
+
+<span class="kw">def</span> <span class="fn">daily_briefing_job</span>():
+    <span class="str">"""일일 뉴스 브리핑 작업."""</span>
+    result = news_agent.invoke({
+        <span class="str">"query"</span>: <span class="str">"한국 부동산 정책"</span>,
+        <span class="str">"articles"</span>: [],
+        <span class="str">"summaries"</span>: [],
+        <span class="str">"final_briefing"</span>: <span class="str">""</span>
+    })
+
+    <span class="cm"># 결과를 파일에 저장</span>
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="str">"daily_briefing.txt"</span>, <span class="str">"w"</span>, encoding=<span class="str">"utf-8"</span>) <span class="kw">as</span> f:
+        f.write(result[<span class="str">"final_briefing"</span>])
+
+    <span class="kw">print</span>(<span class="str">"✓ 오늘의 뉴스 브리핑이 생성되었습니다."</span>)
+
+<span class="cm"># 매일 아침 8시에 실행</span>
+schedule.every().day.at(<span class="str">"08:00"</span>).do(daily_briefing_job)
+
+<span class="cm"># 스케줄러 실행</span>
+<span class="kw">while</span> <span class="kw">True</span>:
+    schedule.run_pending()
+    time.sleep(<span class="num">60</span>)</pre>
+                </div>
+
+                <h3>10단계: 실전 예제 - 부동산 정책 일일 브리핑</h3>
+                <p>실제로 뉴스 수집과 브리핑 생성을 실행해봅시다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre>result = news_agent.invoke({
+    <span class="str">"query"</span>: <span class="str">"한국 부동산 정책 2026"</span>,
+    <span class="str">"articles"</span>: [],
+    <span class="str">"summaries"</span>: [],
+    <span class="str">"final_briefing"</span>: <span class="str">""</span>
+})
+
+<span class="kw">print</span>(<span class="str">"【 오늘의 뉴스 브리핑 】"</span>)
+<span class="kw">print</span>(result[<span class="str">"final_briefing"</span>])
+
+<span class="cm"># 수집된 기사 목록 표시</span>
+<span class="kw">print</span>(<span class="str">"\n【 수집된 기사 】"</span>)
+<span class="kw">for</span> i, summary <span class="kw">in</span> <span class="fn">enumerate</span>(result[<span class="str">"summaries"</span>], <span class="num">1</span>):
+    <span class="kw">print</span>(<span class="str">f"{i}. {summary['title']}"</span>)
+    <span class="kw">print</span>(<span class="str">f"   출처: {summary['source']}"</span>)
+    <span class="kw">print</span>(<span class="str">f"   링크: {summary['url']}"</span>)</pre>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>▼ 일일 브리핑 생성 결과 예시</span>
+                            <span class="accordion-toggle">⋮</span>
+                        </div>
+                        <div class="accordion-body">
+                            <h5>【 오늘의 뉴스 브리핑 】</h5>
+                            <p><strong>1. 핵심 동향</strong></p>
+                            <p>부동산 시장은 정부의 규제 강화 정책에 대한 우려로 혼란스러운 상황이 계속되고 있습니다. 여러 지역에서 전세 사기 피해가 증가하면서 임차인 보호 방안이 시급한 과제로 대두되고 있습니다. 부동산 전문가들은 단기적 정책 효과가 제한적일 것으로 전망하고 있습니다.</p>
+                            <p><strong>2. 주요 뉴스</strong></p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li><strong>① 정부 부동산 정책 개편:</strong> 청약 제도 개정 및 대출 규제 강화 방침 발표.</li>
+                                <li><strong>② 전세 보증보험 확대:</strong> 전세 사기 방지를 위한 보험 상품 신설.</li>
+                                <li><strong>③ 주택담보대출 금리 인상:</strong> 금융통화위원회 기준금리 인상 영향.</li>
+                            </ul>
+                            <p><strong>3. 주목할 점</strong></p>
+                            <p>정부 정책이 구체적인 실효성을 발휘하려면 임차인 중심의 추가 대책이 필요해 보입니다. 장기적으로는 주택 공급 확대와 임대료 안정화가 근본적인 해결책이 될 것으로 예상됩니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>11단계: 고급 기능 - 주제별 뉴스 비교</h3>
+                <p>여러 주제의 뉴스를 동시에 수집하고 비교 분석합니다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">multi_topic_briefing</span>(topics: <span class="kw">list</span>):
+    <span class="str">"""여러 주제의 뉴스를 수집하고 비교."""</span>
+    all_briefings = {}
+
+    <span class="kw">for</span> topic <span class="kw">in</span> topics:
+        result = news_agent.invoke({
+            <span class="str">"query"</span>: topic,
+            <span class="str">"articles"</span>: [],
+            <span class="str">"summaries"</span>: [],
+            <span class="str">"final_briefing"</span>: <span class="str">""</span>
+        })
+        all_briefings[topic] = result[<span class="str">"final_briefing"</span>]
+
+    <span class="kw">return</span> all_briefings
+
+<span class="cm"># 사용 예</span>
+topics = [<span class="str">"부동산 정책"</span>, <span class="str">"금리 인상"</span>, <span class="str">"서울 시장 동향"</span>]
+briefings = <span class="fn">multi_topic_briefing</span>(topics)
+
+<span class="kw">for</span> topic, briefing <span class="kw">in</span> briefings.items():
+    <span class="kw">print</span>(<span class="str">f"\n【 {topic} 】"</span>)
+    <span class="kw">print</span>(briefing)</pre>
+                </div>
+
+                <div class="callout warning">
+                    <h4>⚠️ API 비용 주의</h4>
+                    <p>NewsAPI 무료 계획은 월 500개 요청까지 가능합니다. 여러 주제를 자주 수집할 경우 비용이 발생할 수 있으므로 API 사용량을 모니터링하세요.</p>
+                </div>
+
+                <h3>퀴즈: 뉴스 파이프라인 설계</h3>
+                <div class="quiz">
+                    <h4>Q1. 뉴스 수집 파이프라인의 올바른 순서는?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="a">
+                            수집 → 브리핑 생성 → 요약.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="b">
+                            수집 → 요약 → 브리핑 생성.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="c">
+                            브리핑 생성 → 수집 → 요약.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q3" value="d">
+                            요약 → 수집 → 브리핑 생성.
+                        </label>
+                    </div>
+                    <button onclick="checkQuiz('q3', 'b', '정답입니다. 먼저 뉴스를 수집한 후 개별 요약을 진행하고, 최종적으로 종합 브리핑을 생성합니다.')">답변 확인</button>
+                    <div class="quiz-result"></div>
+                </div>
+
+                <div class="quiz">
+                    <h4>Q2. 비동기 처리가 효과적인 이유는?</h4>
+                    <div class="quiz-options">
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="a">
+                            메모리 사용량이 줄어들기 때문.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="b">
+                            여러 기사를 동시에 처리하여 처리 시간을 단축할 수 있기 때문.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="c">
+                            API 비용이 감소하기 때문.
+                        </label>
+                        <label class="quiz-option">
+                            <input type="radio" name="q4" value="d">
+                            품질이 더 좋아지기 때문.
+                        </label>
+                    </div>
+                    <button onclick="checkQuiz('q4', 'b', '정답입니다. 비동기 처리를 사용하면 I/O 대기 시간을 효율적으로 활용하여 여러 기사를 동시에 처리할 수 있습니다.')">답변 확인</button>
+                    <div class="quiz-result"></div>
+                </div>
+
+            </div>
+
+<div class="section" id="sec-m6">
+                <div class="module-header blue">
+                    <div>
+                        <h2>리서치 에이전트</h2>
+                        <p style="margin: 8px 0 0 0; color: #1976d2;">자동화된 배경 조사와 정보 수집</p>
+                    </div>
+                    <div class="module-meta">
+                        <span class="tag time">⏱ 45분</span>
+                        <span class="tag level">📊 고급</span>
+                    </div>
+                </div>
+
+                <h3>1. 자동 리서치 에이전트의 가치</h3>
+                <p>현대 뉴스룸에서 취재의 시간은 금이다. 리서치 에이전트는 다음과 같은 가치를 제공한다.</p>
+
+                <h4>시간 절감과 효율성</h4>
+                <p>기자가 하루 종일 걸리는 배경 조사를 리서치 에이전트는 30분 내에 완료할 수 있다. 특히 빠르게 변하는 이슈나 긴급 뉴스의 경우 초기 정보 수집을 AI가 담당함으로써 기자는 더 깊이 있는 취재에 집중할 수 있다.</p>
+
+                <h4>다양한 출처 종합</h4>
+                <p>학술 논문, 법률 문서, 과거 보도, 정부 발표, 통계 자료 등 여러 출처의 정보를 동시에 검색하고 종합할 수 있다. 이를 통해 균형 잡힌 기사 작성이 가능해진다.</p>
+
+                <h4>일관성과 재현성</h4>
+                <p>동일한 리서치 프로세스를 반복 실행하므로 결과의 일관성이 보장된다. 또한 검색 프로세스를 기록으로 남길 수 있어 투명성이 높다.</p>
+
+                <h3>2. 웹 리서치 에이전트 구현</h3>
+                <p>다음은 웹 검색과 분석을 수행하는 리서치 에이전트의 기본 구조다.</p>
+
+                <h4>상태 정의</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">typing</span> <span class="kw">import</span> <span class="fn">TypedDict</span>
+
+<span class="kw">class</span> <span class="fn">ResearchState</span>(<span class="fn">TypedDict</span>):
+    <span class="str">topic: str</span>
+    <span class="str">search_results: list</span>
+    <span class="str">analysis: str</span>
+    <span class="str">sources: list</span>
+    <span class="str">report: str</span></pre>
+                </div>
+
+                <h4>검색 노드</h4>
+                <p>DuckDuckGo 또는 Google Search API를 활용하여 웹 검색을 수행한다.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">search_node</span>(<span class="fn">state</span>: <span class="fn">ResearchState</span>):
+    <span class="kw">from</span> <span class="fn">duckduckgo_search</span> <span class="kw">import</span> <span class="fn">DDGS</span>
+
+    <span class="fn">results</span> <span class="op">=</span> <span class="fn">DDGS</span>().<span class="fn">text</span>(
+        <span class="fn">state</span>[<span class="str">"topic"</span>],
+        <span class="fn">region</span><span class="op">=</span><span class="str">"kr-kr"</span>,
+        <span class="fn">max_results</span><span class="op">=</span><span class="num">10</span>
+    )
+
+    <span class="kw">return</span> {
+        <span class="str">"search_results"</span>: <span class="fn">results</span>,
+        <span class="str">"sources"</span>: [<span class="fn">r</span>[<span class="str">"href"</span>] <span class="kw">for</span> <span class="fn">r</span> <span class="kw">in</span> <span class="fn">results</span>]
+    }</pre>
+                </div>
+
+                <h4>분석 노드</h4>
+                <p>검색 결과를 LLM에 입력하여 체계적으로 분석한다.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">analyze_node</span>(<span class="fn">state</span>: <span class="fn">ResearchState</span>):
+    <span class="fn">context</span> <span class="op">=</span> <span class="str">"\n"</span>.<span class="fn">join</span>([
+        <span class="fn">f</span><span class="str">"- {r['title']}: {r['body']}"</span>
+        <span class="kw">for</span> <span class="fn">r</span> <span class="kw">in</span> <span class="fn">state</span>[<span class="str">"search_results"</span>]
+    ])
+
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""주제: {state['topic']}
+
+검색 결과:
+{context}
+
+위 자료를 바탕으로 다음을 분석하세요:
+1. 핵심 사실 정리.
+2. 서로 다른 시각/입장 정리.
+3. 추가 취재가 필요한 부분.
+4. 출처별 신뢰도 평가."""</span>
+
+    <span class="fn">result</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {<span class="str">"analysis"</span>: <span class="fn">result</span>.<span class="fn">content</span>}</pre>
+                </div>
+
+                <h3>3. 리서치 보고서 생성</h3>
+                <p>최종 노드는 분석 결과를 체계적인 보고서로 정리하고 출처 목록을 포함한다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">report_node</span>(<span class="fn">state</span>: <span class="fn">ResearchState</span>):
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""다음 분석을 바탕으로 뉴스룸용 리서치 보고서를 작성하세요.
+
+분석 내용:
+{state['analysis']}
+
+보고서 형식:
+## 주제
+{state['topic']}
+
+## 핵심 요약
+[100자 요약]
+
+## 상세 분석
+[분석 내용 3-4단락]
+
+## 추가 취재 포인트
+[리스트]
+
+## 참고 출처
+[출처 목록 with URL]"""</span>
+
+    <span class="fn">report</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {<span class="str">"report"</span>: <span class="fn">report</span>.<span class="fn">content</span>}</pre>
+                </div>
+
+                <h3>4. 반복 검색 패턴</h3>
+                <p>초기 검색으로 충분한 정보를 얻지 못했을 경우 자동으로 추가 검색을 수행하는 피드백 루프를 구현할 수 있다.</p>
+
+                <h4>조건부 엣지 로직</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">should_continue_research</span>(<span class="fn">state</span>: <span class="fn">ResearchState</span>):
+    <span class="cm"># 분석 결과에 "추가 정보 필요" 키워드가 있으면 계속 검색</span>
+    <span class="kw">if</span> <span class="str">"추가 정보 필요"</span> <span class="kw">in</span> <span class="fn">state</span>[<span class="str">"analysis"</span>]:
+        <span class="kw">return</span> <span class="str">"continue_search"</span>
+    <span class="kw">elif</span> <span class="fn">len</span>(<span class="fn">state</span>[<span class="str">"search_results"</span>]) <span class="op">&lt;</span> <span class="num">5</span>:
+        <span class="kw">return</span> <span class="str">"continue_search"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"generate_report"</span>
+
+graph.<span class="fn">add_conditional_edges</span>(
+    <span class="str">"analyze"</span>,
+    <span class="fn">should_continue_research</span>,
+    {
+        <span class="str">"continue_search"</span>: <span class="str">"search"</span>,
+        <span class="str">"generate_report"</span>: <span class="str">"report"</span>
+    }
+)</pre>
+                </div>
+
+                <h3>5. 한국어 예제: 전세 사기 관련 법안 리서치</h3>
+                <p>다음은 실제 뉴스룸에서 사용할 수 있는 구체적인 예제다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">langgraph.graph</span> <span class="kw">import</span> <span class="fn">StateGraph</span>, <span class="fn">END</span>
+
+<span class="fn">research_workflow</span> <span class="op">=</span> <span class="fn">StateGraph</span>(<span class="fn">ResearchState</span>)
+<span class="fn">research_workflow</span>.<span class="fn">add_node</span>(<span class="str">"search"</span>, <span class="fn">search_node</span>)
+<span class="fn">research_workflow</span>.<span class="fn">add_node</span>(<span class="str">"analyze"</span>, <span class="fn">analyze_node</span>)
+<span class="fn">research_workflow</span>.<span class="fn">add_node</span>(<span class="str">"report"</span>, <span class="fn">report_node</span>)
+
+<span class="fn">research_workflow</span>.<span class="fn">set_entry_point</span>(<span class="str">"search"</span>)
+<span class="fn">research_workflow</span>.<span class="fn">add_edge</span>(<span class="str">"search"</span>, <span class="str">"analyze"</span>)
+<span class="fn">research_workflow</span>.<span class="fn">add_conditional_edges</span>(
+    <span class="str">"analyze"</span>,
+    <span class="fn">should_continue_research</span>
+)
+<span class="fn">research_workflow</span>.<span class="fn">add_edge</span>(<span class="str">"report"</span>, <span class="fn">END</span>)
+
+<span class="fn">research_agent</span> <span class="op">=</span> <span class="fn">research_workflow</span>.<span class="fn">compile</span>()
+
+<span class="cm"># 실행</span>
+<span class="fn">result</span> <span class="op">=</span> <span class="fn">research_agent</span>.<span class="fn">invoke</span>({
+    <span class="str">"topic"</span>: <span class="str">"2024년 전세 사기 방지 법안 현황 및 정부 대책"</span>,
+    <span class="str">"search_results"</span>: [],
+    <span class="str">"analysis"</span>: <span class="str">""</span>,
+    <span class="str">"sources"</span>: [],
+    <span class="str">"report"</span>: <span class="str">""</span>
+})</pre>
+                </div>
+
+                <h3>6. 학술 논문 검색 연동</h3>
+                <p>더 깊이 있는 리서치를 위해 한국학술정보(KISS)나 Google Scholar를 연동할 수 있다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">search_academic</span>(<span class="fn">state</span>: <span class="fn">ResearchState</span>):
+    <span class="cm"># Google Scholar API 또는 KISS 크롤링</span>
+    <span class="kw">import</span> <span class="fn">requests</span>
+    <span class="kw">from</span> <span class="fn">bs4</span> <span class="kw">import</span> <span class="fn">BeautifulSoup</span>
+
+    <span class="fn">scholar_url</span> <span class="op">=</span> <span class="str">f"https://scholar.google.com/scholar?q={state['topic']}"</span>
+    <span class="fn">headers</span> <span class="op">=</span> {
+        <span class="str">"User-Agent"</span>: <span class="str">"Mozilla/5.0..."</span>
+    }
+
+    <span class="fn">response</span> <span class="op">=</span> <span class="fn">requests</span>.<span class="fn">get</span>(<span class="fn">scholar_url</span>, <span class="fn">headers</span><span class="op">=</span><span class="fn">headers</span>)
+    <span class="fn">soup</span> <span class="op">=</span> <span class="fn">BeautifulSoup</span>(<span class="fn">response</span>.<span class="fn">content</span>, <span class="str">'html.parser'</span>)
+
+    <span class="fn">papers</span> <span class="op">=</span> []
+    <span class="kw">for</span> <span class="fn">item</span> <span class="kw">in</span> <span class="fn">soup</span>.<span class="fn">select</span>(<span class="str">'.gs_ri'</span>):
+        <span class="fn">papers</span>.<span class="fn">append</span>({
+            <span class="str">"title"</span>: <span class="fn">item</span>.<span class="fn">select_one</span>(<span class="str">'h3'</span>).<span class="fn">text</span>,
+            <span class="str">"url"</span>: <span class="fn">item</span>.<span class="fn">select_one</span>(<span class="str">'a'</span>).<span class="fn">get</span>(<span class="str">'href'</span>)
+        })
+
+    <span class="kw">return</span> {<span class="str">"search_results"</span>: <span class="fn">papers</span>}</pre>
+                </div>
+
+                <div class="callout info">
+                    <strong>팁: 한국 뉴스 소스 활용</strong>
+                    <p>Korean News API, 네이버 뉴스, 다음 뉴스 등 한국 전문 뉴스 API를 DuckDuckGo와 함께 사용하면 더욱 한국 맥락에 맞는 정보를 수집할 수 있다.</p>
+                </div>
+
+                <h3>7. 리서치 에이전트 설계 퀴즈</h3>
+                <div class="quiz-container">
+                    <div class="quiz-question">당신이 "한국의 AI 규제 동향" 주제로 리서치 에이전트를 설계한다면, 반복 검색을 언제 멈춰야 하는가?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option">
+                            <input type="radio" id="q1a" name="quiz1" value="a">
+                            <label for="q1a">A) 첫 검색 후 분석이 완료되면 바로 멈춘다.</label>
+                        </div>
+                        <div class="quiz-option">
+                            <input type="radio" id="q1b" name="quiz1" value="b">
+                            <label for="q1b">B) 분석에서 "추가 정보 필요"가 나타나고, 정부 발표 + 업계 반응 + 전문가 의견이 모두 수집될 때까지 계속한다.</label>
+                        </div>
+                        <div class="quiz-option">
+                            <input type="radio" id="q1c" name="quiz1" value="c">
+                            <label for="q1c">C) 최대 10개의 검색 결과를 수집할 때까지만 수행한다.</label>
+                        </div>
+                    </div>
+                    <button class="quiz-submit" onclick="checkQuiz('quiz1', 'b')">제출</button>
+                    <div class="quiz-result" id="quiz1-result"></div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button onclick="switchSection('sec-m7')">다음 모듈로</button>
+                </div>
+            </div>
+
+<div class="section" id="sec-m7">
+                <div class="module-header green">
+                    <div>
+                        <h2>멀티 에이전트 뉴스룸</h2>
+                        <p style="margin: 8px 0 0 0; color: #388e3c;">협업 기반 기사 작성 워크플로우</p>
+                    </div>
+                    <div class="module-meta">
+                        <span class="tag time">⏱ 50분</span>
+                        <span class="tag level">📊 고급</span>
+                    </div>
+                </div>
+
+                <h3>1. 멀티 에이전트란?</h3>
+                <p>멀티 에이전트 시스템은 여러 개의 독립적인 에이전트가 각자의 역할을 맡아 협업하는 구조다. 실제 뉴스룸의 조직 구조를 모방하여 설계된다.</p>
+
+                <h4>뉴스룸 비유</h4>
+                <p>전통적인 뉴스룸의 워크플로우:</p>
+                <ul>
+                    <li><strong>기자:</strong> 주제를 받아 기사 초안을 작성한다.</li>
+                    <li><strong>데스크:</strong> 초안을 검토하고 논리적 결함, 누락된 내용을 지적한다.</li>
+                    <li><strong>팩트체커:</strong> 모든 사실적 주장을 검증한다.</li>
+                    <li><strong>편집자:</strong> 모든 피드백을 종합하여 최종본을 완성한다.</li>
+                    <li><strong>발행:</strong> 최종 기사를 발행한다.</li>
+                </ul>
+                <p>멀티 에이전트 시스템은 이러한 각 역할을 AI 에이전트로 구현한 것이다.</p>
+
+                <h3>2. 뉴스룸 멀티 에이전트 설계</h3>
+
+                <h4>상태 정의</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">typing</span> <span class="kw">import</span> <span class="fn">TypedDict</span>
+
+<span class="kw">class</span> <span class="fn">NewsroomState</span>(<span class="fn">TypedDict</span>):
+    <span class="str">topic: str</span>
+    <span class="str">draft: str</span>
+    <span class="str">desk_feedback: str</span>
+    <span class="str">factcheck_result: str</span>
+    <span class="str">final_article: str</span>
+    <span class="str">approved: bool</span></pre>
+                </div>
+
+                <h4>기자 에이전트</h4>
+                <p>주제를 받아 기사 초안을 작성한다. 5W1H를 포함하고 출처를 명시해야 한다.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">reporter_node</span>(<span class="fn">state</span>: <span class="fn">NewsroomState</span>):
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""당신은 탐사보도 기자입니다. 객관보도 원칙을 따르면서 다음 주제로 기사 초안을 작성하세요.
+
+주제: {state['topic']}
+
+작성 요구사항:
+1. 5W1H를 모두 포함: Who(누가), What(무엇을), When(언제), Where(어디서), Why(왜), How(어떻게).
+2. 최소 2개 출처를 명시적으로 인용.
+3. 역피라미드 형식: 가장 중요한 정보부터.
+4. 한국 뉴스 기준 900-1200자.
+5. 주관적 평가는 피하고 객관적 사실만 제시."""</span>
+
+    <span class="fn">draft</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {<span class="str">"draft"</span>: <span class="fn">draft</span>.<span class="fn">content</span>}</pre>
+                </div>
+
+                <h4>데스크 에이전트</h4>
+                <p>초안을 검토하고 편집 관점에서 의견을 제시한다.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">desk_node</span>(<span class="fn">state</span>: <span class="fn">NewsroomState</span>):
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""당신은 뉴스 편집 데스크입니다. 다음 기사 초안을 엄격하게 검토하세요.
+
+<기사 초안>
+{state['draft']}
+</기사 초안>
+
+다음 항목을 검토하세요:
+1. 논리적 허점이나 모순이 있는가?
+2. 중요한 관점이 빠져 있는가?
+3. 제목과 리드가 본문 내용을 적절히 요약하는가?
+4. 문장의 명확성과 가독성은 충분한가?
+5. 필요한 구체적 수정 지시사항을 작성하세요."""</span>
+
+    <span class="fn">feedback</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {<span class="str">"desk_feedback"</span>: <span class="fn">feedback</span>.<span class="fn">content</span>}</pre>
+                </div>
+
+                <h4>팩트체커 에이전트</h4>
+                <p>기사의 모든 사실적 주장을 검증한다.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">factchecker_node</span>(<span class="fn">state</span>: <span class="fn">NewsroomState</span>):
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""당신은 팩트체크 담당입니다. 다음 기사의 모든 사실적 주장을 검증하세요.
+
+<기사>
+{state['draft']}
+</기사>
+
+검증 방법:
+1. 기사의 주요 주장을 항목별로 나열.
+2. 각 주장에 대해 [확인됨/미확인/오류] 표시.
+3. 오류가 있다면 올바른 정보를 제시.
+4. 출처가 명시되지 않은 주장은 [출처 미명시]로 표시."""</span>
+
+    <span class="fn">result</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {<span class="str">"factcheck_result"</span>: <span class="fn">result</span>.<span class="fn">content</span>}</pre>
+                </div>
+
+                <h4>편집자 에이전트</h4>
+                <p>모든 피드백과 팩트체크 결과를 종합하여 최종본을 작성한다.</p>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">editor_node</span>(<span class="fn">state</span>: <span class="fn">NewsroomState</span>):
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""당신은 최종 편집자입니다. 초안, 데스크 피드백, 팩트체크 결과를 모두 반영하여 최종 기사를 작성하세요.
+
+<초안>
+{state['draft']}
+</초안>
+
+<데스크 피드백>
+{state['desk_feedback']}
+</데스크 피드백>
+
+<팩트체크>
+{state['factcheck_result']}
+</팩트체크>
+
+작성 기준:
+1. 모든 팩트체크 오류를 수정.
+2. 데스크의 구체적 지시사항을 반영.
+3. 최종 제목과 리드를 다시 작성.
+4. 필요시 문단 재편성.
+5. 최종 기사를 완성하세요."""</span>
+
+    <span class="fn">final</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {<span class="str">"final_article"</span>: <span class="fn">final</span>.<span class="fn">content</span>, <span class="str">"approved"</span>: <span class="kw">True</span>}</pre>
+                </div>
+
+                <h3>3. 그래프 조립과 실행</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">langgraph.graph</span> <span class="kw">import</span> <span class="fn">StateGraph</span>, <span class="fn">END</span>
+
+<span class="fn">newsroom_graph</span> <span class="op">=</span> <span class="fn">StateGraph</span>(<span class="fn">NewsroomState</span>)
+
+<span class="cm"># 노드 추가</span>
+<span class="fn">newsroom_graph</span>.<span class="fn">add_node</span>(<span class="str">"reporter"</span>, <span class="fn">reporter_node</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_node</span>(<span class="str">"desk"</span>, <span class="fn">desk_node</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_node</span>(<span class="str">"factchecker"</span>, <span class="fn">factchecker_node</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_node</span>(<span class="str">"editor"</span>, <span class="fn">editor_node</span>)
+
+<span class="cm"># 엣지 정의</span>
+<span class="fn">newsroom_graph</span>.<span class="fn">set_entry_point</span>(<span class="str">"reporter"</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_edge</span>(<span class="str">"reporter"</span>, <span class="str">"desk"</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_edge</span>(<span class="str">"desk"</span>, <span class="str">"factchecker"</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_edge</span>(<span class="str">"factchecker"</span>, <span class="str">"editor"</span>)
+<span class="fn">newsroom_graph</span>.<span class="fn">add_edge</span>(<span class="str">"editor"</span>, <span class="fn">END</span>)
+
+<span class="cm"># 컴파일</span>
+<span class="fn">newsroom</span> <span class="op">=</span> <span class="fn">newsroom_graph</span>.<span class="fn">compile</span>()</pre>
+                </div>
+
+                <h3>4. 조건부 리젝트 패턴</h3>
+                <p>데스크가 기사를 "기각"하거나 팩트체크에서 "오류"가 나면 기자에게 돌려보낸다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">should_reject</span>(<span class="fn">state</span>: <span class="fn">NewsroomState</span>):
+    <span class="cm"># 데스크에서 "기각" 지시</span>
+    <span class="kw">if</span> <span class="str">"기각"</span> <span class="kw">in</span> <span class="fn">state</span>[<span class="str">"desk_feedback"</span>]:
+        <span class="kw">return</span> <span class="str">"reject"</span>
+
+    <span class="cm"># 팩트체크에서 오류 발견</span>
+    <span class="kw">if</span> <span class="str">"오류"</span> <span class="kw">in</span> <span class="fn">state</span>[<span class="str">"factcheck_result"</span>]:
+        <span class="kw">return</span> <span class="str">"reject"</span>
+
+    <span class="kw">return</span> <span class="str">"approve"</span>
+
+<span class="fn">newsroom_graph</span>.<span class="fn">add_conditional_edges</span>(
+    <span class="str">"factchecker"</span>,
+    <span class="fn">should_reject</span>,
+    {
+        <span class="str">"reject"</span>: <span class="str">"reporter"</span>,
+        <span class="str">"approve"</span>: <span class="str">"editor"</span>
+    }
+)</pre>
+                </div>
+
+                <h3>5. 피드백 루프와 재시도</h3>
+                <p>기자가 피드백을 받으면 수정하고 다시 제출한다. 최대 3회 반복 후 강제 종료한다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">class</span> <span class="fn">NewsroomStateWithRetry</span>(<span class="fn">TypedDict</span>):
+    <span class="str">topic: str</span>
+    <span class="str">draft: str</span>
+    <span class="str">desk_feedback: str</span>
+    <span class="str">factcheck_result: str</span>
+    <span class="str">final_article: str</span>
+    <span class="str">approved: bool</span>
+    <span class="str">retry_count: int</span>
+
+<span class="kw">def</span> <span class="fn">reporter_revise_node</span>(<span class="fn">state</span>: <span class="fn">NewsroomStateWithRetry</span>):
+    <span class="fn">prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""당신은 탐사보도 기자입니다. 편집 피드백을 받아 기사를 수정하세요.
+
+<원본 초안>
+{state['draft']}
+</원본 초안>
+
+<피드백>
+{state['desk_feedback']}
+</피드백>
+
+<팩트체크>
+{state['factcheck_result']}
+</팩트체크>
+
+피드백의 모든 지적을 반영하여 수정하세요."""</span>
+
+    <span class="fn">revised</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="fn">prompt</span>)
+    <span class="kw">return</span> {
+        <span class="str">"draft"</span>: <span class="fn">revised</span>.<span class="fn">content</span>,
+        <span class="str">"retry_count"</span>: <span class="fn">state</span>[<span class="str">"retry_count"</span>] <span class="op">+</span> <span class="num">1</span>
+    }
+
+<span class="kw">def</span> <span class="fn">should_continue_retry</span>(<span class="fn">state</span>: <span class="fn">NewsroomStateWithRetry</span>):
+    <span class="kw">if</span> <span class="fn">state</span>[<span class="str">"retry_count"</span>] <span class="op">&gt;=</span> <span class="num">3</span>:
+        <span class="kw">return</span> <span class="str">"force_publish"</span>
+    <span class="kw">elif</span> <span class="str">"오류"</span> <span class="kw">in</span> <span class="fn">state</span>[<span class="str">"factcheck_result"</span>]:
+        <span class="kw">return</span> <span class="str">"retry"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"approve"</span></span>
+                </div>
+
+                <h3>6. 한국어 예제: "최저임금 인상" 주제 처리</h3>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="fn">result</span> <span class="op">=</span> <span class="fn">newsroom</span>.<span class="fn">invoke</span>({
+    <span class="str">"topic"</span>: <span class="str">"2024년 최저임금 인상안 최종 확정, 내년 월급 얼마나 올라?</span>,
+    <span class="str">"draft"</span>: <span class="str">""</span>,
+    <span class="str">"desk_feedback"</span>: <span class="str">""</span>,
+    <span class="str">"factcheck_result"</span>: <span class="str">""</span>,
+    <span class="str">"final_article"</span>: <span class="str">""</span>,
+    <span class="str">"approved"</span>: <span class="kw">False</span>
+})
+
+<span class="cm"># 최종 기사 출력</span>
+<span class="fn">print</span>(<span class="str">"=== 최종 기사 ==="</span>)
+<span class="fn">print</span>(<span class="fn">result</span>[<span class="str">"final_article"</span>])
+<span class="fn">print</span>(<span class="str">"\n=== 발행 상태 ==="</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"승인됨: {result['approved']}"</span>)</pre>
+                </div>
+
+                <div class="callout warning">
+                    <strong>주의: AI 생성 콘텐츠 표시</strong>
+                    <p>AI로 생성된 기사는 반드시 "이 기사는 AI 어시스턴트의 도움을 받아 작성되었습니다"라는 고지를 부칙해야 한다. 한국 언론사의 편집규칙을 확인하세요.</p>
+                </div>
+
+                <h3>7. 멀티 에이전트 역할 설계 퀴즈</h3>
+                <div class="quiz-container">
+                    <div class="quiz-question">멀티 에이전트 뉴스룸에서 팩트체커가 기사의 한 주장에 "미확인" 표시를 했다면, 다음 단계는 어떻게 진행되어야 하는가?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option">
+                            <input type="radio" id="q2a" name="quiz2" value="a">
+                            <label for="q2a">A) 기사를 그대로 발행한다. 독자가 판단하도록 한다.</label>
+                        </div>
+                        <div class="quiz-option">
+                            <input type="radio" id="q2b" name="quiz2" value="b">
+                            <label for="q2b">B) "미확인" 항목을 팩트체커가 구체적으로 기자에게 전달하고, 기자는 추가 취재를 통해 출처를 명시하거나 해당 주장을 제거해야 한다.</label>
+                        </div>
+                        <div class="quiz-option">
+                            <input type="radio" id="q2c" name="quiz2" value="c">
+                            <label for="q2c">C) 미확인 사항만 따옴표 안에 넣어 발행한다.</label>
+                        </div>
+                    </div>
+                    <button class="quiz-submit" onclick="checkQuiz('quiz2', 'b')">제출</button>
+                    <div class="quiz-result" id="quiz2-result"></div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button onclick="switchSection('sec-m6')">이전 모듈</button>
+                    <button onclick="switchSection('sec-m8')">다음 모듈로</button>
+                </div>
+            </div>
+
+<div class="section" id="sec-m8">
+                <div class="module-header purple">
+                    <div>
+                        <h2>실전 배포와 커스터마이징</h2>
+                        <p style="margin: 8px 0 0 0; color: #6a1b9a;">프로덕션 환경에서의 에이전트 운영</p>
+                    </div>
+                    <div class="module-meta">
+                        <span class="tag time">⏱ 40분</span>
+                        <span class="tag level">📊 고급</span>
+                    </div>
+                </div>
+
+                <h3>1. 에이전트 배포 옵션</h3>
+                <p>리서치 에이전트나 멀티 에이전트 시스템을 실제 뉴스룸에 도입할 때 선택할 수 있는 배포 방식은 다음과 같다.</p>
+
+                <h4>Jupyter 노트북 (개인 실험용)</h4>
+                <ul>
+                    <li>가장 간단한 프로토타입 개발 방식.</li>
+                    <li>대화형 인터페이스로 빠른 피드백 가능.</li>
+                    <li>팀 공유: Google Colab, JupyterHub로 확장 가능.</li>
+                </ul>
+
+                <h4>FastAPI 웹 서비스</h4>
+                <ul>
+                    <li>뉴스룸의 여러 기자가 HTTP 요청으로 에이전트를 호출.</li>
+                    <li>REST API 형식으로 표준화된 인터페이스 제공.</li>
+                    <li>클라우드 서버(AWS, Google Cloud)에 배포 가능.</li>
+                </ul>
+
+                <h4>Streamlit 대시보드</h4>
+                <ul>
+                    <li>기자들이 브라우저에서 직접 사용 가능한 UI.</li>
+                    <li>파이썬만으로 웹 인터페이스 작성 가능.</li>
+                    <li>Streamlit Cloud로 무료 호스팅 가능.</li>
+                </ul>
+
+                <h3>2. FastAPI로 에이전트 API 만들기</h3>
+                <p>기사 분석 에이전트를 REST API로 제공하는 예제다.</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">fastapi</span> <span class="kw">import</span> <span class="fn">FastAPI</span>
+<span class="kw">from</span> <span class="fn">pydantic</span> <span class="kw">import</span> <span class="fn">BaseModel</span>
+<span class="kw">from</span> <span class="fn">typing</span> <span class="kw">import</span> <span class="fn">List</span>
+
+<span class="fn">app</span> <span class="op">=</span> <span class="fn">FastAPI</span>(<span class="fn">title</span><span class="op">=</span><span class="str">"뉴스룸 AI 에이전트 API"</span>)
+
+<span class="kw">class</span> <span class="fn">ArticleRequest</span>(<span class="fn">BaseModel</span>):
+    <span class="str">article: str</span>
+    <span class="str">analyses: List[str] = ["summary", "factcheck", "tone"]</span>
+
+<span class="kw">class</span> <span class="fn">ArticleResponse</span>(<span class="fn">BaseModel</span>):
+    <span class="str">summary: str</span>
+    <span class="str">fact_check: str</span>
+    <span class="str">tone: str</span>
+    <span class="str">ai_generated: bool = True</span>
+
+<span class="fn">@app</span>.<span class="fn">post</span>(<span class="str">"/analyze"</span>, <span class="fn">response_model</span><span class="op">=</span><span class="fn">ArticleResponse</span>)
+<span class="kw">async</span> <span class="kw">def</span> <span class="fn">analyze_article</span>(<span class="fn">req</span>: <span class="fn">ArticleRequest</span>):
+    <span class="fn">result</span> <span class="op">=</span> <span class="fn">journalism_agent</span>.<span class="fn">invoke</span>({
+        <span class="str">"article"</span>: <span class="fn">req</span>.<span class="fn">article</span>,
+        <span class="str">"current_step"</span>: <span class="str">"start"</span>
+    })
+
+    <span class="kw">return</span> <span class="fn">ArticleResponse</span>(
+        <span class="fn">summary</span><span class="op">=</span><span class="fn">result</span>.<span class="fn">get</span>(<span class="str">"summary"</span>),
+        <span class="fn">fact_check</span><span class="op">=</span><span class="fn">result</span>.<span class="fn">get</span>(<span class="str">"fact_check"</span>),
+        <span class="fn">tone</span><span class="op">=</span><span class="fn">result</span>.<span class="fn">get</span>(<span class="str">"tone"</span>)
+    )
+
+<span class="cm"># 실행: uvicorn app:app --reload</span></pre>
+                </div>
+
+                <h3>3. 한국어 최적화</h3>
+
+                <h4>한국어 프롬프트 튜닝</h4>
+                <p>한국어 자연언어처리의 특성을 반영한 프롬프트 작성 팁:</p>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="cm"># 좋은 예: 구체적이고 명확한 한국어</span>
+<span class="fn">good_prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"""다음 뉴스 기사에서 가장 중요한 3가지 사실을 번호 매겨서 정리하세요.
+각 사실 뒤에는 괄호 안에 출처를 명시하세요.
+
+기사:
+{article}
+
+형식:
+1. [사실 1] (출처: OO신문)
+2. [사실 2] (출처: OO기관)
+3. [사실 3] (출처: OO인터뷰)"""</span>
+
+<span class="cm"># 피할 예: 모호한 표현</span>
+<span class="fn">bad_prompt</span> <span class="op">=</span> <span class="fn">f</span><span class="str">"이 기사를 요약해줘."</span></pre>
+                </div>
+
+                <h4>한국 뉴스 특성 반영</h4>
+                <ul>
+                    <li><strong>역피라미드 형식:</strong> 가장 중요한 정보부터 제시.</li>
+                    <li><strong>객관보도 원칙:</strong> 주관적 해석 최소화, 사실 확인 강조.</li>
+                    <li><strong>맥락 설명:</strong> 한국 정치·경제·사회의 맥락 이해 필요.</li>
+                </ul>
+
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="cm"># 한국 뉴스 맥락 포함 프롬프트</span>
+<span class="fn">korean_context_prompt</span> <span class="op">=</span> <span class="str">"""당신은 한국 뉴스 기자입니다.
+
+한국의 뉴스 작성 원칙:
+1. 역피라미드 형식: 가장 중요한 정보(WHO, WHAT, WHEN) 먼저.
+2. 객관보도: '~라고 주장한다', '~에 따르면' 표현 사용.
+3. 정부 발표와 야당 반응 균형있게 제시.
+4. 수치는 전년도나 전월도와 비교 표시.
+
+다음 주제로 기사를 작성하세요:
+{topic}"""</span></pre>
+                </div>
+
+                <h4>한국어 토큰 효율성</h4>
+                <p>한국어는 영어보다 토큰 사용량이 많다. 특히 Hangul을 BPE로 인코딩할 때 문자 한 개가 여러 토큰으로 분해될 수 있다.</p>
+                <ul>
+                    <li>평균적으로 한국어 1자 = 2-3 토큰</li>
+                    <li>영어 1단어 = 1-1.5 토큰</li>
+                    <li>따라서 같은 내용이라도 한국어가 더 많은 비용 발생</li>
+                </ul>
+
+                <h3>4. 비용 관리</h3>
+
+                <h4>토큰 사용량 모니터링</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">langchain.callbacks</span> <span class="kw">import</span> <span class="fn">get_openai_callback</span>
+
+<span class="kw">with</span> <span class="fn">get_openai_callback</span>() <span class="kw">as</span> <span class="fn">cb</span>:
+    <span class="fn">result</span> <span class="op">=</span> <span class="fn">agent</span>.<span class="fn">invoke</span>({<span class="str">"topic"</span>: <span class="str">"test"</span>})
+
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"총 토큰: {cb.total_tokens}"</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"입력 토큰: {cb.prompt_tokens}"</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"출력 토큰: {cb.completion_tokens}"</span>)
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"비용: ${cb.total_cost}"</span>)</pre>
+                </div>
+
+                <h4>모델 선택 전략</h4>
+                <table>
+                    <tr>
+                        <th>모델</th>
+                        <th>입력 비용 (토큰당)</th>
+                        <th>출력 비용</th>
+                        <th>추천 용도</th>
+                    </tr>
+                    <tr>
+                        <td>GPT-4o mini</td>
+                        <td>$0.150/M</td>
+                        <td>$0.600/M</td>
+                        <td>대량 처리, 비용 우선</td>
+                    </tr>
+                    <tr>
+                        <td>GPT-4o</td>
+                        <td>$5/M</td>
+                        <td>$15/M</td>
+                        <td>복잡한 분석, 품질 우선</td>
+                    </tr>
+                </table>
+
+                <h4>캐싱으로 중복 요청 절감</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">from</span> <span class="fn">langchain.cache</span> <span class="kw">import</span> <span class="fn">SQLiteCache</span>
+<span class="kw">import</span> <span class="fn">langchain</span>
+
+<span class="cm"># SQLite 캐시 설정</span>
+<span class="fn">langchain</span>.<span class="fn">llm_cache</span> <span class="op">=</span> <span class="fn">SQLiteCache</span>(<span class="fn">database_path</span><span class="op">=</span><span class="str">"llm_cache.db"</span>)
+
+<span class="cm"># 이제 동일한 프롬프트는 캐시에서 조회</span>
+<span class="fn">result1</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="str">"같은 주제"</span>)  <span class="cm"># API 호출</span>
+<span class="fn">result2</span> <span class="op">=</span> <span class="fn">llm</span>.<span class="fn">invoke</span>(<span class="str">"같은 주제"</span>)  <span class="cm"># 캐시에서 조회</span></pre>
+                </div>
+
+                <h3>5. 에러 처리와 안정성</h3>
+
+                <h4>API 타임아웃과 Rate Limit 대응</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">import</span> <span class="fn">time</span>
+<span class="kw">from</span> <span class="fn">tenacity</span> <span class="kw">import</span> <span class="fn">retry</span>, <span class="fn">stop_after_attempt</span>, <span class="fn">wait_exponential</span>
+
+<span class="fn">@retry</span>(<span class="fn">stop</span><span class="op">=</span><span class="fn">stop_after_attempt</span>(<span class="num">3</span>), <span class="fn">wait</span><span class="op">=</span><span class="fn">wait_exponential</span>())
+<span class="kw">def</span> <span class="fn">call_agent_with_retry</span>(<span class="fn">topic</span>):
+    <span class="kw">try</span>:
+        <span class="kw">return</span> <span class="fn">agent</span>.<span class="fn">invoke</span>({<span class="str">"topic"</span>: <span class="fn">topic</span>})
+    <span class="kw">except</span> <span class="fn">Exception</span> <span class="kw">as</span> <span class="fn">e</span>:
+        <span class="fn">print</span>(<span class="fn">f</span><span class="str">"에러 발생: {e}"</span>)
+        <span class="kw">raise</span>
+
+<span class="cm"># 자동 재시도 (최대 3회, 지수 백오프)</span>
+<span class="fn">result</span> <span class="op">=</span> <span class="fn">call_agent_with_retry</span>(<span class="str">"최저임금 인상"</span>)</pre>
+                </div>
+
+                <h4>폴백 전략</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="kw">def</span> <span class="fn">analyze_with_fallback</span>(<span class="fn">article</span>):
+    <span class="kw">try</span>:
+        <span class="cm"># 1순위: 고급 모델 사용</span>
+        <span class="fn">result</span> <span class="op">=</span> <span class="fn">gpt4_model</span>.<span class="fn">invoke</span>(<span class="fn">article</span>)
+    <span class="kw">except</span>:
+        <span class="kw">try</span>:
+            <span class="cm"># 2순위: 저렴한 모델로 폴백</span>
+            <span class="fn">result</span> <span class="op">=</span> <span class="fn">gpt_mini_model</span>.<span class="fn">invoke</span>(<span class="fn">article</span>)
+        <span class="kw">except</span>:
+            <span class="cm"># 3순위: 캐시된 결과 또는 기본값</span>
+            <span class="fn">result</span> <span class="op">=</span> {<span class="str">"error"</span>: <span class="str">"분석 실패. 나중에 다시 시도하세요."</span>}
+
+    <span class="kw">return</span> <span class="fn">result</span></pre>
+                </div>
+
+                <h3>6. 보안과 윤리</h3>
+
+                <h4>API 키 관리</h4>
+                <div class="code-block">
+                    <div class="code-header">
+                        <span>Python</span>
+                        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                    </div>
+                    <pre><span class="cm"># .env 파일</span>
+<span class="str">OPENAI_API_KEY=sk-...</span>
+<span class="str">GOOGLE_API_KEY=AIzaSy...</span>
+
+<span class="cm"># Python 코드</span>
+<span class="kw">import</span> <span class="fn">os</span>
+<span class="kw">from</span> <span class="fn">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+
+<span class="fn">load_dotenv</span>()
+<span class="fn">api_key</span> <span class="op">=</span> <span class="fn">os</span>.<span class="fn">getenv</span>(<span class="str">"OPENAI_API_KEY"</span>)
+
+<span class="cm"># 절대 코드에 직접 키를 입력하지 마세요!</span></pre>
+                </div>
+
+                <h4>기사 데이터 외부 전송 주의</h4>
+                <p>OpenAI나 Google 같은 외부 API에 기사를 보낼 때는 다음을 고려하세요:</p>
+                <ul>
+                    <li>미발표 뉴스나 스쿱은 보내지 말 것.</li>
+                    <li>개인정보(인명, 주소)는 마스킹할 것.</li>
+                    <li>회사 정책과 데이터 처리 약관 확인 필수.</li>
+                </ul>
+
+                <h4>AI 생성 콘텐츠 표시 의무</h4>
+                <div class="callout success">
+                    <strong>필수 고지</strong>
+                    <p>다음은 기사 끝에 반드시 포함되어야 할 고지문 예시입니다:</p>
+                    <p style="margin-top: 10px; font-style: italic;">"이 기사는 AI 어시스턴트의 도움을 받아 취재 및 작성되었습니다. 최종 검증과 편집은 기자와 편집자가 직접 수행했습니다."</p>
+                </div>
+
+                <h4>취재원 보호</h4>
+                <p>리서치 에이전트가 검색하는 과정에서 익명 취재원의 신원이 노출될 수 있다. 다음을 주의하세요:</p>
+                <ul>
+                    <li>내부 취재 노트나 비공개 메모는 AI에 입력하지 말 것.</li>
+                    <li>이미 공개된 정보만 학습 및 분석에 사용.</li>
+                    <li>취재원의 이름이 포함된 대화는 마스킹할 것.</li>
+                </ul>
+
+                <h3>7. 배포 전략 선택 퀴즈</h3>
+                <div class="quiz-container">
+                    <div class="quiz-question">한국의 중규모 뉴스룸(20명의 기자)이 AI 리서치 에이전트를 도입하려고 한다. 비용 효율성과 사용성을 모두 고려할 때 최적의 배포 방식은?</div>
+                    <div class="quiz-options">
+                        <div class="quiz-option">
+                            <input type="radio" id="q3a" name="quiz3" value="a">
+                            <label for="q3a">A) 각 기자가 로컬 Jupyter 노트북에서 실행.</label>
+                        </div>
+                        <div class="quiz-option">
+                            <input type="radio" id="q3b" name="quiz3" value="b">
+                            <label for="q3b">B) FastAPI로 중앙 서버를 구축하고, 기자들은 브라우저에서 REST API로 접근. 캐싱으로 비용 절감.</label>
+                        </div>
+                        <div class="quiz-option">
+                            <input type="radio" id="q3c" name="quiz3" value="c">
+                            <label for="q3c">C) Streamlit Cloud로 무료 호스팅하되, 토큰 제한 없이 모든 분석 무료 제공.</label>
+                        </div>
+                    </div>
+                    <button class="quiz-submit" onclick="checkQuiz('quiz3', 'b')">제출</button>
+                    <div class="quiz-result" id="quiz3-result"></div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button onclick="switchSection('sec-m7')">이전 모듈</button>
+                    <button onclick="switchSection('sec-ref')">레퍼런스로</button>
+                </div>
+            </div>
+
+<div class="section" id="sec-ref">
+                <div class="module-header blue">
+                    <div>
+                        <h2>레퍼런스 카드</h2>
+                        <p style="margin: 8px 0 0 0; color: #1976d2;">빠른 참조를 위한 요약 및 리소스</p>
+                    </div>
+                </div>
+
+                <h3>1. LangGraph 핵심 패턴</h3>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        StateGraph 기본 구조
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Python</span>
+                                <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                            </div>
+                            <pre><span class="kw">from</span> <span class="fn">langgraph.graph</span> <span class="kw">import</span> <span class="fn">StateGraph</span>, <span class="fn">END</span>
+<span class="kw">from</span> <span class="fn">typing</span> <span class="kw">import</span> <span class="fn">TypedDict</span>
+
+<span class="kw">class</span> <span class="fn">MyState</span>(<span class="fn">TypedDict</span>):
+    <span class="str">data: str</span>
+    <span class="str">result: str</span>
+
+<span class="fn">graph</span> <span class="op">=</span> <span class="fn">StateGraph</span>(<span class="fn">MyState</span>)
+<span class="fn">graph</span>.<span class="fn">add_node</span>(<span class="str">"node1"</span>, <span class="fn">node1_func</span>)
+<span class="fn">graph</span>.<span class="fn">set_entry_point</span>(<span class="str">"node1"</span>)
+<span class="fn">graph</span>.<span class="fn">add_edge</span>(<span class="str">"node1"</span>, <span class="fn">END</span>)
+
+<span class="fn">compiled</span> <span class="op">=</span> <span class="fn">graph</span>.<span class="fn">compile</span>()</span>
+                        </pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        조건부 엣지 패턴
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Python</span>
+                                <button class="copy-btn" onclick="copyCode(this)">복사</button>
+                            </div>
+                            <pre><span class="kw">def</span> <span class="fn">decide_path</span>(<span class="fn">state</span>):
+    <span class="kw">if</span> <span class="fn">state</span>[<span class="str">"condition"</span>]:
+        <span class="kw">return</span> <span class="str">"path_a"</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">"path_b"</span>
+
+<span class="fn">graph</span>.<span class="fn">add_conditional_edges</span>(
+    <span class="str">"node1"</span>,
+    <span class="fn">decide_path</span>,
+    {<span class="str">"path_a"</span>: <span class="str">"node_a"</span>, <span class="str">"path_b"</span>: <span class="str">"node_b"</span>}
+)</span>
+                        </pre>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>2. 주요 도구 라이브러리 요약</h3>
+                <table>
+                    <tr>
+                        <th>라이브러리</th>
+                        <th>용도</th>
+                        <th>설치</th>
+                    </tr>
+                    <tr>
+                        <td><strong>LangChain</strong></td>
+                        <td>LLM 호출, 프롬프트 관리, 메모리</td>
+                        <td>pip install langchain</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LangGraph</strong></td>
+                        <td>에이전트 그래프 구축, 상태 관리</td>
+                        <td>pip install langgraph</td>
+                    </tr>
+                    <tr>
+                        <td><strong>duckduckgo-search</strong></td>
+                        <td>웹 검색 (API 키 불필요)</td>
+                        <td>pip install duckduckgo-search</td>
+                    </tr>
+                    <tr>
+                        <td><strong>newsapi</strong></td>
+                        <td>뉴스 헤드라인 검색</td>
+                        <td>pip install newsapi-python</td>
+                    </tr>
+                    <tr>
+                        <td><strong>FastAPI</strong></td>
+                        <td>REST API 웹 서비스 개발</td>
+                        <td>pip install fastapi uvicorn</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Streamlit</strong></td>
+                        <td>대시보드 및 웹 UI 개발</td>
+                        <td>pip install streamlit</td>
+                    </tr>
+                </table>
+
+                <h3>3. 뉴스룸 에이전트 템플릿 5종</h3>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        1. 기사 분석기
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <p><strong>목적:</strong> 기사를 입력받아 요약, 팩트체크, 톤 분석 수행.</p>
+                        <p><strong>입력:</strong> 기사 텍스트</p>
+                        <p><strong>출력:</strong> JSON (summary, factcheck, tone)</p>
+                        <p><strong>사용 시기:</strong> 외부 기사 검토, 퀵 분석이 필요할 때.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        2. 뉴스 브리핑 봇
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <p><strong>목적:</strong> 매일 아침 특정 주제의 뉴스를 자동으로 수집하고 요약.</p>
+                        <p><strong>입력:</strong> 관심 주제 목록</p>
+                        <p><strong>출력:</strong> 일일 브리핑 레포트</p>
+                        <p><strong>사용 시기:</strong> 정기적 모니터링, 경영진 아침 브리핑.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        3. 리서치 어시스턴트
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <p><strong>목적:</strong> 주제를 받아 웹 리서치 자동 수행, 보고서 작성.</p>
+                        <p><strong>입력:</strong> 취재 주제</p>
+                        <p><strong>출력:</strong> 마크다운 형식 리서치 보고서</p>
+                        <p><strong>사용 시기:</strong> 배경 조사, 심화 취재 준비.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        4. 멀티 에이전트 뉴스룸
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <p><strong>목적:</strong> 기자 → 데스크 → 팩트체커 → 편집자 워크플로우 자동화.</p>
+                        <p><strong>입력:</strong> 뉴스 주제</p>
+                        <p><strong>출력:</strong> 발행 준비 완료된 기사</p>
+                        <p><strong>사용 시기:</strong> 시간 압박이 있을 때 신속한 기사 작성.</p>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        5. API 서비스
+                        <span class="icon">▼</span>
+                    </div>
+                    <div class="accordion-body">
+                        <p><strong>목적:</strong> 기존 뉴스룸 CMS나 편집 시스템과 통합.</p>
+                        <p><strong>입력:</strong> REST API 요청</p>
+                        <p><strong>출력:</strong> JSON 응답</p>
+                        <p><strong>사용 시기:</strong> 기사 발행 플랫폼 통합, 자동화 워크플로우.</p>
+                    </div>
+                </div>
+
+                <h3>4. 비용 계산 가이드</h3>
+                <p>GPT-4o mini 기준 (2024년 가격):</p>
+                <ul>
+                    <li><strong>기사 1건 분석:</strong> 약 500 토큰 입력 × 3 출력 = 1500 토큰 = $0.00055</li>
+                    <li><strong>하루 100건 분석:</strong> 100 × $0.00055 = $0.055</li>
+                    <li><strong>월 3000건:</strong> 약 $1.65</li>
+                    <li><strong>멀티 에이전트 1건:</strong> 약 2000 토큰 (모든 에이전트 합산) = $0.002</li>
+                    <li><strong>월 1000회 멀티 에이전트:</strong> 약 $2</li>
+                </ul>
+
+                <h3>5. 추가 학습 자료</h3>
+
+                <h4>공식 문서 및 레포지토리</h4>
+                <ul>
+                    <li><strong>NirDiamant GenAI_Agents:</strong> <code>https://github.com/NirDiamant/GenAI_Agents</code></li>
+                    <li><strong>LangChain 공식 문서:</strong> <code>https://python.langchain.com</code></li>
+                    <li><strong>LangGraph 가이드:</strong> <code>https://langchain-ai.github.io/langgraph</code></li>
+                </ul>
+
+                <h4>한국어 튜토리얼</h4>
+                <ul>
+                    <li>LangChain 한국어 입문</li>
+                    <li>멀티 에이전트 시스템 심화 가이드</li>
+                    <li>뉴스 자동화 사례 연구 (조선일보, 중앙일보 AI 사례)</li>
+                </ul>
+
+                <div class="callout info">
+                    <strong>다음 단계</strong>
+                    <p>이 Part 3를 완료한 후, 실제 뉴스룸에 배포하기 전에 다음을 확인하세요:</p>
+                    <ol style="margin-left: 20px;">
+                        <li>API 키 보안 설정</li>
+                        <li>데이터 처리 정책 검토</li>
+                        <li>기자 팀 트레이닝</li>
+                        <li>AI 생성 콘텐츠 고지 규정</li>
+                        <li>작은 규모로 파일럿 시작</li>
+                    </ol>
+                </p>
+                </div>
+
+                <div class="nav-buttons">
+                    <button onclick="switchSection('sec-m8')">이전 모듈</button>
+                </div>
+            </div>
+</div>
+<script>
+const SECTIONS = ['sec-intro','sec-m1','sec-m2','sec-m3','sec-m4','sec-m5','sec-m6','sec-m7','sec-m8','sec-ref'];
+const TOTAL = SECTIONS.length;
+let visited = new Set();
+let current = 'sec-intro';
+
+function showSection(id) {
+  SECTIONS.forEach(s => {
+    const el = document.getElementById(s);
+    if (el) { el.classList.remove('active'); }
+  });
+  const target = document.getElementById(id);
+  if (target) { target.classList.add('active'); }
+  current = id;
+  visited.add(id);
+  updateNav();
+  updateProgress();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function switchSection(id) { showSection(id); }
+
+function updateNav() {
+  document.querySelectorAll('.sidebar .nav-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(current)) {
+      item.classList.add('active');
+    }
+  });
+}
+
+function updateProgress() {
+  const pct = Math.round(visited.size / TOTAL * 100);
+  const fill = document.getElementById('progressFill');
+  const label = document.getElementById('progressLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (label) label.textContent = visited.size + '/' + TOTAL + ' 완료';
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '복사됨!';
+    setTimeout(() => { btn.textContent = '복사'; }, 1500);
+  });
+}
+
+function toggleAnswer(btn) {
+  const answer = btn.nextElementSibling;
+  if (answer.style.display === 'none' || !answer.style.display) {
+    answer.style.display = 'block';
+    btn.textContent = '정답 숨기기';
+  } else {
+    answer.style.display = 'none';
+    btn.textContent = '정답 보기';
+  }
+}
+
+function toggleAccordion(header) {
+  const acc = header.closest('.accordion');
+  if (acc) { acc.classList.toggle('open'); }
+  const item = header.closest('.accordion-item');
+  if (item) { item.classList.toggle('active'); item.classList.toggle('open'); }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+function checkQuiz(quizName, correctAnswer) {
+  const selected = document.querySelector('input[name="' + quizName + '"]:checked');
+  const resultDiv = document.getElementById(quizName + '-result');
+  if (!resultDiv) return;
+  resultDiv.classList.add('show');
+  if (!selected) {
+    resultDiv.classList.add('incorrect');
+    resultDiv.innerText = '답을 선택해주세요.';
+    return;
+  }
+  if (selected.value === correctAnswer) {
+    resultDiv.classList.remove('incorrect');
+    resultDiv.classList.add('correct');
+    resultDiv.innerText = '정답입니다! 훌륭한 이해입니다.';
+  } else {
+    resultDiv.classList.remove('correct');
+    resultDiv.classList.add('incorrect');
+    resultDiv.innerText = '다시 한 번 생각해보세요.';
+  }
+}
+
+// Initialize
+showSection('sec-intro');
+</script>
+</body>
+</html>
