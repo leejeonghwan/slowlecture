@@ -1,0 +1,3546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>저널리즘을 위한 알고리즘과 머신러닝</title>
+<style>
+  :root {
+    --bg: #fafaf9; --surface: #ffffff; --border: #e7e5e4;
+    --text: #1c1917; --text-secondary: #78716c;
+    --accent: #2563eb; --accent-light: #eff6ff; --accent-dark: #1d4ed8;
+    --green: #16a34a; --green-light: #f0fdf4;
+    --orange: #ea580c; --orange-light: #fff7ed;
+    --purple: #7c3aed; --purple-light: #f5f3ff;
+    --red: #dc2626; --red-light: #fef2f2;
+    --code-bg: #1e293b; --code-text: #e2e8f0;
+    --sidebar-w: 280px; --header-h: 64px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; font-size:16px; }
+  .header { position:fixed; top:0; left:0; right:0; z-index:100; height:var(--header-h); background:var(--surface); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; }
+  .header h1 { font-size:20px; font-weight:700; }
+  .header .badge { font-size:11px; font-weight:600; background:var(--accent-light); color:var(--accent); padding:3px 10px; border-radius:12px; }
+  .menu-btn { display:none; background:none; border:none; cursor:pointer; font-size:24px; color:var(--text); }
+  .sidebar { position:fixed; top:var(--header-h); left:0; bottom:0; width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border); overflow-y:auto; padding:20px 0; z-index:90; transition:transform 0.3s; }
+  .sidebar .nav-group { margin-bottom:8px; }
+  .sidebar .nav-group-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-secondary); padding:8px 20px 4px; }
+  .sidebar .nav-item { display:block; padding:8px 20px 8px 28px; font-size:13.5px; color:var(--text-secondary); text-decoration:none; border-left:3px solid transparent; cursor:pointer; transition:all 0.15s; }
+  .sidebar .nav-item:hover { color:var(--text); background:var(--bg); }
+  .sidebar .nav-item.active { color:var(--accent); font-weight:600; border-left-color:var(--accent); background:var(--accent-light); }
+  .sidebar .progress-bar { margin:16px 20px; padding:12px; background:var(--bg); border-radius:8px; }
+  .sidebar .progress-bar .bar-bg { height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+  .sidebar .progress-bar .bar-fill { height:100%; background:var(--accent); border-radius:3px; transition:width 0.4s; }
+  .sidebar .progress-bar .label { font-size:12px; color:var(--text-secondary); margin-top:6px; }
+  .main { margin-left:var(--sidebar-w); margin-top:var(--header-h); padding:40px 48px 80px; max-width:920px; }
+  .section { display:none; } .section.active { display:block; }
+  h2 { font-size:28px; font-weight:800; margin-bottom:8px; }
+  h3 { font-size:20px; font-weight:700; margin:32px 0 12px; }
+  h4 { font-size:16px; font-weight:700; margin:24px 0 8px; }
+  p { margin-bottom:16px; } ul,ol { margin:0 0 16px 20px; } li { margin-bottom:6px; }
+  a { color:var(--accent); }
+  .module-header { padding:24px 28px; border-radius:12px; margin-bottom:32px; }
+  .module-header.m1 { background:var(--accent-light); border-left:4px solid var(--accent); }
+  .module-header.m2 { background:var(--green-light); border-left:4px solid var(--green); }
+  .module-header.m3 { background:var(--purple-light); border-left:4px solid var(--purple); }
+  .module-header.m4 { background:var(--orange-light); border-left:4px solid var(--orange); }
+  .module-header.m5 { background:var(--red-light); border-left:4px solid var(--red); }
+  .module-header .subtitle { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .module-header .learning-goals { font-size:14px; color:var(--text-secondary); margin-top:8px; }
+  .tag { display:inline-block; font-size:11px; font-weight:600; padding:2px 8px; border-radius:4px; margin-right:4px; }
+  .tag.beginner { background:#dcfce7; color:#166534; } .tag.intermediate { background:#fef3c7; color:#92400e; }
+  .tag.advanced { background:#fce7f3; color:#9d174d; } .tag.time { background:#e0e7ff; color:#3730a3; }
+  .code-block { position:relative; margin:16px 0 24px; background:var(--code-bg); border-radius:10px; overflow:hidden; }
+  .code-block .code-header { display:flex; justify-content:space-between; align-items:center; padding:8px 16px; background:rgba(255,255,255,0.05); font-size:12px; color:#94a3b8; }
+  .code-block .copy-btn { background:rgba(255,255,255,0.1); border:none; color:#94a3b8; font-size:12px; padding:3px 10px; border-radius:4px; cursor:pointer; transition:all 0.15s; }
+  .code-block .copy-btn:hover { background:rgba(255,255,255,0.2); color:#fff; }
+  .code-block pre { padding:16px; overflow-x:auto; font-family:'JetBrains Mono','Fira Code',monospace; font-size:13.5px; line-height:1.6; color:var(--code-text); white-space:pre-wrap; word-wrap:break-word; }
+  .code-block pre .kw { color:#c084fc; } .code-block pre .fn { color:#67e8f9; }
+  .code-block pre .str { color:#86efac; } .code-block pre .cm { color:#64748b; font-style:italic; }
+  .code-block pre .num { color:#fbbf24; } .code-block pre .op { color:#f472b6; }
+  .callout { padding:16px 20px; border-radius:8px; margin:20px 0; font-size:14.5px; }
+  .callout.tip { background:#f0fdf4; border-left:3px solid var(--green); }
+  .callout.warn { background:#fffbeb; border-left:3px solid #f59e0b; }
+  .callout.info { background:var(--accent-light); border-left:3px solid var(--accent); }
+  .callout.danger { background:var(--red-light); border-left:3px solid var(--red); }
+  .callout .callout-title { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .accordion { border:1px solid var(--border); border-radius:8px; margin:16px 0; overflow:hidden; }
+  .accordion-header { padding:14px 20px; background:var(--surface); cursor:pointer; font-weight:600; font-size:15px; display:flex; justify-content:space-between; align-items:center; user-select:none; transition:background 0.15s; }
+  .accordion-header:hover { background:var(--bg); }
+  .accordion-header .arrow { transition:transform 0.25s; font-size:12px; }
+  .accordion.open .accordion-header .arrow { transform:rotate(90deg); }
+  .accordion-body { display:none; padding:16px 20px; border-top:1px solid var(--border); background:var(--bg); }
+  .accordion.open .accordion-body { display:block; }
+  .step { display:flex; gap:16px; margin:20px 0; align-items:flex-start; }
+  .step-num { flex-shrink:0; width:32px; height:32px; background:var(--accent); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+  .step-content { flex:1; } .step-content h4 { margin-top:4px; }
+  .table-wrap { overflow-x:auto; margin:16px 0 24px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  th { background:var(--bg); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-secondary); }
+  td code { background:#f1f5f9; padding:1px 6px; border-radius:4px; font-size:13px; }
+  code { background:#f1f5f9; padding:1px 6px; border-radius:4px; font-size:13px; font-family:'JetBrains Mono','Fira Code',monospace; }
+  .tabs { margin:20px 0; } .tab-buttons { display:flex; gap:0; border-bottom:2px solid var(--border); }
+  .tab-btn { padding:10px 20px; border:none; background:none; font-size:14px; font-weight:600; color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.15s; }
+  .tab-btn:hover { color:var(--text); } .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .tab-panel { display:none; padding:20px 0; } .tab-panel.active { display:block; }
+  .checklist { list-style:none; margin:12px 0; padding:0; }
+  .checklist li { padding:8px 12px; display:flex; align-items:center; gap:10px; border-radius:6px; cursor:pointer; font-size:14.5px; transition:background 0.15s; }
+  .checklist li:hover { background:var(--bg); }
+  .checklist li .check { width:20px; height:20px; border:2px solid var(--border); border-radius:4px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent; transition:all 0.2s; }
+  .checklist li.done .check { background:var(--accent); border-color:var(--accent); color:white; }
+  .checklist li.done span { text-decoration:line-through; color:var(--text-secondary); }
+  .diagram { text-align:center; margin:24px 0; padding:24px; background:var(--surface); border:1px solid var(--border); border-radius:12px; }
+  .diagram .flow { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:8px; }
+  .diagram .flow-box { background:var(--accent-light); border:1px solid #bfdbfe; padding:10px 16px; border-radius:8px; font-size:13px; font-weight:600; color:var(--accent-dark); }
+  .diagram .flow-arrow { font-size:18px; color:var(--text-secondary); }
+  .quiz { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin:24px 0; }
+  .quiz h4 { margin-top:0; }
+  .quiz-option { display:block; padding:10px 16px; margin:6px 0; border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:14px; transition:all 0.15s; }
+  .quiz-option:hover { border-color:var(--accent); background:var(--accent-light); }
+  .quiz-option.correct { border-color:var(--green); background:var(--green-light); }
+  .quiz-option.wrong { border-color:var(--red); background:var(--red-light); }
+  .quiz-feedback { margin-top:12px; font-size:14px; display:none; padding:12px; border-radius:8px; }
+  .nav-buttons { display:flex; justify-content:space-between; margin-top:48px; padding-top:24px; border-top:1px solid var(--border); }
+  .nav-btn { padding:10px 24px; border:1px solid var(--border); border-radius:8px; background:var(--surface); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; text-decoration:none; transition:all 0.15s; }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn.primary { background:var(--accent); color:white; border-color:var(--accent); }
+  .nav-btn.primary:hover { background:var(--accent-dark); }
+  @media (max-width:768px) { .sidebar{transform:translateX(-100%)} .sidebar.open{transform:translateX(0)} .main{margin-left:0;padding:24px 16px 80px} .menu-btn{display:block} }
+  @media print { .sidebar,.header,.nav-buttons,.menu-btn{display:none!important} .main{margin:0;max-width:100%} .section{display:block!important;page-break-before:always} .code-block{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="header">
+  <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+  <h1>저널리즘 ML 매뉴얼</h1>
+  <span class="badge">Columbia Lede 기반</span>
+</div>
+<nav class="sidebar" id="sidebar">
+  <div class="progress-bar">
+    <div class="bar-bg"><div class="bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="label" id="progressLabel">진행률 0/12</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">시작하기</div>
+    <div class="nav-item active" data-section="intro" onclick="showSection('intro')">과정 소개</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">기초</div>
+    <div class="nav-item" data-section="m1" onclick="showSection('m1')">m1. Python 데이터 구조</div>
+    <div class="nav-item" data-section="m2" onclick="showSection('m2')">m2. 알고리즘 사고법</div>
+    <div class="nav-item" data-section="m3" onclick="showSection('m3')">m3. 기술통계와 탐색</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">머신러닝 입문</div>
+    <div class="nav-item" data-section="m4" onclick="showSection('m4')">m4. 머신러닝 기초</div>
+    <div class="nav-item" data-section="m5" onclick="showSection('m5')">m5. 선형 회귀</div>
+    <div class="nav-item" data-section="m6" onclick="showSection('m6')">m6. 로지스틱 회귀</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">고급 분류</div>
+    <div class="nav-item" data-section="m7" onclick="showSection('m7')">m7. 의사결정나무</div>
+    <div class="nav-item" data-section="m8" onclick="showSection('m8')">m8. 특성 엔지니어링</div>
+    <div class="nav-item" data-section="m9" onclick="showSection('m9')">m9. 모델 검증</div>
+    <div class="nav-item" data-section="m10" onclick="showSection('m10')">m10. 나이브 베이즈</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">부록</div>
+    <div class="nav-item" data-section="ref" onclick="showSection('ref')">레퍼런스 카드</div>
+  </div>
+</nav>
+<div class="main">
+<!-- 과정 소개 섹션 -->
+<div class="section" id="sec-intro">
+  <div class="module-header m1">
+    <h1>저널리즘을 위한 알고리즘과 머신러닝</h1>
+    <p class="subtitle">Columbia Journalism School Lede Program</p>
+  </div>
+
+  <div class="intro-content">
+    <div class="intro-text">
+      <h2>과정 소개</h2>
+      <p>이 과정은 <strong>데이터 저널리즘의 기초</strong>를 마친 기자와 PD를 위해 설계된 고급 과정입니다. 알고리즘과 머신러닝의 핵심 개념을 저널리즘 실무에 적용하는 방법을 배웁니다.</p>
+
+      <h3>대상</h3>
+      <ul>
+        <li>데이터 저널리즘 기초 경험이 있는 기자</li>
+        <li>데이터 분석에 관심 있는 방송/신문 PD</li>
+        <li>Python 기본 문법을 알고 있는 학습자</li>
+      </ul>
+
+      <h3>선수 요구사항</h3>
+      <ul>
+        <li>Python 기본 문법 (변수, 반복문, 조건문)</li>
+        <li>pandas DataFrame 기본 사용법</li>
+        <li>CSV 파일 읽기/쓰기</li>
+      </ul>
+
+      <div class="callout info">
+        <strong>팁:</strong> 각 모듈은 실제 한국 뉴스 데이터와 사례를 다룹니다. 한국 정치, 경제, 사회 뉴스를 분석하면서 배우게 됩니다.
+      </div>
+    </div>
+
+    <div class="learning-path">
+      <h3>학습 경로 (10개 모듈)</h3>
+      <svg viewBox="0 0 800 400" class="flow-diagram">
+        <!-- Module 1 -->
+        <rect x="20" y="20" width="100" height="60" class="flow-box m1" rx="5"/>
+        <text x="70" y="55" text-anchor="middle" class="flow-text">M1<br/>데이터 구조</text>
+
+        <!-- Arrow -->
+        <path d="M 120 50 L 160 50" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 2 -->
+        <rect x="160" y="20" width="100" height="60" class="flow-box m2" rx="5"/>
+        <text x="210" y="55" text-anchor="middle" class="flow-text">M2<br/>알고리즘 사고</text>
+
+        <!-- Arrow -->
+        <path d="M 260 50 L 300 50" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 3 -->
+        <rect x="300" y="20" width="100" height="60" class="flow-box m3" rx="5"/>
+        <text x="350" y="55" text-anchor="middle" class="flow-text">M3<br/>기술통계</text>
+
+        <!-- Arrow -->
+        <path d="M 400 50 L 440 50" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 4 -->
+        <rect x="440" y="20" width="100" height="60" class="flow-box m4" rx="5"/>
+        <text x="490" y="55" text-anchor="middle" class="flow-text">M4<br/>ML 기초</text>
+
+        <!-- Arrow -->
+        <path d="M 540 50 L 580 50" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 5 -->
+        <rect x="580" y="20" width="100" height="60" class="flow-box m5" rx="5"/>
+        <text x="630" y="55" text-anchor="middle" class="flow-text">M5<br/>선형 회귀</text>
+
+        <!-- Row 2 -->
+        <!-- Arrow down from M1 -->
+        <path d="M 70 80 L 70 120" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 6 -->
+        <rect x="20" y="120" width="100" height="60" class="flow-box m1" rx="5"/>
+        <text x="70" y="155" text-anchor="middle" class="flow-text">M6<br/>로지스틱 회귀</text>
+
+        <!-- Arrow -->
+        <path d="M 120 150 L 160 150" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 7 -->
+        <rect x="160" y="120" width="100" height="60" class="flow-box m2" rx="5"/>
+        <text x="210" y="155" text-anchor="middle" class="flow-text">M7<br/>의사결정나무</text>
+
+        <!-- Arrow -->
+        <path d="M 260 150 L 300 150" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 8 -->
+        <rect x="300" y="120" width="100" height="60" class="flow-box m3" rx="5"/>
+        <text x="350" y="155" text-anchor="middle" class="flow-text">M8<br/>특성 엔지니어링</text>
+
+        <!-- Arrow -->
+        <path d="M 400 150 L 440 150" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 9 -->
+        <rect x="440" y="120" width="100" height="60" class="flow-box m4" rx="5"/>
+        <text x="490" y="155" text-anchor="middle" class="flow-text">M9<br/>모델 검증</text>
+
+        <!-- Arrow -->
+        <path d="M 540 150 L 580 150" stroke="#ccc" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+
+        <!-- Module 10 -->
+        <rect x="580" y="120" width="100" height="60" class="flow-box m5" rx="5"/>
+        <text x="630" y="155" text-anchor="middle" class="flow-text">M10<br/>텍스트 분류</text>
+
+        <!-- Arrow marker definition -->
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <polygon points="0 0, 10 3, 0 6" fill="#ccc"/>
+          </marker>
+        </defs>
+
+        <!-- Legend -->
+        <text x="50" y="280" class="flow-legend">초급</text>
+        <text x="250" y="280" class="flow-legend">중급</text>
+        <text x="450" y="280" class="flow-legend">고급</text>
+      </svg>
+    </div>
+
+    <div class="module-overview">
+      <h3>모듈 개요</h3>
+      <table class="module-table">
+        <thead>
+          <tr>
+            <th>모듈</th>
+            <th>주제</th>
+            <th>시간</th>
+            <th>난이도</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>M1</strong></td>
+            <td>Python 데이터 구조 복습</td>
+            <td>30분</td>
+            <td>초급</td>
+          </tr>
+          <tr>
+            <td><strong>M2</strong></td>
+            <td>알고리즘 사고법</td>
+            <td>40분</td>
+            <td>초급</td>
+          </tr>
+          <tr>
+            <td><strong>M3</strong></td>
+            <td>기술통계와 탐색적 분석</td>
+            <td>45분</td>
+            <td>중급</td>
+          </tr>
+          <tr>
+            <td><strong>M4</strong></td>
+            <td>머신러닝 기초</td>
+            <td>50분</td>
+            <td>중급</td>
+          </tr>
+          <tr>
+            <td><strong>M5</strong></td>
+            <td>선형 회귀</td>
+            <td>60분</td>
+            <td>중급</td>
+          </tr>
+          <tr>
+            <td><strong>M6</strong></td>
+            <td>로지스틱 회귀</td>
+            <td>60분</td>
+            <td>중급</td>
+          </tr>
+          <tr>
+            <td><strong>M7</strong></td>
+            <td>의사결정나무</td>
+            <td>50분</td>
+            <td>중급</td>
+          </tr>
+          <tr>
+            <td><strong>M8</strong></td>
+            <td>특성 엔지니어링</td>
+            <td>55분</td>
+            <td>고급</td>
+          </tr>
+          <tr>
+            <td><strong>M9</strong></td>
+            <td>모델 검증과 교차검증</td>
+            <td>50분</td>
+            <td>고급</td>
+          </tr>
+          <tr>
+            <td><strong>M10</strong></td>
+            <td>나이브 베이즈와 텍스트 분류</td>
+            <td>60분</td>
+            <td>고급</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-nav">
+    <button class="nav-btn prev" disabled>← 이전</button>
+    <button class="nav-btn next" onclick="scrollToSection('sec-m1')">다음 →</button>
+  </div>
+</div>
+
+<!-- 모듈 1: Python 데이터 구조 -->
+<div class="section" id="sec-m1">
+  <div class="module-header m1">
+    <h2>M1: Python 데이터 구조 복습</h2>
+    <div class="module-meta">
+      <span class="tag beginner">초급</span>
+      <span class="tag time">30분</span>
+    </div>
+  </div>
+
+  <div class="module-content">
+    <h3>개요</h3>
+    <p>Python의 기본 데이터 구조를 저널리즘 실무 예제를 통해 복습합니다. 리스트, 튜플, 딕셔너리, 집합 각각이 언제 어떻게 쓰이는지 알아봅시다.</p>
+
+    <!-- 리스트 -->
+    <h3>1. 리스트 (List): 순서가 있고 변경 가능</h3>
+    <p>리스트는 <strong>여러 항목을 순서대로 저장</strong>할 때 사용합니다. 저널리즘에서는 기사 제목, 취재원 명단, 보도 시간 등을 저장하는 데 자주 씁니다.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 기사 제목 목록</span>
+articles <span class="op">=</span> [
+    <span class="str">"국회, 신청사 이전 결정"</span>,
+    <span class="str">"미세먼지 경보 발령"</span>,
+    <span class="str">"삼성전자 4분기 실적 발표"</span>
+]
+
+<span class="cm"># 리스트의 첫 번째 항목 접근 (인덱싱)</span>
+<span class="kw">print</span>(articles[<span class="num">0</span>])  <span class="cm"># "국회, 신청사 이전 결정"</span>
+
+<span class="cm"># 리스트에 새 기사 추가</span>
+articles.<span class="fn">append</span>(<span class="str">"날씨 내일 맑음"</span>)
+
+<span class="cm"># 리스트 길이 확인</span>
+<span class="kw">print</span>(<span class="fn">len</span>(articles))  <span class="cm"># 4</span></pre>
+    </div>
+
+    <h4>리스트 컴프리헨션</h4>
+    <p>리스트 컴프리헨션은 반복문과 조건을 한 줄로 작성하는 Python의 강력한 기능입니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 취재원 명단</span>
+sources <span class="op">=</span> [
+    <span class="str">"김민준 국회의원"</span>,
+    <span class="str">"이영희 환경부 장관"</span>,
+    <span class="str">"박용준 삼성 대변인"</span>
+]
+
+<span class="cm"># 모든 이름의 글자 수를 세기</span>
+name_lengths <span class="op">=</span> [<span class="fn">len</span>(name) <span class="kw">for</span> name <span class="kw">in</span> sources]
+<span class="kw">print</span>(name_lengths)  <span class="cm"># [8, 9, 10]</span>
+
+<span class="cm"># 10자 이상인 이름만 필터링</span>
+long_names <span class="op">=</span> [name <span class="kw">for</span> name <span class="kw">in</span> sources <span class="kw">if</span> <span class="fn">len</span>(name) <span class="op">>=</span> <span class="num">10</span>]
+<span class="kw">print</span>(long_names)  <span class="cm"># ["박용준 삼성 대변인"]</span></pre>
+    </div>
+
+    <!-- 튜플 -->
+    <h3>2. 튜플 (Tuple): 순서가 있고 변경 불가</h3>
+    <p>튜플은 리스트와 비슷하지만 <strong>변경할 수 없습니다</strong>. 좌표, 날짜, 기사의 고정된 메타데이터를 저장할 때 좋습니다.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 뉴스 사건 발생 좌표 (위도, 경도)</span>
+accident_location <span class="op">=</span> (<span class="num">37.5665</span>, <span class="num">126.9780</span>)  <span class="cm"># 서울 광화문</span>
+
+<span class="cm"># 기사 발행 날짜 (불변성이 중요)</span>
+article_date <span class="op">=</span> (<span class="num">2026</span>, <span class="num">3</span>, <span class="num">28</span>)
+
+<span class="cm"># 튜플 언팩킹 (여러 변수에 동시에 할당)</span>
+lat, lng <span class="op">=</span> accident_location
+year, month, day <span class="op">=</span> article_date
+
+<span class="kw">print</span>(<span class="str">f"사건: {year}년 {month}월 {day}일, 위치: ({lat}, {lng})"</span>)
+
+<span class="cm"># 튜플은 변경 불가능 (다음은 오류 발생)</span>
+<span class="cm"># accident_location[0] = 37.5</span></pre>
+    </div>
+
+    <!-- 딕셔너리 -->
+    <h3>3. 딕셔너리 (Dictionary): 키-값 쌍</h3>
+    <p>딕셔너리는 <strong>키로 값을 찾는 구조</strong>입니다. 기사의 메타데이터(제목, 기자, 날짜, 조회수)를 저장하기에 완벽합니다.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 기사 메타데이터</span>
+article <span class="op">=</span> {
+    <span class="str">"제목"</span>: <span class="str">"국회, 신청사 이전 결정"</span>,
+    <span class="str">"기자"</span>: <span class="str">"김민준"</span>,
+    <span class="str">"날짜"</span>: <span class="str">"2026-03-28"</span>,
+    <span class="str">"조회수"</span>: <span class="num">125000</span>,
+    <span class="str">"카테고리"</span>: <span class="str">"정치"</span>
+}
+
+<span class="cm"># 키로 값 접근</span>
+<span class="kw">print</span>(article[<span class="str">"제목"</span>])  <span class="cm"># "국회, 신청사 이전 결정"</span>
+
+<span class="cm"># get() 메서드: 키가 없으면 기본값 반환</span>
+<span class="kw">print</span>(article.<span class="fn">get</span>(<span class="str">"작성자"</span>, <span class="str">"정보 없음"</span>))  <span class="cm"># "정보 없음"</span>
+
+<span class="cm"># 새로운 정보 추가</span>
+article[<span class="str">"편집자"</span>] <span class="op">=</span> <span class="str">"이영희"</span>
+
+<span class="cm"># 모든 키 확인</span>
+<span class="kw">print</span>(article.<span class="fn">keys</span>())</pre>
+    </div>
+
+    <div class="callout tip">
+      <strong>팁:</strong> 딕셔너리의 items() 메서드를 사용하면 키와 값을 동시에 순회할 수 있습니다.
+    </div>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 딕셔너리의 모든 항목 순회</span>
+<span class="kw">for</span> key, value <span class="kw">in</span> article.<span class="fn">items</span>():
+    <span class="kw">print</span>(<span class="str">f"{key}: {value}"</span>)
+
+<span class="cm"># 결과:</span>
+<span class="cm"># 제목: 국회, 신청사 이전 결정</span>
+<span class="cm"># 기자: 김민준</span>
+<span class="cm"># 날짜: 2026-03-28</span>
+<span class="cm"># ...</span></pre>
+    </div>
+
+    <!-- 집합 -->
+    <h3>4. 집합 (Set): 유일한 항목들의 모음</h3>
+    <p>집합은 <strong>중복을 자동으로 제거</strong>합니다. 기사의 모든 태그를 수집할 때나 중복 제거가 필요할 때 유용합니다.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 여러 기사에서 수집한 태그들 (중복 있음)</span>
+tags <span class="op">=</span> [<span class="str">"정치"</span>, <span class="str">"경제"</span>, <span class="str">"정치"</span>, <span class="str">"사회"</span>, <span class="str">"경제"</span>, <span class="str">"국제"</span>]
+
+<span class="cm"># 중복을 제거한 유일한 태그들</span>
+unique_tags <span class="op">=</span> <span class="fn">set</span>(tags)
+<span class="kw">print</span>(unique_tags)  <span class="cm"># {'정치', '경제', '사회', '국제'}</span>
+
+<span class="cm"># 새 태그 추가</span>
+unique_tags.<span class="fn">add</span>(<span class="str">"과학"</span>)
+
+<span class="cm"># 태그 제거</span>
+unique_tags.<span class="fn">remove</span>(<span class="str">"국제"</span>)
+
+<span class="cm"># 두 태그 집합의 교집합 (공통 태그)</span>
+article1_tags <span class="op">=</span> {<span class="str">"정치"</span>, <span class="str">"경제"</span>, <span class="str">"한국"</span>}
+article2_tags <span class="op">=</span> {<span class="str">"경제"</span>, <span class="str">"금융"</span>, <span class="str">"한국"</span>}
+common <span class="op">=</span> article1_tags <span class="op">&</span> article2_tags
+<span class="kw">print</span>(common)  <span class="cm"># {'경제', '한국'}</span></pre>
+    </div>
+
+    <!-- 중첩 데이터 구조 -->
+    <h3>5. 중첩 데이터 구조: 복잡한 현실 데이터</h3>
+    <p>실제 뉴스 데이터는 여러 구조가 섞여 있습니다. 여러 기사의 정보를 저장하는 것이 좋은 예입니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 여러 기사를 딕셔너리 목록으로 저장</span>
+articles <span class="op">=</span> [
+    {
+        <span class="str">"제목"</span>: <span class="str">"국회, 신청사 이전 결정"</span>,
+        <span class="str">"기자"</span>: <span class="str">"김민준"</span>,
+        <span class="str">"조회수"</span>: <span class="num">125000</span>,
+        <span class="str">"태그"</span>: [<span class="str">"정치"</span>, <span class="str">"한국"</span>]
+    },
+    {
+        <span class="str">"제목"</span>: <span class="str">"미세먼지 경보 발령"</span>,
+        <span class="str">"기자"</span>: <span class="str">"박영희"</span>,
+        <span class="str">"조회수"</span>: <span class="num">89000</span>,
+        <span class="str">"태그"</span>: [<span class="str">"환경"</span>, <span class="str">"날씨"</span>]
+    }
+]
+
+<span class="cm"># 첫 번째 기사의 제목</span>
+<span class="kw">print</span>(articles[<span class="num">0</span>][<span class="str">"제목"</span>])
+
+<span class="cm"># 모든 기사의 조회수 합계</span>
+total_views <span class="op">=</span> <span class="fn">sum</span>([a[<span class="str">"조회수"</span>] <span class="kw">for</span> a <span class="kw">in</span> articles])
+<span class="kw">print</span>(total_views)  <span class="cm"># 214000</span>
+
+<span class="cm"># 모든 고유 태그 찾기</span>
+all_tags <span class="op">=</span> <span class="fn">set</span>()
+<span class="kw">for</span> article <span class="kw">in</span> articles:
+    all_tags.<span class="fn">update</span>(article[<span class="str">"태그"</span>])
+<span class="kw">print</span>(all_tags)  <span class="cm"># {'정치', '한국', '환경', '날씨'}</span></pre>
+    </div>
+
+    <!-- 데이터 구조 비교 -->
+    <h3>6. 데이터 구조 비교표</h3>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>구조</th>
+          <th>변경 가능</th>
+          <th>순서</th>
+          <th>중복</th>
+          <th>사용 예</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>리스트</strong></td>
+          <td>✓ 가능</td>
+          <td>✓ 있음</td>
+          <td>✓ 허용</td>
+          <td>기사 제목 목록, 취재원 명단</td>
+        </tr>
+        <tr>
+          <td><strong>튜플</strong></td>
+          <td>✗ 불가</td>
+          <td>✓ 있음</td>
+          <td>✓ 허용</td>
+          <td>좌표, 고정 메타데이터</td>
+        </tr>
+        <tr>
+          <td><strong>딕셔너리</strong></td>
+          <td>✓ 가능</td>
+          <td>✓ 있음*</td>
+          <td>✗ 불가(키)</td>
+          <td>기사 정보, 설정값</td>
+        </tr>
+        <tr>
+          <td><strong>집합</strong></td>
+          <td>✓ 가능</td>
+          <td>✗ 없음</td>
+          <td>✗ 불가</td>
+          <td>고유 태그, 중복 제거</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-note">* Python 3.7+에서는 딕셔너리도 삽입 순서를 유지합니다.</p>
+
+    <!-- 퀴즈 -->
+    <h3>퀴즈: 어떤 데이터 구조를 쓸까?</h3>
+    <div class="quiz">
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q1:</strong> 한 기사의 여러 정보(제목, 기자, 날짜, 조회수)를 함께 보관하려면?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: 딕셔너리</strong></p>
+            <p>각 정보를 키-값으로 저장하면, 제목이나 기자 이름으로 쉽게 접근할 수 있습니다.</p>
+            <code>article = {"제목": "...", "기자": "...", "날짜": "...", "조회수": 125000}</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q2:</strong> 100만 건의 기사에서 각 기사가 몇 번 언급되는지 세려면?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: 딕셔너리</strong></p>
+            <p>기사 제목을 키로, 언급 횟수를 값으로 저장하면 O(1)의 빠른 조회가 가능합니다.</p>
+            <code>article_count = {"기사제목1": 45, "기사제목2": 32, ...}</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q3:</strong> 한 기사의 모든 고유한 태그를 얻으려면?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: 집합</strong></p>
+            <p>tags = set(["정치", "정치", "경제", "경제"]) → {'정치', '경제'}</p>
+            <p>집합은 자동으로 중복을 제거하므로 고유 값만 남습니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>주의:</strong> 리스트나 집합 같은 변경 가능한 객체를 딕셔너리의 키로 쓸 수 없습니다. 반드시 튜플이나 문자열 같은 불변 객체를 사용하세요.
+    </div>
+
+    <!-- 고급 주제 (아코디언) -->
+    <div class="accordion">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <span class="accordion-icon">▶</span> 고급: 딕셔너리 기본값 다루기 (defaultdict)
+      </button>
+      <div class="accordion-content">
+        <p>같은 기사가 여러 번 언급될 때 카운트를 증가시키는 패턴은 자주 나옵니다:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>Python</span>
+            <button class="copy-btn" onclick="copyCode(this)">복사</button>
+          </div>
+          <pre><span class="cm"># 기존 방법: KeyError 피하기 위해 매번 확인</span>
+article_count <span class="op">=</span> {}
+articles <span class="op">=</span> [<span class="str">"정치"</span>, <span class="str">"정치"</span>, <span class="str">"경제"</span>, <span class="str">"정치"</span>]
+
+<span class="kw">for</span> article <span class="kw">in</span> articles:
+    <span class="kw">if</span> article <span class="kw">in</span> article_count:
+        article_count[article] <span class="op">+=</span> <span class="num">1</span>
+    <span class="kw">else</span>:
+        article_count[article] <span class="op">=</span> <span class="num">1</span>
+
+<span class="cm"># 더 나은 방법: defaultdict 사용</span>
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+
+article_count <span class="op">=</span> <span class="fn">defaultdict</span>(<span class="kw">int</span>)  <span class="cm"># 기본값은 0</span>
+<span class="kw">for</span> article <span class="kw">in</span> articles:
+    article_count[article] <span class="op">+=</span> <span class="num">1</span>
+
+<span class="kw">print</span>(<span class="fn">dict</span>(article_count))  <span class="cm"># {'정치': 3, '경제': 1}</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-nav">
+    <button class="nav-btn prev" onclick="scrollToSection('sec-intro')">← 이전</button>
+    <button class="nav-btn next" onclick="scrollToSection('sec-m2')">다음 →</button>
+  </div>
+</div>
+
+<!-- 모듈 2: 알고리즘 사고법 -->
+<div class="section" id="sec-m2">
+  <div class="module-header m2">
+    <h2>M2: 알고리즘 사고법</h2>
+    <div class="module-meta">
+      <span class="tag beginner">초급</span>
+      <span class="tag time">40분</span>
+    </div>
+  </div>
+
+  <div class="module-content">
+    <h3>개요</h3>
+    <p>알고리즘은 단순히 프로그래밍 개념이 아닙니다. 뉴스룸에서 데이터를 다루는 모든 작업에 알고리즘적 사고가 필요합니다.</p>
+
+    <!-- 알고리즘이란 -->
+    <h3>1. 알고리즘이란?</h3>
+    <p>알고리즘은 <strong>주어진 문제를 단계적으로 해결하는 절차</strong>입니다. 요리 레시피와 비슷합니다:</p>
+
+    <div class="algorithm-analogy">
+      <div class="analogy-col">
+        <h4>요리 레시피</h4>
+        <ol>
+          <li>쌀 2컵을 헹굼</li>
+          <li>물 2.5컵을 넣음</li>
+          <li>밥솥의 "취사" 버튼을 누름</li>
+          <li>30분 후 완성</li>
+        </ol>
+      </div>
+      <div class="analogy-col">
+        <h4>기사 분류 알고리즘</h4>
+        <ol>
+          <li>모든 기사를 읽음</li>
+          <li>각 기사의 키워드를 확인</li>
+          <li>키워드에 따라 카테고리 분류</li>
+          <li>분류된 기사 저장</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <strong>핵심:</strong> 알고리즘의 품질은 입력 데이터의 크기가 커질수록 더 중요해집니다. 100개 기사와 100만 개 기사에서 차이가 생깁니다.
+    </div>
+
+    <!-- 뉴스룸의 알고리즘적 사고 -->
+    <h3>2. 뉴스룸에서의 알고리즘적 사고</h3>
+
+    <h4>사례 1: 기사 분류 자동화</h4>
+    <p>선거 결과 뉴스가 수천 건 들어올 때, 어떻게 자동으로 분류할까요?</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 기사 분류 알고리즘 (간단한 버전)</span>
+<span class="kw">def</span> <span class="fn">classify_article</span>(title):
+    <span class="cm">"""기사 제목의 키워드로 카테고리 분류"""</span>
+    keywords <span class="op">=</span> {
+        <span class="str">"정치"</span>: [<span class="str">"국회"</span>, <span class="str">"선거"</span>, <span class="str">"정부"</span>, <span class="str">"여당"</span>, <span class="str">"야당"</span>],
+        <span class="str">"경제"</span>: [<span class="str">"삼성"</span>, <span class="str">"주식"</span>, <span class="str">"금리"</span>, <span class="str">"실적"</span>],
+        <span class="str">"환경"</span>: [<span class="str">"미세먼지"</span>, <span class="str">"날씨"</span>, <span class="str">"온난화"</span>]
+    }
+
+    <span class="kw">for</span> category, kwords <span class="kw">in</span> keywords.<span class="fn">items</span>():
+        <span class="kw">for</span> kword <span class="kw">in</span> kwords:
+            <span class="kw">if</span> kword <span class="kw">in</span> title:
+                <span class="kw">return</span> category
+
+    <span class="kw">return</span> <span class="str">"기타"</span>
+
+<span class="cm"># 사용 예</span>
+articles <span class="op">=</span> [
+    <span class="str">"국회, 신청사 이전 결정"</span>,
+    <span class="str">"삼성전자 4분기 실적 발표"</span>,
+    <span class="str">"내일 날씨 맑음"</span>
+]
+
+<span class="kw">for</span> title <span class="kw">in</span> articles:
+    category <span class="op">=</span> <span class="fn">classify_article</span>(title)
+    <span class="kw">print</span>(<span class="str">f"{title} → {category}"</span>)</pre>
+    </div>
+
+    <h4>사례 2: 선거 결과 집계 알고리즘</h4>
+    <p>각 지역에서 보고되는 선거 개표 결과를 실시간으로 집계합니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 선거 결과 집계</span>
+election_results <span class="op">=</span> [
+    {<span class="str">"지역"</span>: <span class="str">"서울"</span>, <span class="str">"A당"</span>: <span class="num">1200</span>, <span class="str">"B당"</span>: <span class="num">980</span>},
+    {<span class="str">"지역"</span>: <span class="str">"부산"</span>, <span class="str">"A당"</span>: <span class="num">850</span>, <span class="str">"B당"</span>: <span class="num">1150</span>},
+    {<span class="str">"지역"</span>: <span class="str">"대구"</span>, <span class="str">"A당"</span>: <span class="num">920</span>, <span class="str">"B당"</span>: <span class="num">780</span>}
+]
+
+<span class="cm"># 집계</span>
+total_votes <span class="op">=</span> {<span class="str">"A당"</span>: <span class="num">0</span>, <span class="str">"B당"</span>: <span class="num">0</span>}
+
+<span class="kw">for</span> result <span class="kw">in</span> election_results:
+    total_votes[<span class="str">"A당"</span>] <span class="op">+=</span> result[<span class="str">"A당"</span>]
+    total_votes[<span class="str">"B당"</span>] <span class="op">+=</span> result[<span class="str">"B당"</span>]
+
+<span class="kw">print</span>(<span class="str">f"A당: {total_votes['A당']}, B당: {total_votes['B당']}"</span>)
+<span class="cm"># A당: 2970, B당: 2910</span></pre>
+    </div>
+
+    <!-- 시간 복잡도 -->
+    <h3>3. 시간 복잡도 (Big-O): 알고리즘의 효율성</h3>
+    <p>데이터 크기가 커질수록 알고리즘의 속도 차이가 극적으로 나타납니다. 이를 측정하는 것이 <strong>시간 복잡도(Big-O)</strong>입니다.</p>
+
+    <h4>시간 복잡도 종류</h4>
+    <table class="complexity-table">
+      <thead>
+        <tr>
+          <th>표기</th>
+          <th>이름</th>
+          <th>설명</th>
+          <th>예시</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>O(1)</strong></td>
+          <td>상수 시간</td>
+          <td>데이터 크기와 무관하게 항상 같은 시간</td>
+          <td>딕셔너리로 값 찾기</td>
+        </tr>
+        <tr>
+          <td><strong>O(n)</strong></td>
+          <td>선형 시간</td>
+          <td>데이터가 n배 증가하면 시간도 n배 증가</td>
+          <td>리스트 순회, 최댓값 찾기</td>
+        </tr>
+        <tr>
+          <td><strong>O(n²)</strong></td>
+          <td>이차 시간</td>
+          <td>데이터가 n배 증가하면 시간은 n²배 증가</td>
+          <td>이중 루프, 버블 정렬</td>
+        </tr>
+        <tr>
+          <td><strong>O(log n)</strong></td>
+          <td>로그 시간</td>
+          <td>데이터가 두 배 증가할 때 시간이 조금만 증가</td>
+          <td>이진 검색</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h4>실제 예: 100만 건 기사에서 검색할 때 차이</h4>
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># O(1): 딕셔너리 조회 (매우 빠름)</span>
+article_dict <span class="op">=</span> {<span class="str">"제목1"</span>: <span class="num">100</span>, <span class="str">"제목2"</span>: <span class="num">200</span>}
+views <span class="op">=</span> article_dict[<span class="str">"제목1"</span>]  <span class="cm"># 즉시 반환</span>
+
+<span class="cm"># O(n): 리스트 순회 (느림)</span>
+articles <span class="op">=</span> [<span class="str">"제목1"</span>, <span class="str">"제목2"</span>, ...]  <span class="cm"># 100만 개</span>
+target <span class="op">=</span> <span class="str">"제목1000000"</span>
+
+found <span class="op">=</span> <span class="kw">False</span>
+<span class="kw">for</span> article <span class="kw">in</span> articles:
+    <span class="kw">if</span> article <span class="op">==</span> target:  <span class="cm"># 평균 50만 번의 비교 필요</span>
+        found <span class="op">=</span> <span class="kw">True</span>
+        <span class="kw">break</span>
+
+<span class="cm"># O(n²): 이중 루프 (매우 느림)</span>
+<span class="cm"># 100만 × 100만 = 1조 번의 비교 필요!</span>
+<span class="kw">for</span> i <span class="kw">in</span> articles:
+    <span class="kw">for</span> j <span class="kw">in</span> articles:
+        <span class="kw">if</span> i <span class="op">==</span> j:
+            <span class="kw">pass</span></pre>
+    </div>
+
+    <div class="callout warn">
+      <strong>중요:</strong> 100만 건 데이터에서 O(n²) 알고리즘을 쓰면 수 시간이 걸릴 수 있습니다. 먼저 시간 복잡도를 고려하세요!
+    </div>
+
+    <!-- 정렬 알고리즘 비교 -->
+    <h3>4. 정렬 알고리즘 비교</h3>
+    <p>기사를 조회수 순서로 정렬하려면? 버블 정렬과 Python의 내장 정렬 함수의 차이를 봅시다.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># ❌ 버블 정렬: O(n²) - 느림</span>
+<span class="kw">def</span> <span class="fn">bubble_sort</span>(articles):
+    n <span class="op">=</span> <span class="fn">len</span>(articles)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">0</span>, n<span class="op">-</span>i<span class="op">-</span><span class="num">1</span>):
+            <span class="kw">if</span> articles[j][<span class="str">"조회수"</span>] <span class="op">></span> articles[j<span class="op">+</span><span class="num">1</span>][<span class="str">"조회수"</span>]:
+                articles[j], articles[j<span class="op">+</span><span class="num">1</span>] <span class="op">=</span> articles[j<span class="op">+</span><span class="num">1</span>], articles[j]
+    <span class="kw">return</span> articles
+
+<span class="cm"># ✓ Python 내장 sorted: O(n log n) - 빠름</span>
+articles <span class="op">=</span> [
+    {<span class="str">"제목"</span>: <span class="str">"기사1"</span>, <span class="str">"조회수"</span>: <span class="num">100</span>},
+    {<span class="str">"제목"</span>: <span class="str">"기사2"</span>, <span class="str">"조회수"</span>: <span class="num">350</span>},
+    {<span class="str">"제목"</span>: <span class="str">"기사3"</span>, <span class="str">"조회수"</span>: <span class="num">250</span>}
+]
+
+<span class="cm"># 조회수 기준으로 내림차순 정렬</span>
+sorted_articles <span class="op">=</span> <span class="fn">sorted</span>(
+    articles,
+    key<span class="op">=</span><span class="kw">lambda</span> x: x[<span class="str">"조회수"</span>],
+    reverse<span class="op">=</span><span class="kw">True</span>
+)
+
+<span class="kw">for</span> article <span class="kw">in</span> sorted_articles:
+    <span class="kw">print</span>(<span class="str">f"{article['제목']}: {article['조회수']}"</span>)</pre>
+    </div>
+
+    <div class="callout tip">
+      <strong>팁:</strong> Python의 sorted() 함수는 병합 정렬(Merge Sort)을 사용하며, O(n log n)의 효율적인 알고리즘입니다. 직접 정렬 함수를 구현하지 마세요!
+    </div>
+
+    <!-- 뉴스룸 실전 -->
+    <h3>5. 뉴스룸 실전: 대량 데이터 처리 전략</h3>
+    <p>실제 뉴스룸에서 수백만 건의 데이터를 처리할 때 생각해야 할 점들입니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 예: 100만 건 댓글에서 악성 댓글 검출</span>
+
+<span class="cm"># ❌ 비효율적: 모든 댓글에 대해 모든 단어 확인 (O(n×m))</span>
+<span class="kw">def</span> <span class="fn">is_toxic_slow</span>(comment, toxic_words):
+    <span class="kw">for</span> word <span class="kw">in</span> toxic_words:
+        <span class="kw">if</span> word <span class="kw">in</span> comment:
+            <span class="kw">return</span> <span class="kw">True</span>
+    <span class="kw">return</span> <span class="kw">False</span>
+
+<span class="cm"># ✓ 효율적: 집합으로 O(1) 검색</span>
+<span class="kw">def</span> <span class="fn">is_toxic_fast</span>(comment, toxic_words_set):
+    words <span class="op">=</span> comment.<span class="fn">split</span>()
+    <span class="kw">for</span> word <span class="kw">in</span> words:
+        <span class="kw">if</span> word <span class="kw">in</span> toxic_words_set:  <span class="cm"># O(1)</span>
+            <span class="kw">return</span> <span class="kw">True</span>
+    <span class="kw">return</span> <span class="kw">False</span>
+
+toxic_words <span class="op">=</span> {<span class="str">"욕설1"</span>, <span class="str">"욕설2"</span>, ...}  <span class="cm"># 1000개</span>
+comments <span class="op">=</span> [<span class="str">"comment1"</span>, <span class="str">"comment2"</span>, ...]  <span class="cm"># 100만 개</span>
+
+<span class="cm"># is_toxic_fast를 사용하면 훨씬 빠릅니다!</span>
+toxic_comments <span class="op">=</span> [c <span class="kw">for</span> c <span class="kw">in</span> comments <span class="kw">if</span> <span class="fn">is_toxic_fast</span>(c, toxic_words)]</pre>
+    </div>
+
+    <!-- 퀴즈 -->
+    <h3>퀴즈: Big-O 복잡도 문제</h3>
+    <div class="quiz">
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q1:</strong> 100개 국회의원 명단에서 특정 의원을 찾으려면?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: O(n) 또는 O(1)</strong></p>
+            <p>리스트에서 순회하면 O(n), 딕셔너리에 저장하면 O(1)입니다. 딕셔너리가 훨씬 빠릅니다!</p>
+            <code>legislators = {"이름": {...}, ...}</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q2:</strong> 100만 명의 투표 결과를 집계하려면?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: O(n)</strong></p>
+            <p>100만 명의 데이터를 한 번 순회하면서 카운트하면 됩니다. O(n)은 큰 데이터에서도 수용할 수 있는 수준입니다.</p>
+            <code>for vote in votes: vote_count[party] += 1</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q3:</strong> 1000건 기사 중에서 서로 비슷한 기사 쌍을 모두 찾으려면?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: O(n²)</strong></p>
+            <p>1000개 × 1000개 = 100만 번의 비교가 필요합니다. 1000건이면 괜찮지만, 100만 건이면 불가능합니다.</p>
+            <code>for i in articles:
+    for j in articles:
+        if similar(i, j):</code>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 고급 주제 -->
+    <div class="accordion">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <span class="accordion-icon">▶</span> 고급: 동적 계획법 (Dynamic Programming) 기초
+      </button>
+      <div class="accordion-content">
+        <p>동적 계획법은 복잡한 문제를 작은 부분 문제로 나누어 풀고, 그 결과를 저장하여 재사용하는 방법입니다.</p>
+
+        <h4>예: 최장 공통 부분 문자열</h4>
+        <p>두 기사가 얼마나 비슷한지 측정하는 방법입니다:</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>Python</span>
+            <button class="copy-btn" onclick="copyCode(this)">복사</button>
+          </div>
+          <pre><span class="cm"># 두 문자열의 최장 공통 부분 길이</span>
+<span class="kw">def</span> <span class="fn">lcs_length</span>(text1, text2):
+    m, n <span class="op">=</span> <span class="fn">len</span>(text1), <span class="fn">len</span>(text2)
+
+    <span class="cm"># DP 테이블</span>
+    dp <span class="op">=</span> [[<span class="num">0</span>] <span class="op">*</span> (n <span class="op">+</span> <span class="num">1</span>) <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(m <span class="op">+</span> <span class="num">1</span>)]
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, m <span class="op">+</span> <span class="num">1</span>):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, n <span class="op">+</span> <span class="num">1</span>):
+            <span class="kw">if</span> text1[i<span class="op">-</span><span class="num">1</span>] <span class="op">==</span> text2[j<span class="op">-</span><span class="num">1</span>]:
+                dp[i][j] <span class="op">=</span> dp[i<span class="op">-</span><span class="num">1</span>][j<span class="op">-</span><span class="num">1</span>] <span class="op">+</span> <span class="num">1</span>
+            <span class="kw">else</span>:
+                dp[i][j] <span class="op">=</span> <span class="fn">max</span>(dp[i<span class="op">-</span><span class="num">1</span>][j], dp[i][j<span class="op">-</span><span class="num">1</span>])
+
+    <span class="kw">return</span> dp[m][n]
+
+article1 <span class="op">=</span> <span class="str">"국회 신청사 이전"</span>
+article2 <span class="op">=</span> <span class="str">"신청사 이전 결정"</span>
+<span class="kw">print</span>(<span class="fn">lcs_length</span>(article1, article2))  <span class="cm"># 3</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-nav">
+    <button class="nav-btn prev" onclick="scrollToSection('sec-m1')">← 이전</button>
+    <button class="nav-btn next" onclick="scrollToSection('sec-m3')">다음 →</button>
+  </div>
+</div>
+
+<!-- 모듈 3: 기술통계와 탐색적 분석 -->
+<div class="section" id="sec-m3">
+  <div class="module-header m3">
+    <h2>M3: 기술통계와 탐색적 분석</h2>
+    <div class="module-meta">
+      <span class="tag intermediate">중급</span>
+      <span class="tag time">45분</span>
+    </div>
+  </div>
+
+  <div class="module-content">
+    <h3>개요</h3>
+    <p>데이터를 받으면 가장 먼저 해야 할 일은 <strong>데이터가 어떤 모양인지 이해하는 것</strong>입니다. 기술통계(Descriptive Statistics)와 탐색적 분석(EDA)을 배웁니다.</p>
+
+    <!-- 기술통계 기본 -->
+    <h3>1. 기술통계 기본: 평균, 중앙값, 최빈값, 표준편차</h3>
+
+    <h4>예제: 국회의원 재산 데이터</h4>
+    <p>한국의 국회의원 300명의 재산 정보를 분석한다고 가정합니다. 평균만으로는 부족합니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># 샘플 데이터: 국회의원 순자산 (단위: 억원)</span>
+assets <span class="op">=</span> [<span class="num">5</span>, <span class="num">8</span>, <span class="num">12</span>, <span class="num">15</span>, <span class="num">20</span>, <span class="num">25</span>, <span class="num">30</span>, <span class="num">200</span>]  <span class="cm"># 마지막은 매우 부유한 의원</span>
+
+<span class="cm"># 평균</span>
+mean_asset <span class="op">=</span> np.<span class="fn">mean</span>(assets)
+<span class="kw">print</span>(<span class="str">f"평균: {mean_asset:.1f}억원"</span>)  <span class="cm"># 44.4억원</span>
+
+<span class="cm"># 중앙값 (더 대표적!)</span>
+median_asset <span class="op">=</span> np.<span class="fn">median</span>(assets)
+<span class="kw">print</span>(<span class="str">f"중앙값: {median_asset:.1f}억원"</span>)  <span class="cm"># 17.5억원</span>
+
+<span class="cm"># 최빈값</span>
+<span class="kw">from</span> statistics <span class="kw">import</span> mode
+<span class="cm"># 최빈값은 이 데이터에서는 의미 없음 (모두 다른 값)</span>
+
+<span class="cm"># 표준편차</span>
+std_asset <span class="op">=</span> np.<span class="fn">std</span>(assets)
+<span class="kw">print</span>(<span class="str">f"표준편차: {std_asset:.1f}억원"</span>)  <span class="cm"># 데이터 분산 정도</span>
+
+<span class="cm"># 최솟값, 최댓값</span>
+<span class="kw">print</span>(<span class="str">f"최솟값: {min(assets)}, 최댓값: {max(assets)}"</span>)</pre>
+    </div>
+
+    <div class="callout warn">
+      <strong>중요:</strong> <strong>평균은 극단값에 약합니다!</strong> 한 명의 매우 부유한 의원이 평균을 크게 올립니다. 중앙값(median)이 더 대표적입니다.
+    </div>
+
+    <h4>왜 중앙값이 평균보다 나은가?</h4>
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 한국 연봉 분포 (가상 데이터)</span>
+salaries <span class="op">=</span> [
+    <span class="num">3000</span>, <span class="num">3500</span>, <span class="num">4000</span>, <span class="num">4500</span>, <span class="num">5000</span>,  <span class="cm"># 일반인</span>
+    <span class="num">15000</span>, <span class="num">50000</span>, <span class="num">500000</span>  <span class="cm"># 극소수 CEO/재벌</span>
+]
+
+mean <span class="op">=</span> np.<span class="fn">mean</span>(salaries)
+median <span class="op">=</span> np.<span class="fn">median</span>(salaries)
+
+<span class="kw">print</span>(<span class="str">f"평균: {mean:,.0f}만원"</span>)    <span class="cm"># 평균은 CEO 때문에 과장됨</span>
+<span class="kw">print</span>(<span class="str">f"중앙값: {median:,.0f}만원"</span>)  <span class="cm"># 중앙값이 더 현실적</span>
+
+<span class="cm"># 기자의 입장:</span>
+<span class="cm"># "평균 연봉 XX만원" (오도하는 표현)</span>
+<span class="cm"># "중앙값 연봉 XX만원" (더 정확한 표현)</span></pre>
+    </div>
+
+    <!-- pandas describe() -->
+    <h3>2. pandas describe() 활용</h3>
+    <p>pandas 라이브러리의 describe() 함수로 한 번에 모든 통계량을 볼 수 있습니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># 기사 조회수 데이터</span>
+df <span class="op">=</span> pd.<span class="fn">DataFrame</span>({
+    <span class="str">"제목"</span>: [<span class="str">"기사1"</span>, <span class="str">"기사2"</span>, <span class="str">"기사3"</span>, <span class="str">"기사4"</span>, <span class="str">"기사5"</span>],
+    <span class="str">"조회수"</span>: [<span class="num">10000</span>, <span class="num">25000</span>, <span class="num">15000</span>, <span class="num">50000</span>, <span class="num">12000</span>],
+    <span class="str">"공유수"</span>: [<span class="num">100</span>, <span class="num">250</span>, <span class="num">180</span>, <span class="num">500</span>, <span class="num">120</span>]
+})
+
+<span class="cm"># describe() 호출</span>
+df.<span class="fn">describe</span>()</pre>
+    </div>
+
+    <p>결과는 다음과 같습니다:</p>
+    <pre class="result-box">조회수               공유수
+count     5.000000      5.000000
+mean   22400.000000  230.000000
+std    17548.623900  174.356461
+min    10000.000000  100.000000
+25%    12000.000000  120.000000
+50%    15000.000000  180.000000
+75%    25000.000000  250.000000
+max    50000.000000  500.000000</pre>
+
+    <!-- 데이터 분포 이해 -->
+    <h3>3. 데이터 분포 이해: 정규분포 vs 왜곡분포</h3>
+
+    <h4>정규분포 (Normal Distribution)</h4>
+    <p>평균을 중심으로 종 모양으로 분포합니다. 많은 자연 현상이 정규분포를 따릅니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 정규분포 예: 사람의 키</span>
+heights <span class="op">=</span> [<span class="num">165</span>, <span class="num">170</span>, <span class="num">168</span>, <span class="num">172</span>, <span class="num">169</span>, <span class="num">171</span>, <span class="num">170</span>]  <span class="cm"># 평균 170 근처로 집중</span>
+
+mean_height <span class="op">=</span> np.<span class="fn">mean</span>(heights)  <span class="cm"># 약 170</span>
+median_height <span class="op">=</span> np.<span class="fn">median</span>(heights)  <span class="cm"># 약 170</span>
+
+<span class="kw">print</span>(<span class="str">f"평균과 중앙값이 비슷: {mean_height:.1f}, {median_height:.1f}"</span>)
+<span class="cm"># → 정규분포 신호!</span></pre>
+    </div>
+
+    <h4>왜곡분포 (Skewed Distribution)</h4>
+    <p>한쪽으로 치우친 분포입니다. 소득, 아파트 가격 등 경제 데이터는 왜곡분포를 따릅니다:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 왜곡분포 예: 아파트 가격 (우측 왜곡)</span>
+apartment_prices <span class="op">=</span> [<span class="num">3</span>, <span class="num">3.5</span>, <span class="num">4</span>, <span class="num">4.5</span>, <span class="num">5</span>, <span class="num">6</span>, <span class="num">8</span>, <span class="num">15</span>, <span class="num">50</span>]  <span class="cm"># 억원</span>
+
+mean_price <span class="op">=</span> np.<span class="fn">mean</span>(apartment_prices)  <span class="cm"># 약 9.8억</span>
+median_price <span class="op">=</span> np.<span class="fn">median</span>(apartment_prices)  <span class="cm"># 5억</span>
+
+<span class="kw">print</span>(<span class="str">f"평균: {mean_price:.1f}, 중앙값: {median_price:.1f}"</span>)
+<span class="cm"># → 평균이 훨씬 큼 = 우측 왜곡분포!</span>
+
+<span class="cm"># 기자의 실수:</span>
+<span class="cm"># "평균 아파트 가격은 9.8억원입니다" (부자들의 초고가 아파트 때문에 과장)</span>
+<span class="cm"># "중앙값 아파트 가격은 5억원입니다" (더 정확)</span></pre>
+    </div>
+
+    <!-- 상관관계 분석 -->
+    <h3>4. 상관관계 분석 (Correlation)</h3>
+    <p>두 변수 간의 관계를 측정합니다. <strong>주의: 상관관계 ≠ 인과관계!</strong></p>
+
+    <h4>예: 미세먼지와 호흡기 질환</h4>
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="cm"># 서울 미세먼지 데이터</span>
+df <span class="op">=</span> pd.<span class="fn">DataFrame</span>({
+    <span class="str">"날짜"</span>: [<span class="str">"2026-01-01"</span>, <span class="str">"2026-01-02"</span>, <span class="str">"2026-01-03"</span>, <span class="str">"2026-01-04"</span>, <span class="str">"2026-01-05"</span>],
+    <span class="str">"미세먼지(㎍/m³)"</span>: [<span class="num">120</span>, <span class="num">95</span>, <span class="num">150</span>, <span class="num">130</span>, <span class="num">110</span>],
+    <span class="str">"호흡기질환(명)"</span>: [<span class="num">450</span>, <span class="num">380</span>, <span class="num">520</span>, <span class="num">480</span>, <span class="num">420</span>]
+})
+
+<span class="cm"># 상관계수 계산</span>
+correlation <span class="op">=</span> df[<span class="str">"미세먼지(㎍/m³)"</span>].<span class="fn">corr</span>(df[<span class="str">"호흡기질환(명)"</span>])
+<span class="kw">print</span>(<span class="str">f"상관계수: {correlation:.3f}"</span>)  <span class="cm"># 0.95 (매우 높은 양의 상관)</span>
+
+<span class="cm"># 전체 상관계수 매트릭스</span>
+<span class="kw">print</span>(df.<span class="fn">corr</span>())</pre>
+    </div>
+
+    <div class="callout warn">
+      <strong>주의: 상관관계 ≠ 인과관계</strong>
+      <ul>
+        <li>"미세먼지가 높은 날에 호흡기 질환이 많다" ← 상관관계</li>
+        <li>"미세먼지가 호흡기 질환의 <strong>원인</strong>이다" ← 인과관계 (더 강한 주장)</li>
+      </ul>
+      <p>기자가 자주 빠지는 함정입니다. 상관관계를 발견했다면, 이게 정말 인과관계인지 확인이 필요합니다.</p>
+    </div>
+
+    <!-- matplotlib 시각화 -->
+    <h3>5. matplotlib 기초 시각화</h3>
+
+    <h4>히스토그램: 데이터 분포 보기</h4>
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># 기사 조회수 분포</span>
+views <span class="op">=</span> [<span class="num">100</span>, <span class="num">150</span>, <span class="num">200</span>, <span class="num">250</span>, <span class="num">300</span>, <span class="num">1000</span>, <span class="num">5000</span>]
+
+plt.<span class="fn">figure</span>(figsize<span class="op">=</span>(<span class="num">10</span>, <span class="num">6</span>))
+plt.<span class="fn">hist</span>(views, bins<span class="op">=</span><span class="num">10</span>, color<span class="op">=</span><span class="str">'skyblue'</span>, edgecolor<span class="op">=</span><span class="str">'black'</span>)
+plt.<span class="fn">xlabel</span>(<span class="str">'조회수'</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">'기사 수'</span>)
+plt.<span class="fn">title</span>(<span class="str">'기사 조회수 분포'</span>)
+plt.<span class="fn">show</span>()</pre>
+    </div>
+
+    <h4>산점도: 두 변수의 관계 보기</h4>
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 기사 길이와 조회수의 관계</span>
+article_length <span class="op">=</span> [<span class="num">500</span>, <span class="num">800</span>, <span class="num">1000</span>, <span class="num">1200</span>, <span class="num">1500</span>]
+article_views <span class="op">=</span> [<span class="num">100</span>, <span class="num">250</span>, <span class="num">300</span>, <span class="num">450</span>, <span class="num">600</span>]
+
+plt.<span class="fn">figure</span>(figsize<span class="op">=</span>(<span class="num">10</span>, <span class="num">6</span>))
+plt.<span class="fn">scatter</span>(article_length, article_views, s<span class="op">=</span><span class="num">100</span>, alpha<span class="op">=</span><span class="num">0.6</span>)
+plt.<span class="fn">xlabel</span>(<span class="str">'기사 길이 (글자수)'</span>)
+plt.<span class="fn">ylabel</span>(<span class="str">'조회수'</span>)
+plt.<span class="fn">title</span>(<span class="str">'기사 길이와 조회수의 관계'</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>, alpha<span class="op">=</span><span class="num">0.3</span>)
+plt.<span class="fn">show</span>()</pre>
+    </div>
+
+    <h4>박스플롯: 분포의 통계량 한눈에</h4>
+    <div class="code-block">
+      <div class="code-header">
+        <span>Python</span>
+        <button class="copy-btn" onclick="copyCode(this)">복사</button>
+      </div>
+      <pre><span class="cm"># 카테고리별 조회수 비교</span>
+politics_views <span class="op">=</span> [<span class="num">100</span>, <span class="num">200</span>, <span class="num">150</span>, <span class="num">250</span>, <span class="num">300</span>]
+economy_views <span class="op">=</span> [<span class="num">500</span>, <span class="num">600</span>, <span class="num">700</span>, <span class="num">800</span>, <span class="num">1000</span>]
+sports_views <span class="op">=</span> [<span class="num">2000</span>, <span class="num">3000</span>, <span class="num">2500</span>, <span class="num">3500</span>, <span class="num">4000</span>]
+
+plt.<span class="fn">figure</span>(figsize<span class="op">=</span>(<span class="num">10</span>, <span class="num">6</span>))
+plt.<span class="fn">boxplot</span>([politics_views, economy_views, sports_views],
+            labels<span class="op">=</span>[<span class="str">'정치'</span>, <span class="str">'경제'</span>, <span class="str">'스포츠'</span>])
+plt.<span class="fn">ylabel</span>(<span class="str">'조회수'</span>)
+plt.<span class="fn">title</span>(<span class="str">'카테고리별 조회수 분포'</span>)
+plt.<span class="fn">show</span>()</pre>
+    </div>
+
+    <!-- 퀴즈 -->
+    <h3>퀴즈: 이 데이터에 적합한 대표값은?</h3>
+    <div class="quiz">
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q1:</strong> 50명의 회사원 월급: [300만원, 350만원, 380만원, 400만원, 1000만원]. 어떤 대표값을 써야 할까?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: 중앙값</strong></p>
+            <p>평균 = 486만원 (CEO 때문에 과장)</p>
+            <p>중앙값 = 380만원 (더 현실적)</p>
+            <p>기사: "평균 급여는 380만원입니다"가 더 정확합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q2:</strong> 신문사의 일일 발행 부수: [50000, 52000, 51000, 49000, 51000]. 이 데이터는 어떤 분포인가?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: 정규분포에 가까운 분포</strong></p>
+            <p>평균과 중앙값이 비슷합니다 (약 50600부).</p>
+            <p>데이터가 평균 주위에 모여 있습니다.</p>
+            <p>이런 데이터에서는 평균이 대표값으로 충분합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz-item">
+        <p class="quiz-q"><strong>Q3:</strong> 온라인 뉴스 댓글 감정도 상관분석에서 0.05의 상관계수가 나왔습니다. 이를 어떻게 해석할까?</p>
+        <div class="quiz-answer">
+          <button class="quiz-btn" onclick="toggleAnswer(this)">정답 보기</button>
+          <div class="answer-text" style="display:none;">
+            <p><strong>답: 거의 상관관계가 없음</strong></p>
+            <p>상관계수는 -1~1 범위에서:</p>
+            <ul>
+              <li>0.05는 거의 0에 가까움 = 관계 없음</li>
+              <li>0.7 이상 = 높은 상관관계</li>
+            </ul>
+            <p>"댓글 감정과 조회수는 거의 관계가 없다"고 결론지어야 합니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <strong>팁:</strong> pandas의 describe()와 corr() 메서드만 잘 써도 대부분의 기초 탐색적 분석이 가능합니다. 먼저 이 두 메서드부터 마스터하세요.
+    </div>
+
+    <!-- 고급 주제 -->
+    <div class="accordion">
+      <button class="accordion-header" onclick="toggleAccordion(this)">
+        <span class="accordion-icon">▶</span> 고급: 이상치 (Outlier) 감지
+      </button>
+      <div class="accordion-content">
+        <p>데이터 중에는 비정상적인 값들(이상치)이 있을 수 있습니다. 이를 감지하고 처리해야 합니다.</p>
+
+        <div class="code-block">
+          <div class="code-header">
+            <span>Python</span>
+            <button class="copy-btn" onclick="copyCode(this)">복사</button>
+          </div>
+          <pre><span class="cm"># IQR(사분위수범위) 방법을 이용한 이상치 감지</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+article_views <span class="op">=</span> [<span class="num">100</span>, <span class="num">150</span>, <span class="num">200</span>, <span class="num">250</span>, <span class="num">300</span>, <span class="num">350</span>, <span class="num">400</span>, <span class="num">100000</span>]
+
+Q1 <span class="op">=</span> pd.<span class="fn">Series</span>(article_views).<span class="fn">quantile</span>(<span class="num">0.25</span>)  <span class="cm"># 25분위</span>
+Q3 <span class="op">=</span> pd.<span class="fn">Series</span>(article_views).<span class="fn">quantile</span>(<span class="num">0.75</span>)  <span class="cm"># 75분위</span>
+IQR <span class="op">=</span> Q3 <span class="op">-</span> Q1
+
+<span class="cm"># 이상치 범위 밖</span>
+lower_bound <span class="op">=</span> Q1 <span class="op">-</span> <span class="num">1.5</span> <span class="op">*</span> IQR
+upper_bound <span class="op">=</span> Q3 <span class="op">+</span> <span class="num">1.5</span> <span class="op">*</span> IQR
+
+outliers <span class="op">=</span> [v <span class="kw">for</span> v <span class="kw">in</span> article_views <span class="kw">if</span> v <span class="op"><</span> lower_bound <span class="kw">or</span> v <span class="op">></span> upper_bound]
+<span class="kw">print</span>(<span class="str">f"이상치: {outliers}"</span>)  <span class="cm"># [100000]</span></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-nav">
+    <button class="nav-btn prev" onclick="scrollToSection('sec-m2')">← 이전</button>
+    <button class="nav-btn next" disabled>다음 →</button>
+  </div>
+</div>
+
+<!-- Module 4: 머신러닝 기초 개념 -->
+<div class="section" id="sec-m4">
+  <div class="module-header m4">
+    <div class="header-content">
+      <h2>머신러닝 기초 개념</h2>
+      <div class="tags">
+        <span class="tag intermediate">중급</span>
+        <span class="tag time">45분</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>머신러닝이란?</h3>
+  <p>머신러닝은 데이터를 학습하여 패턴을 찾고 예측하는 기술입니다. 전통적인 프로그래밍과 머신러닝의 차이를 이해하는 것이 중요합니다.</p>
+
+  <div class="subsection">
+    <h4>전통 프로그래밍 vs 머신러닝</h4>
+    <table style="width:100%; margin: 1em 0;">
+      <tr>
+        <th>전통 프로그래밍</th>
+        <th>머신러닝</th>
+      </tr>
+      <tr>
+        <td>규칙을 직접 코딩 → 결과</td>
+        <td>데이터 + 결과 → 규칙을 자동으로 학습</td>
+      </tr>
+      <tr>
+        <td>명시적인 if/else 로직</td>
+        <td>데이터 패턴에서 규칙 추출</td>
+      </tr>
+      <tr>
+        <td>변화에 따라 수동으로 코드 수정</td>
+        <td>새 데이터로 재학습하면 자동 개선</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <strong>뉴스룸 예시:</strong> 스팸 댓글을 필터링하는 시스템을 만든다고 가정해봅시다.
+    <ul>
+      <li><strong>전통:</strong> "욕설 1000개 단어 목록 만들기" → 새로운 욕설이 나오면 계속 추가해야 함</li>
+      <li><strong>ML:</strong> "스팸 10만 개, 정상 10만 개의 댓글 데이터 학습" → 자동으로 새로운 패턴 감지</li>
+    </ul>
+  </div>
+
+  <h3>머신러닝의 세 가지 유형</h3>
+
+  <div class="subsection">
+    <h4>1. 지도학습 (Supervised Learning)</h4>
+    <p><strong>라벨이 있는</strong> 데이터를 사용하여 학습합니다.</p>
+    <ul>
+      <li><strong>회귀(Regression):</strong> 연속된 숫자 예측 (예: 집값 예측, 주식 가격)</li>
+      <li><strong>분류(Classification):</strong> 범주 예측 (예: 이 기사는 정치/경제/스포츠?)</li>
+    </ul>
+    <p><strong>뉴스룸 활용:</strong> 신문사에 쏟아지는 기사 제안을 자동으로 분류 (속보/일반/광고)</p>
+  </div>
+
+  <div class="subsection">
+    <h4>2. 비지도학습 (Unsupervised Learning)</h4>
+    <p><strong>라벨이 없는</strong> 데이터에서 숨겨진 패턴을 찾습니다.</p>
+    <ul>
+      <li><strong>클러스터링(Clustering):</strong> 비슷한 데이터끼리 묶기 (예: 비슷한 뉴스 기사 그룹화)</li>
+      <li><strong>차원 축소(Dimensionality Reduction):</strong> 복잡한 데이터를 단순화</li>
+    </ul>
+    <p><strong>뉴스룸 활용:</strong> 소셜미디어에서 떠오르는 주제들을 자동 감지</p>
+  </div>
+
+  <div class="subsection">
+    <h4>3. 강화학습 (Reinforcement Learning)</h4>
+    <p>환경과의 상호작용을 통해 보상을 최대화하도록 학습합니다.</p>
+    <ul>
+      <li>시행착오를 통해 최적의 행동 학습</li>
+      <li>게임 AI, 자율주행 등에 활용</li>
+    </ul>
+    <p><strong>뉴스룸 활용:</strong> 독자 선호도에 맞게 기사 추천 알고리즘 최적화</p>
+  </div>
+
+  <div class="callout warn">
+    <strong>주의:</strong> 대부분의 저널리즘 분석에서는 <strong>지도학습</strong>을 사용합니다. 이 강의에서도 지도학습에 중점을 둡니다.
+  </div>
+
+  <h3>훈련 데이터와 테스트 데이터 분리</h3>
+  <p>모델의 실제 성능을 정확히 측정하려면 <strong>훈련 데이터(Training Set)</strong>과 <strong>테스트 데이터(Test Set)</strong>를 분리해야 합니다.</p>
+
+  <div class="subsection">
+    <h4>왜 데이터를 분리할까?</h4>
+    <p>만약 훈련에 사용한 데이터로 성능을 평가하면, 모델이 "이미 본 문제"에서는 높은 점수를 받지만, "새로운 문제"에서는 형편없는 성능을 보일 수 있습니다. 이것을 <strong>과적합(Overfitting)</strong>이라고 부릅니다.</p>
+    <p><strong>비유:</strong> 시험 문제를 답만 외운 학생은 같은 문제는 맞히지만, 유사 문제는 풀 수 없습니다.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> <span class="fn">sklearn.model_selection</span> <span class="kw">import</span> <span class="fn">train_test_split</span>
+<span class="kw">import</span> <span class="fn">pandas</span> <span class="kw">as</span> <span class="fn">pd</span>
+
+<span class="cm"># 한국 기사 데이터 로드</span>
+df = pd.read_csv(<span class="str">'korean_articles.csv'</span>)
+
+<span class="cm"># X: 특성(features), y: 타겟(target)</span>
+X = df[[<span class="str">'word_count'</span>, <span class="str">'has_image'</span>, <span class="str">'published_hour'</span>]]
+y = df[<span class="str">'category'</span>]  <span class="cm"># 뉴스 카테고리</span>
+
+<span class="cm"># 80:20으로 데이터 분리</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=<span class="num">0.2</span>,  <span class="cm"># 20%를 테스트로</span>
+    random_state=<span class="num">42</span>  <span class="cm"># 재현성을 위해 시드 설정</span>
+)
+
+<span class="kw">print</span>(<span class="str">f"훈련 데이터: {len(X_train)}, 테스트 데이터: {len(X_test)}"</span>)
+    </pre>
+  </div>
+
+  <h3>Scikit-Learn 기초</h3>
+  <p>Scikit-learn은 머신러닝의 "표준 라이브러리"입니다. 모든 모델이 일관된 API를 따릅니다.</p>
+
+  <div class="subsection">
+    <h4>Scikit-Learn의 일관된 패턴</h4>
+    <ol>
+      <li><strong>fit():</strong> 훈련 데이터로 모델 학습</li>
+      <li><strong>predict():</strong> 새 데이터에 대해 예측</li>
+      <li><strong>score():</strong> 모델의 정확도 평가</li>
+    </ol>
+    <p>어떤 모델을 사용하든 이 세 가지 메서드만 알면 대부분의 작업이 가능합니다.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> <span class="fn">sklearn.preprocessing</span> <span class="kw">import</span> <span class="fn">StandardScaler</span>
+<span class="kw">from</span> <span class="fn">sklearn.neighbors</span> <span class="kw">import</span> <span class="fn">KNeighborsClassifier</span>
+
+<span class="cm"># 데이터 정규화 (특성의 스케일 조정)</span>
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+<span class="cm"># 모델 생성 및 학습</span>
+model = KNeighborsClassifier(n_neighbors=<span class="num">5</span>)
+model.fit(X_train_scaled, y_train)
+
+<span class="cm"># 예측</span>
+predictions = model.predict(X_test_scaled)
+
+<span class="cm"># 성능 평가</span>
+accuracy = model.score(X_test_scaled, y_test)
+<span class="kw">print</span>(<span class="str">f"모델 정확도: {accuracy:.2%}"</span>)
+    </pre>
+  </div>
+
+  <h3>과적합 vs 과소적합</h3>
+
+  <div class="subsection">
+    <h4>문제의 종류</h4>
+    <p>모델 학습에서 발생할 수 있는 두 가지 극단적인 상황을 이해해야 합니다.</p>
+
+    <table style="width:100%; margin: 1em 0;">
+      <tr>
+        <th>과적합 (Overfitting)</th>
+        <th>과소적합 (Underfitting)</th>
+      </tr>
+      <tr>
+        <td><strong>문제:</strong> 훈련 데이터에만 맞춤<br>높은 훈련 정확도, 낮은 테스트 정확도</td>
+        <td><strong>문제:</strong> 모델이 너무 단순함<br>낮은 훈련 정확도, 낮은 테스트 정확도</td>
+      </tr>
+      <tr>
+        <td><strong>원인:</strong> 복잡한 모델, 많은 특성</td>
+        <td><strong>원인:</strong> 단순한 모델, 데이터 부족</td>
+      </tr>
+      <tr>
+        <td><strong>해결:</strong> 정규화, 교차검증, 특성 제거</td>
+        <td><strong>해결:</strong> 더 복잡한 모델, 더 많은 데이터</td>
+      </tr>
+    </table>
+
+    <p><strong>비유:</strong> 시험 준비를 비유하면:</p>
+    <ul>
+      <li><strong>과적합:</strong> 작년 시험 문제 100개를 완벽히 외움 → 올해 유사 문제는 못 풀음</li>
+      <li><strong>과소적합:</strong> 시험 교과서를 대충만 읽음 → 기본 개념을 몰라서 어떤 문제도 못 풀음</li>
+      <li><strong>균형:</strong> 개념을 제대로 이해하고, 다양한 문제를 풀어봄 → 새로운 문제도 풀 수 있음</li>
+    </ul>
+  </div>
+
+  <div class="callout tip">
+    <strong>기자를 위한 팁:</strong> 당신의 기사 분류 모델이 훈련 정확도는 95%인데 테스트 정확도가 60%라면? 과적합입니다! 더 간단한 모델을 시도하거나, 특성의 개수를 줄여보세요.
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 과적합 감지하기</span>
+train_accuracy = model.score(X_train, y_train)
+test_accuracy = model.score(X_test, y_test)
+
+<span class="kw">print</span>(<span class="str">f"훈련 정확도: {train_accuracy:.2%}"</span>)
+<span class="kw">print</span>(<span class="str">f"테스트 정확도: {test_accuracy:.2%}"</span>)
+
+<span class="cm"># 간단한 판단 기준</span>
+gap = train_accuracy - test_accuracy
+<span class="kw">if</span> gap > <span class="num">0.15</span>:  <span class="cm"># 15% 이상 차이</span>
+    <span class="kw">print</span>(<span class="str">"⚠️  과적합의 징후! 모델을 단순화하세요."</span>)
+<span class="kw">elif</span> test_accuracy < <span class="num">0.60</span>:
+    <span class="kw">print</span>(<span class="str">"⚠️  과소적합의 징후! 더 복잡한 모델을 시도하세요."</span>)
+<span class="kw">else</span>:
+    <span class="kw">print</span>(<span class="str">"✓ 균형잡힌 모델입니다."</span>)
+    </pre>
+  </div>
+
+  <h3>ML 프로젝트 워크플로우</h3>
+  <p>실제 머신러닝 프로젝트는 다음과 같은 순서로 진행됩니다:</p>
+
+  <div class="workflow" style="background: #f5f5f5; padding: 1.5em; border-radius: 8px; margin: 1.5em 0;">
+    <ol style="font-size: 1.1em; line-height: 2;">
+      <li><strong>1. 문제 정의</strong> - 예측할 것이 무엇인가? (기사 카테고리 분류)</li>
+      <li><strong>2. 데이터 수집</strong> - 충분한 데이터를 모았는가? (5만 개 이상 권장)</li>
+      <li><strong>3. 데이터 탐색 (EDA)</strong> - 데이터의 특성을 파악했는가? (결측값, 이상치 확인)</li>
+      <li><strong>4. 데이터 전처리</strong> - 텍스트 정제, 인코딩, 정규화</li>
+      <li><strong>5. 특성 엔지니어링</strong> - 어떤 특성이 예측에 도움될까?</li>
+      <li><strong>6. 모델 선택 및 학습</strong> - 여러 모델을 시도</li>
+      <li><strong>7. 모델 평가</strong> - 테스트 데이터로 성능 확인</li>
+      <li><strong>8. 하이퍼파라미터 튜닝</strong> - 모델의 세부 설정 조정</li>
+      <li><strong>9. 배포 및 모니터링</strong> - 실무에 적용하고 성능 추적</li>
+    </ol>
+  </div>
+
+  <h3>퀴즈: 어떤 머신러닝 유형일까?</h3>
+  <div style="background: #fff9e6; padding: 1.5em; border-radius: 8px; border-left: 4px solid #ff9800; margin: 1.5em 0;">
+    <p><strong>문제 1:</strong> "2024년 국회의원 의안 100개의 역사적 데이터를 기반으로, 새로운 의안이 본회의를 통과할 확률을 예측한다"</p>
+    <p style="color: #666; margin-top: 1em;"><strong>정답:</strong> 지도학습 - 분류 (Yes/No 예측)</p>
+
+    <p style="margin-top: 1.5em;"><strong>문제 2:</strong> "SNS에서 수백만 개의 뉴스 기사를 분석하여, 자동으로 비슷한 주제끼리 그룹화한다"</p>
+    <p style="color: #666; margin-top: 1em;"><strong>정답:</strong> 비지도학습 - 클러스터링</p>
+
+    <p style="margin-top: 1.5em;"><strong>문제 3:</strong> "신문사의 모바일 앱에서, 사용자가 클릭한 기사의 이력을 바탕으로 다음에 읽을 만한 기사 3개를 추천한다"</p>
+    <p style="color: #666; margin-top: 1em;"><strong>정답:</strong> 강화학습 (사용자 반응을 보상으로 학습)</p>
+  </div>
+
+  <div class="nav-buttons">
+    <button onclick="scrollToSection('sec-m3')" class="nav-btn prev-btn">← 이전 (모듈 3)</button>
+    <button onclick="scrollToSection('sec-m5')" class="nav-btn next-btn">다음 (모듈 5) →</button>
+  </div>
+</div>
+
+<!-- Module 5: 선형 회귀 분석 -->
+<div class="section" id="sec-m5">
+  <div class="module-header m5">
+    <div class="header-content">
+      <h2>선형 회귀 분석</h2>
+      <div class="tags">
+        <span class="tag intermediate">중급</span>
+        <span class="tag time">50분</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>회귀 분석이란?</h3>
+  <p>회귀 분석은 <strong>두 변수 사이의 관계</strong>를 찾아 하나의 변수로 다른 변수를 예측하는 기법입니다. 예를 들어, "독자 체류 시간"이 "기사 조회수"에 어떤 영향을 미치는지를 분석할 수 있습니다.</p>
+
+  <div class="subsection">
+    <h4>뉴스룸에서의 활용</h4>
+    <ul>
+      <li><strong>건강:</strong> 미세먼지 농도 ↔ 병원 응급실 방문 수</li>
+      <li><strong>경제:</strong> 광고 예산 ↔ 기사 클릭 수</li>
+      <li><strong>정치:</strong> 의원의 SNS 팔로워 ↔ 언론 보도 횟수</li>
+      <li><strong>부동산:</strong> 강남역까지의 거리 ↔ 평수당 아파트 가격</li>
+    </ul>
+  </div>
+
+  <h3>단순 선형 회귀 (Simple Linear Regression)</h3>
+
+  <div class="subsection">
+    <h4>기본 개념</h4>
+    <p>가장 간단한 형태로, <strong>X 변수 1개로 Y를 예측</strong>합니다.</p>
+    <p style="text-align: center; font-size: 1.3em; margin: 1.5em 0; font-family: 'Courier New';">
+      <strong>Y = a + b × X</strong>
+    </p>
+    <ul>
+      <li><strong>Y:</strong> 예측하려는 변수 (예: 기사 클릭 수)</li>
+      <li><strong>X:</strong> 설명 변수 (예: 제목의 길이)</li>
+      <li><strong>a:</strong> 절편 (X=0일 때의 Y값)</li>
+      <li><strong>b:</strong> 기울기 (X가 1 증가할 때 Y의 변화)</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="fn">pandas</span> <span class="kw">as</span> <span class="fn">pd</span>
+<span class="kw">import</span> <span class="fn">statsmodels.formula.api</span> <span class="kw">as</span> <span class="fn">smf</span>
+
+<span class="cm"># 한국 도시별 데이터</span>
+df = pd.DataFrame({
+    <span class="str">'city'</span>: [<span class="str">'서울'</span>, <span class="str">'부산'</span>, <span class="str">'대구'</span>, <span class="str">'인천'</span>, <span class="str">'광주'</span>],
+    <span class="str">'population_density'</span>: [<span class="num">10000</span>, <span class="num">4700</span>, <span class="num">2900</span>, <span class="num">2700</span>, <span class="num">1600</span>],
+    <span class="str">'grdp_per_capita'</span>: [<span class="num">45000</span>, <span class="num">38000</span>, <span class="num">33000</span>, <span class="num">35000</span>, <span class="num">28000</span>]
+})
+
+<span class="cm"># 회귀 모델 생성</span>
+model = smf.ols(<span class="str">formula='grdp_per_capita ~ population_density'</span>, data=df).fit()
+
+<span class="cm"># 결과 출력</span>
+<span class="kw">print</span>(model.summary())
+    </pre>
+  </div>
+
+  <div class="subsection">
+    <h4>결과 해석: R², p-value, 계수</h4>
+    <p>회귀 결과에서 기자가 알아야 할 주요 지표들:</p>
+
+    <table style="width:100%; margin: 1em 0; font-size: 0.95em;">
+      <tr>
+        <th>지표</th>
+        <th>의미</th>
+        <th>좋은 값</th>
+      </tr>
+      <tr>
+        <td><strong>R²</strong></td>
+        <td>모델이 데이터의 몇 %를 설명하는가?<br>(0~1, 클수록 좋음)</td>
+        <td>0.7 이상</td>
+      </tr>
+      <tr>
+        <td><strong>p-value</strong></td>
+        <td>이 관계가 우연일 확률<br>(작을수록 신뢰도 높음)</td>
+        <td>0.05 미만</td>
+      </tr>
+      <tr>
+        <td><strong>Coefficient</strong></td>
+        <td>X가 1 증가할 때 Y의 변화량</td>
+        <td>비즈니스 의미 파악</td>
+      </tr>
+    </table>
+
+    <p><strong>기자 관점에서의 해석:</strong></p>
+    <ul>
+      <li><strong>p-value < 0.05:</strong> "통계적으로 유의미하다" → 이 관계가 우연이 아니다</li>
+      <li><strong>R² = 0.85:</strong> "인구밀도가 지역 경제 격차의 85%를 설명한다" → 강한 관계</li>
+      <li><strong>Coefficient = 2.5:</strong> "인구밀도가 1000명/㎢ 증가하면, 1인당 GDP는 약 2500만원 증가한다"</li>
+    </ul>
+  </div>
+
+  <div class="callout warn">
+    <strong>중요:</strong> "상관관계 ≠ 인과관계"<br>
+    두 변수가 함께 움직인다고 해서, 하나가 다른 하나를 <strong>원인</strong>으로 하는 것은 아닙니다. 예를 들어, "아이스크림 판매량"과 "익사 사건 수"는 상관관계가 있지만 (둘 다 여름에 증가), 인과관계는 없습니다 (실제 원인은 "날씨").
+  </div>
+
+  <h3>다중 선형 회귀 (Multiple Linear Regression)</h3>
+
+  <div class="subsection">
+    <h4>여러 변수로 예측하기</h4>
+    <p>현실 세계에서는 결과에 영향을 미치는 요소가 여러 개입니다.</p>
+    <p style="text-align: center; font-size: 1.2em; margin: 1.5em 0; font-family: 'Courier New';">
+      <strong>Y = a + b₁×X₁ + b₂×X₂ + ... + bₙ×Xₙ</strong>
+    </p>
+    <p><strong>예:</strong> 서울 아파트 가격 = f(면적, 층수, 역세권여부, 건축연도, 반려동물 허용 여부)</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 서울 아파트 데이터 예시</span>
+apartment_data = pd.DataFrame({
+    <span class="str">'price'</span>: [<span class="num">450</span>, <span class="num">380</span>, <span class="num">520</span>, <span class="num">290</span>],  <span class="cm"># 만원</span>
+    <span class="str">'area'</span>: [<span class="num">84</span>, <span class="num">59</span>, <span class="num">102</span>, <span class="num">49</span>],  <span class="cm"># 평수</span>
+    <span class="str">'floor'</span>: [<span class="num">15</span>, <span class="num">5</span>, <span class="num">25</span>, <span class="num">3</span>],  <span class="cm"># 층</span>
+    <span class="str">'near_station'</span>: [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>]  <span class="cm"># 역세권 여부 (1=예, 0=아니오)</span>
+})
+
+<span class="cm"># 다중 회귀</span>
+model = smf.ols(
+    <span class="str">formula='price ~ area + floor + near_station'</span>,
+    data=apartment_data
+).fit()
+
+<span class="kw">print</span>(model.summary())
+<span class="kw">print</span>(<span class="str">f"\nR² (설명력): {model.rsquared:.3f}"</span>)
+    </pre>
+  </div>
+
+  <div class="subsection">
+    <h4>다중공선성 (Multicollinearity) 주의</h4>
+    <p>설명 변수들이 서로 높은 상관관계를 가지면, 모델의 신뢰도가 떨어집니다.</p>
+    <p><strong>예:</strong> 아파트의 "건축연도"와 "경과년수"는 거의 같은 정보를 제공하므로, 두 변수를 함께 사용하면 불안정해집니다.</p>
+
+    <p style="margin-top: 1em;"><strong>확인 방법:</strong> VIF (분산팽창계수) 계산</p>
+    <ul>
+      <li>VIF < 5: 문제 없음</li>
+      <li>VIF > 10: 다중공선성 의심</li>
+    </ul>
+  </div>
+
+  <h3>회귀선 시각화</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">import</span> <span class="fn">matplotlib.pyplot</span> <span class="kw">as</span> <span class="fn">plt</span>
+<span class="kw">import</span> <span class="fn">numpy</span> <span class="kw">as</span> <span class="fn">np</span>
+
+<span class="cm"># 산점도 그리기</span>
+plt.figure(figsize=(<span class="num">10</span>, <span class="num">6</span>))
+plt.scatter(df[<span class="str">'population_density'</span>], df[<span class="str">'grdp_per_capita'</span>],
+            alpha=<span class="num">0.6</span>, s=<span class="num">100</span>, color=<span class="str">'blue'</span>)
+
+<span class="cm"># 회귀선 그리기</span>
+x_line = np.array([df[<span class="str">'population_density'</span>].min(),
+                   df[<span class="str">'population_density'</span>].max()])
+y_line = model.params[<span class="num">0</span>] + model.params[<span class="num">1</span>] * x_line
+plt.plot(x_line, y_line, <span class="str">'r-'</span>, linewidth=<span class="num">2</span>, label=<span class="str">'회귀선'</span>)
+
+plt.xlabel(<span class="str">'인구밀도 (명/㎢)'</span>, fontsize=<span class="num">12</span>)
+plt.ylabel(<span class="str">'1인당 GRDP (만원)'</span>, fontsize=<span class="num">12</span>)
+plt.title(<span class="str">'인구밀도와 지역 경제의 관계'</span>, fontsize=<span class="num">14</span>, fontweight=<span class="str">'bold'</span>)
+plt.legend()
+plt.grid(<span class="kw">True</span>, alpha=<span class="num">0.3</span>)
+plt.show()
+    </pre>
+  </div>
+
+  <h3>잔차 분석 (Residual Analysis)</h3>
+
+  <div class="subsection">
+    <h4>잔차란?</h4>
+    <p><strong>잔차(Residual) = 실제값 - 예측값</strong></p>
+    <p>회귀 모델이 얼마나 잘 맞는지를 보려면, "실제로 관찰된 값"과 "모델의 예측값"의 차이를 봐야 합니다.</p>
+    <ul>
+      <li>잔차가 작으면: 모델이 데이터를 잘 설명</li>
+      <li>잔차가 크면: 모델이 놓친 패턴이 있음</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 잔차 계산 및 시각화</span>
+residuals = model.resid
+
+<span class="cm"># 잔차 플롯</span>
+fig, axes = plt.subplots(<span class="num">2</span>, <span class="num">2</span>, figsize=(<span class="num">12</span>, <span class="num">10</span>))
+
+<span class="cm"># 1. 잔차 vs 예측값</span>
+axes[<span class="num">0</span>, <span class="num">0</span>].scatter(model.fittedvalues, residuals, alpha=<span class="num">0.6</span>)
+axes[<span class="num">0</span>, <span class="num">0</span>].axhline(y=<span class="num">0</span>, color=<span class="str">'r'</span>, linestyle=<span class="str">'--'</span>)
+axes[<span class="num">0</span>, <span class="num">0</span>].set_title(<span class="str">'잔차 플롯'</span>)
+
+<span class="cm"># 2. 정규성 검증 (Q-Q plot)</span>
+<span class="kw">from</span> <span class="fn">scipy</span> <span class="kw">import</span> <span class="fn">stats</span>
+stats.probplot(residuals, dist=<span class="str">"norm"</span>, plot=axes[<span class="num">0</span>, <span class="num">1</span>])
+
+<span class="cm"># 3. 히스토그램</span>
+axes[<span class="num">1</span>, <span class="num">0</span>].hist(residuals, bins=<span class="num">20</span>, edgecolor=<span class="str">'black'</span>)
+axes[<span class="num">1</span>, <span class="num">0</span>].set_title(<span class="str">'잔차 분포'</span>)
+
+<span class="cm"># 4. 시계열 플롯</span>
+axes[<span class="num">1</span>, <span class="num">1</span>].plot(residuals.values, marker=<span class="str">'o'</span>)
+axes[<span class="num">1</span>, <span class="num">1</span>].set_title(<span class="str">'잔차 시계열'</span>)
+
+plt.tight_layout()
+plt.show()
+    </pre>
+  </div>
+
+  <h3>뉴스룸 실전: 회귀분석으로 이상치 찾기</h3>
+
+  <div class="subsection">
+    <h4>사례: 예상보다 비싼 관급 공사 찾기</h4>
+    <p>정부 발주 공사 100개의 데이터가 있습니다: (공사 규모, 공사 기간, 낙찰율, 실제 공사비)</p>
+    <p>선형 회귀로 "정상적인 공사비"를 예측한 후, 실제 공사비가 예측값보다 훨씬 크면 "의심스러운 공사"로 표시할 수 있습니다.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 의심스러운 공사 찾기</span>
+<span class="cm"># 잔차가 크다 = 예상과 다르게 비쌈</span>
+
+suspicious_idx = residuals[residuals.abs() > <span class="num">2</span> * residuals.std()].index
+suspicious_projects = df.loc[suspicious_idx]
+
+<span class="kw">print</span>(<span class="str">"의심스러운 공사 (예상보다 비싼 공사):"</span>)
+<span class="kw">for</span> idx <span class="kw">in</span> suspicious_idx:
+    actual = df.loc[idx, <span class="str">'cost'</span>]
+    predicted = model.fittedvalues[idx]
+    difference = actual - predicted
+    <span class="kw">print</span>(<span class="str">f"공사 {idx}: 예상 {predicted:.0f}억원, 실제 {actual:.0f}억원 (차이: {difference:.0f}억원)"</span>)
+    </pre>
+  </div>
+
+  <h3>퀴즈: 회귀 결과 해석</h3>
+  <div style="background: #fff9e6; padding: 1.5em; border-radius: 8px; border-left: 4px solid #ff9800; margin: 1.5em 0;">
+    <p><strong>상황:</strong> 신문사 데이터 분석팀이 다음 회귀 결과를 얻었습니다.</p>
+    <pre style="background: white; padding: 1em; border-radius: 4px; overflow-x: auto;">
+기사 제목 길이 (단어 수) → 기사 클릭 수
+Coefficient: -15.3
+R-squared: 0.45
+p-value: 0.002
+    </pre>
+
+    <p><strong>문제 1:</strong> 이 결과가 의미하는 것은?</p>
+    <p style="color: #666; margin-top: 1em;"><strong>정답:</strong> 제목이 1단어 길어질수록 클릭 수가 평균 15.3회 줄어든다. 이 관계는 통계적으로 유의미하며(p<0.05), 제목 길이가 클릭 수 변동의 45%를 설명한다.</p>
+
+    <p style="margin-top: 1.5em;"><strong>문제 2:</strong> 기자로서 어떤 행동을 취하겠는가?</p>
+    <p style="color: #666; margin-top: 1em;"><strong>정답:</strong> 제목을 더 짧게 쓰는 것을 고려한다. 하지만 R²이 0.45이므로 다른 요인들(이미지 유무, 시간, 주제 등)도 함께 영향을 미친다는 점을 기억해야 한다.</p>
+  </div>
+
+  <div class="nav-buttons">
+    <button onclick="scrollToSection('sec-m4')" class="nav-btn prev-btn">← 이전 (모듈 4)</button>
+    <button onclick="scrollToSection('sec-m6')" class="nav-btn next-btn">다음 (모듈 6) →</button>
+  </div>
+</div>
+
+<!-- Module 6: 로지스틱 회귀와 분류 -->
+<div class="section" id="sec-m6">
+  <div class="module-header m1">
+    <div class="header-content">
+      <h2>로지스틱 회귀와 분류</h2>
+      <div class="tags">
+        <span class="tag advanced">중급-고급</span>
+        <span class="tag time">50분</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>분류 문제란?</h3>
+
+  <div class="subsection">
+    <h4>회귀 vs 분류</h4>
+    <table style="width:100%; margin: 1em 0;">
+      <tr>
+        <th>회귀 (Regression)</th>
+        <th>분류 (Classification)</th>
+      </tr>
+      <tr>
+        <td><strong>예측 대상:</strong> 연속된 숫자<br>예: 집값, 매출액, 방문객 수</td>
+        <td><strong>예측 대상:</strong> 범주/클래스<br>예: 정치/경제/스포츠, Yes/No, 스팸/정상</td>
+      </tr>
+      <tr>
+        <td><strong>모델:</strong> 직선을 그음</td>
+        <td><strong>모델:</strong> 경계선을 그음</td>
+      </tr>
+      <tr>
+        <td><strong>평가:</strong> MAE, RMSE, R²</td>
+        <td><strong>평가:</strong> Accuracy, Precision, Recall</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="subsection">
+    <h4>뉴스룸에서의 분류 문제</h4>
+    <ul>
+      <li><strong>가짜뉴스 탐지:</strong> 이 뉴스는 가짜뉴스인가? (Yes/No)</li>
+      <li><strong>카테고리 분류:</strong> 이 기사는 정치/경제/스포츠 중 어디에 속하는가?</li>
+      <li><strong>감정 분석:</strong> 댓글의 감정은 긍정/부정/중립인가?</li>
+      <li><strong>스팸 필터:</strong> 이 댓글은 스팸인가?</li>
+      <li><strong>중요도 판정:</strong> 이 의견 제시는 중요한가?</li>
+    </ul>
+  </div>
+
+  <h3>로지스틱 회귀 (Logistic Regression)</h3>
+
+  <div class="subsection">
+    <h4>기본 원리</h4>
+    <p>로지스틱 회귀는 이름은 "회귀"이지만, 실제로는 <strong>분류 알고리즘</strong>입니다.</p>
+    <p><strong>핵심 아이디어:</strong> 선형 회귀의 결과를 "확률"로 변환합니다.</p>
+
+    <div style="background: #f0f4ff; padding: 1.5em; border-radius: 8px; margin: 1.5em 0;">
+      <p><strong>시그모이드 함수 (Sigmoid Function)</strong></p>
+      <p style="text-align: center; font-family: 'Courier New'; font-size: 1.1em; margin: 1em 0;">
+        P(Y=1) = 1 / (1 + e<sup>-z</sup>)
+      </p>
+      <p>여기서 z = a + b×X</p>
+      <p>이 함수는 어떤 입력값이든 0과 1 사이의 확률값으로 변환합니다.</p>
+    </div>
+
+    <p><strong>결과 해석:</strong></p>
+    <ul>
+      <li>P(Y=1) = 0.7 → 70% 확률로 이 뉴스는 가짜뉴스</li>
+      <li>P(Y=1) = 0.3 → 30% 확률로 이 뉴스는 가짜뉴스 (= 70% 확률로 진짜뉴스)</li>
+    </ul>
+  </div>
+
+  <div class="subsection">
+    <h4>임계값 (Threshold) 설정</h4>
+    <p>일반적으로 P(Y=1) ≥ 0.5이면 "Yes", 아니면 "No"로 분류합니다.</p>
+    <p>하지만 상황에 따라 임계값을 조정할 수 있습니다.</p>
+    <ul>
+      <li><strong>임계값 = 0.3:</strong> 더 민감하게 "Yes"로 분류 (재현율 ↑, 정밀도 ↓)</li>
+      <li><strong>임계값 = 0.5:</strong> 기본값</li>
+      <li><strong>임계값 = 0.7:</strong> 더 보수적으로 "Yes"로 분류 (정밀도 ↑, 재현율 ↓)</li>
+    </ul>
+  </div>
+
+  <h3>Scikit-Learn으로 로지스틱 회귀 구현</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> <span class="fn">sklearn.linear_model</span> <span class="kw">import</span> <span class="fn">LogisticRegression</span>
+<span class="kw">from</span> <span class="fn">sklearn.model_selection</span> <span class="kw">import</span> <span class="fn">train_test_split</span>
+<span class="kw">from</span> <span class="fn">sklearn.metrics</span> <span class="kw">import</span> <span class="fn">classification_report, confusion_matrix</span>
+
+<span class="cm"># 국회의원 법안 데이터</span>
+df = pd.read_csv(<span class="str">'bills.csv'</span>)
+
+<span class="cm"># 특성과 타겟</span>
+X = df[[<span class="str">'num_sponsors'</span>, <span class="str">'committee_pass'</span>, <span class="str">'is_ruling_party'</span>]]
+y = df[<span class="str">'plenary_pass'</span>]  <span class="cm"># 1=통과, 0=부결</span>
+
+<span class="cm"># 데이터 분리</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=<span class="num">0.2</span>, random_state=<span class="num">42</span>
+)
+
+<span class="cm"># 모델 생성 및 학습</span>
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+<span class="cm"># 예측</span>
+y_pred = model.predict(X_test)
+y_pred_proba = model.predict_proba(X_test)  <span class="cm"># 확률</span>
+
+<span class="kw">print</span>(<span class="str">f"정확도: {model.score(X_test, y_test):.2%}"</span>)
+    </pre>
+  </div>
+
+  <h3>범주형 변수 인코딩</h3>
+
+  <div class="subsection">
+    <h4>왜 인코딩이 필요한가?</h4>
+    <p>머신러닝 모델은 숫자만 이해합니다. "여당"과 "야당"처럼 텍스트 값은 숫자로 변환해야 합니다.</p>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 원핫인코딩 (One-Hot Encoding)</span>
+<span class="cm"># 예: "정당" 열 → "is_ruling_party", "is_opposition_party"</span>
+
+df_original = pd.DataFrame({
+    <span class="str">'bill_name'</span>: [<span class="str">'법안A'</span>, <span class="str">'법안B'</span>, <span class="str">'법안C'</span>],
+    <span class="str">'party'</span>: [<span class="str">'여당'</span>, <span class="str">'야당'</span>, <span class="str">'여당'</span>],
+    <span class="str">'region'</span>: [<span class="str">'서울'</span>, <span class="str">'부산'</span>, <span class="str">'대구'</span>]
+})
+
+<span class="cm"># 방법 1: pd.get_dummies()</span>
+df_encoded = pd.get_dummies(df_original, columns=[<span class="str">'party'</span>, <span class="str">'region'</span>])
+<span class="kw">print</span>(df_encoded.head())
+
+<span class="cm"># 결과:</span>
+<span class="cm"># bill_name  party_여당  party_야당  region_대구  region_부산  region_서울</span>
+<span class="cm"># 법안A         1        0        0        0        1</span>
+<span class="cm"># 법안B         0        1        0        1        0</span>
+<span class="cm"># 법안C         1        0        1        0        0</span>
+    </pre>
+  </div>
+
+  <div class="callout info">
+    <strong>팁:</strong> get_dummies()를 사용할 때, 학습 데이터와 테스트 데이터에서 카테고리가 다를 수 있습니다. 이런 경우 pd.get_dummies(df, columns=['party'], drop_first=True)로 한 개 열을 제거하는 것이 좋습니다. (다중공선성 방지)
+  </div>
+
+  <h3>모델 성능 평가</h3>
+
+  <div class="subsection">
+    <h4>혼동행렬 (Confusion Matrix)</h4>
+    <p>분류 모델의 성능을 보여주는 2×2 표입니다.</p>
+
+    <table style="width:100%; text-align: center; margin: 1.5em 0; border-collapse: collapse;">
+      <tr>
+        <th colspan="2" rowspan="2"></th>
+        <th colspan="2"><strong>예측값</strong></th>
+      </tr>
+      <tr>
+        <th>예측: Yes</th>
+        <th>예측: No</th>
+      </tr>
+      <tr>
+        <th rowspan="2"><strong>실제값</strong></th>
+        <th>실제: Yes</th>
+        <td>TP (참 양성)</td>
+        <td>FN (거짓 음성)</td>
+      </tr>
+      <tr>
+        <th>실제: No</th>
+        <td>FP (거짓 양성)</td>
+        <td>TN (참 음성)</td>
+      </tr>
+    </table>
+
+    <ul style="margin-top: 1.5em;">
+      <li><strong>TP (True Positive):</strong> 가짜뉴스를 가짝뉴스라고 맞게 분류</li>
+      <li><strong>FN (False Negative):</strong> 가짜뉴스를 진짜뉴스라고 잘못 분류 (위험!)</li>
+      <li><strong>FP (False Positive):</strong> 진짜뉴스를 가짜뉴스라고 잘못 분류</li>
+      <li><strong>TN (True Negative):</strong> 진짜뉴스를 진짜뉴스라고 맞게 분류</li>
+    </ul>
+  </div>
+
+  <div class="subsection">
+    <h4>핵심 성능 지표</h4>
+
+    <table style="width:100%; margin: 1.5em 0;">
+      <tr>
+        <th>지표</th>
+        <th>공식</th>
+        <th>의미</th>
+      </tr>
+      <tr>
+        <td><strong>정확도 (Accuracy)</strong></td>
+        <td>(TP + TN) / (TP + TN + FP + FN)</td>
+        <td>전체 예측 중 맞은 비율<br>전체적인 성능</td>
+      </tr>
+      <tr>
+        <td><strong>정밀도 (Precision)</strong></td>
+        <td>TP / (TP + FP)</td>
+        <td>"예"라고 예측한 것 중 실제로 맞은 비율<br>거짓 양성을 줄이고 싶을 때</td>
+      </tr>
+      <tr>
+        <td><strong>재현율 (Recall)</strong></td>
+        <td>TP / (TP + FN)</td>
+        <td>실제 "예"인 것을 제대로 찾은 비율<br>놓친 것을 최소화하고 싶을 때</td>
+      </tr>
+      <tr>
+        <td><strong>F1-Score</strong></td>
+        <td>2 × (Precision × Recall) / (Precision + Recall)</td>
+        <td>정밀도와 재현율의 조화평균<br>균형잡힌 평가</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="subsection">
+    <h4>뉴스룸 맥락: 왜 지표 선택이 중요한가?</h4>
+    <p><strong>가짜뉴스 탐지 시스템:</strong></p>
+    <ul>
+      <li><strong>높은 재현율이 필요:</strong> 가짜뉴스를 절대 놓치면 안 됨 (FN이 위험)</li>
+      <li><strong>낮은 정밀도 허용:</strong> 진짜뉴스를 실수로 걸러내는 것은 사람이 검수</li>
+    </ul>
+
+    <p style="margin-top: 1.5em;"><strong>스팸 댓글 필터:</strong></p>
+    <ul>
+      <li><strong>높은 정밀도가 필요:</strong> 정상 댓글을 스팸으로 지우면 안 됨 (FP가 위험)</li>
+      <li><strong>낮은 재현율 허용:</strong> 약간의 스팸이 통과해도 사용자가 피할 수 있음</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 성능 평가</span>
+cm = confusion_matrix(y_test, y_pred)
+<span class="kw">print</span>(<span class="str">"혼동행렬:"</span>)
+<span class="kw">print</span>(cm)
+
+<span class="cm"># 자세한 분류 리포트</span>
+report = classification_report(y_test, y_pred,
+                               target_names=[<span class="str">'부결'</span>, <span class="str">'통과'</span>])
+<span class="kw">print</span>(report)
+
+<span class="cm"># 개별 지표 계산</span>
+tn, fp, fn, tp = cm.ravel()
+accuracy = (tp + tn) / (tp + tn + fp + fn)
+precision = tp / (tp + fp)
+recall = tp / (tp + fn)
+f1 = <span class="num">2</span> * (precision * recall) / (precision + recall)
+
+<span class="kw">print</span>(<span class="str">f"정확도: {accuracy:.2%}"</span>)
+<span class="kw">print</span>(<span class="str">f"정밀도: {precision:.2%}"</span>)
+<span class="kw">print</span>(<span class="str">f"재현율: {recall:.2%}"</span>)
+<span class="kw">print</span>(<span class="str">f"F1-Score: {f1:.3f}"</span>)
+    </pre>
+  </div>
+
+  <h3>ROC 곡선과 임계값 조정</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> <span class="fn">sklearn.metrics</span> <span class="kw">import</span> <span class="fn">roc_curve, auc</span>
+
+<span class="cm"># ROC 곡선 그리기</span>
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba[:, <span class="num">1</span>])
+roc_auc = auc(fpr, tpr)
+
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">6</span>))
+plt.plot(fpr, tpr, color=<span class="str">'blue'</span>, lw=<span class="num">2</span>,
+         label=<span class="str">f'ROC curve (AUC = {roc_auc:.2f})'</span>)
+plt.plot([<span class="num">0</span>, <span class="num">1</span>], [<span class="num">0</span>, <span class="num">1</span>], color=<span class="str">'red'</span>, lw=<span class="num">2</span>,
+         linestyle=<span class="str">'--'</span>, label=<span class="str">'Random Classifier'</span>)
+plt.xlabel(<span class="str">'거짓 양성 율 (False Positive Rate)'</span>)
+plt.ylabel(<span class="str">'참 양성 율 (True Positive Rate)'</span>)
+plt.title(<span class="str">'ROC 곡선'</span>)
+plt.legend()
+plt.show()
+
+<span class="cm"># AUC 해석</span>
+<span class="cm"># AUC = 0.5: 랜덤 분류와 같음</span>
+<span class="cm"># AUC = 1.0: 완벽한 분류</span>
+<span class="cm"># 일반적으로 AUC > 0.7이면 괜찮은 모델</span>
+    </pre>
+  </div>
+
+  <h3>실제 사례: 카테고리 분류</h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> <span class="fn">sklearn.preprocessing</span> <span class="kw">import</span> <span class="fn">LabelEncoder</span>
+
+<span class="cm"># 다중 분류 (2개 이상의 클래스)</span>
+df = pd.read_csv(<span class="str">'articles.csv'</span>)
+
+<span class="cm"># 타겟 변수: 정치/경제/스포츠</span>
+categories = df[<span class="str">'category'</span>].unique()
+<span class="kw">print</span>(<span class="str">f"카테고리: {categories}"</span>)
+
+<span class="cm"># 특성 (예: 단어 빈도)</span>
+X = df[[<span class="str">'word_count'</span>, <span class="str">'has_image'</span>, <span class="str">'reading_time'</span>]]
+y = df[<span class="str">'category'</span>]
+
+<span class="cm"># 모델은 자동으로 다중 분류 처리</span>
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=<span class="num">0.2</span>)
+model = LogisticRegression(max_iter=<span class="num">200</span>)
+model.fit(X_train, y_train)
+
+<span class="kw">print</span>(<span class="str">f"다중 분류 정확도: {model.score(X_test, y_test):.2%}"</span>)
+    </pre>
+  </div>
+
+  <h3>퀴즈: 정밀도 vs 재현율</h3>
+  <div style="background: #fff9e6; padding: 1.5em; border-radius: 8px; border-left: 4px solid #ff9800; margin: 1.5em 0;">
+    <p><strong>상황:</strong> 신문사에서 "기사 품질 검증 시스템"을 만들려고 합니다. 저품질 기사를 자동으로 감지해서 에디터에게 경고하는 시스템입니다.</p>
+
+    <p style="margin-top: 1.5em;"><strong>문제:</strong> 다음 중 어떤 성능 지표를 더 중요시해야 할까요?</p>
+
+    <div style="background: white; padding: 1em; border-radius: 4px; margin-top: 1em;">
+      <p><strong>A. 정밀도:</strong> "저품질"이라고 말한 것이 실제 저품질인 비율</p>
+      <p><strong>B. 재현율:</strong> 실제 저품질 기사를 몇 % 잡아내는가</p>
+    </div>
+
+    <p style="color: #666; margin-top: 1.5em;"><strong>정답:</strong> <strong>B. 재현율</strong>. 저품질 기사를 놓치면(FN) 문제가 되지만, 고품질 기사를 저품질로 잘못 분류(FP)해도 에디터가 확인하면 되기 때문입니다.</p>
+
+    <p style="margin-top: 1.5em;"><strong>대조 사례:</strong> 의료 진단 시스템에서는 정밀도가 중요합니다. 건강한 사람을 환자로 진단(FP)하면 불필요한 수술을 받을 수 있기 때문입니다.</p>
+  </div>
+
+  <h3>심화 주제: 클래스 불균형 문제</h3>
+
+  <div class="callout warn">
+    <strong>문제:</strong> 만약 데이터에 99%는 "정상 댓글"이고 1%만 "스팸 댓글"이라면?
+    <br><br>
+    모델이 "모두 정상"이라고 예측하면 정확도는 99%가 됩니다! 하지만 실제로는 스팸을 못 잡고 있습니다.
+    <br><br>
+    <strong>해결책:</strong>
+    <ul>
+      <li>class_weight='balanced' 사용</li>
+      <li>오버샘플링 (소수 클래스를 반복)</li>
+      <li>언더샘플링 (다수 클래스를 제거)</li>
+      <li>SMOTE 사용 (합성 표본 생성)</li>
+    </ul>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 클래스 불균형 해결</span>
+model = LogisticRegression(class_weight=<span class="str">'balanced'</span>)
+model.fit(X_train, y_train)
+
+<span class="cm"># 또는 SMOTE 사용</span>
+<span class="kw">from</span> <span class="fn">imblearn.over_sampling</span> <span class="kw">import</span> <span class="fn">SMOTE</span>
+
+smote = SMOTE(random_state=<span class="num">42</span>)
+X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
+
+model = LogisticRegression()
+model.fit(X_train_balanced, y_train_balanced)
+<span class="kw">print</span>(<span class="str">f"SMOTE 적용 후 정확도: {model.score(X_test, y_test):.2%}"</span>)
+    </pre>
+  </div>
+
+  <div class="nav-buttons">
+    <button onclick="scrollToSection('sec-m5')" class="nav-btn prev-btn">← 이전 (모듈 5)</button>
+    <button onclick="scrollToSection('top')" class="nav-btn next-btn">처음으로 ↑</button>
+  </div>
+</div>
+<!-- ===== MODULE 7: 의사결정나무 (Decision Trees) ===== -->
+<div class="section" id="sec-m7">
+  <div class="module-header m2">
+    <h2>의사결정나무 (Decision Trees)</h2>
+    <div class="tags">
+      <span class="tag-level">중급-고급</span>
+      <span class="tag-time">50분</span>
+    </div>
+  </div>
+
+  <h3>의사결정나무란?</h3>
+  <p>의사결정나무(Decision Tree)는 마치 "스무고개" 게임처럼 일련의 질문을 통해 데이터를 분류하는 머신러닝 모델입니다. 각 노드에서 조건을 확인하고 가지를 따라가며 최종 결정에 도달합니다.</p>
+
+  <div class="callout info">
+    <strong>스무고개 비유:</strong> "나이가 30 이상인가? → 구독 기간이 1년 이상인가? → 방문 빈도가 주 3회 이상인가?" 이런 식으로 질문하며 최종 판단에 도달하는 과정입니다.
+  </div>
+
+  <p><strong>뉴스룸 실전 예시:</strong> 독자 이탈 예측</p>
+  <ul>
+    <li>독자 나이 &gt; 30세? ✓</li>
+    <li>→ 구독 기간 &gt; 1년? ✗</li>
+    <li>→ 최근 3개월 방문 횟수 &gt; 5회? ✓</li>
+    <li>→ <strong>예측: 이탈 가능성 낮음</strong></li>
+  </ul>
+
+  <h3>DecisionTreeClassifier 실습</h3>
+  <p>scikit-learn의 DecisionTreeClassifier로 선거 당선 예측을 해봅시다. 특성은 선거자금, 현직 여부, 정당, 지역 인지도입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeClassifier
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> LabelEncoder
+
+<span class="cm"># 선거 데이터 샘플</span>
+data = {
+    <span class="str">'선거자금'</span>: [<span class="num">500</span>, <span class="num">800</span>, <span class="num">300</span>, <span class="num">900</span>, <span class="num">600</span>],
+    <span class="str">'현직여부'</span>: [<span class="str">'예'</span>, <span class="str">'아니오'</span>, <span class="str">'예'</span>, <span class="str">'아니오'</span>, <span class="str">'예'</span>],
+    <span class="str">'정당'</span>: [<span class="str">'A당'</span>, <span class="str">'B당'</span>, <span class="str">'A당'</span>, <span class="str">'B당'</span>, <span class="str">'A당'</span>],
+    <span class="str">'지역인지도'</span>: [<span class="num">85</span>, <span class="num">60</span>, <span class="num">90</span>, <span class="num">70</span>, <span class="num">80</span>],
+    <span class="str">'당선'</span>: [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>]
+}
+df = pd.DataFrame(data)
+
+<span class="cm"># 범주형 특성 인코딩</span>
+le_yesno = LabelEncoder()
+le_party = LabelEncoder()
+df[<span class="str">'현직여부'</span>] = le_yesno.fit_transform(df[<span class="str">'현직여부'</span>])
+df[<span class="str">'정당'</span>] = le_party.fit_transform(df[<span class="str">'정당'</span>])
+
+X = df.drop(<span class="str">'당선'</span>, axis=<span class="num">1</span>)
+y = df[<span class="str">'당선'</span>]
+
+<span class="cm"># 모델 생성 및 학습</span>
+tree = DecisionTreeClassifier(max_depth=<span class="num">3</span>, random_state=<span class="num">42</span>)
+tree.fit(X, y)
+
+<span class="cm"># 예측</span>
+prediction = tree.predict([[<span class="num">700</span>, <span class="num">1</span>, <span class="num">0</span>, <span class="num">75</span>]])
+<span class="fn">print</span>(<span class="str">f"예측 결과: {'당선' if prediction[0] == 1 else '낙선'}"</span>)</pre>
+  </div>
+
+  <h3>나무 시각화</h3>
+  <p>의사결정나무는 가시적으로 해석할 수 있는 최대 장점입니다. <code>plot_tree()</code>로 전체 구조를 시각화해봅시다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.tree <span class="kw">import</span> plot_tree
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># 나무 시각화</span>
+plt.figure(figsize=(<span class="num">20</span>, <span class="num">10</span>))
+plot_tree(tree,
+          feature_names=X.columns.tolist(),
+          class_names=[<span class="str">'낙선'</span>, <span class="str">'당선'</span>],
+          filled=<span class="kw">True</span>,
+          rounded=<span class="kw">True</span>,
+          fontsize=<span class="num">10</span>)
+plt.title(<span class="str">'선거 당선 예측 의사결정나무'</span>, fontsize=<span class="num">16</span>)
+plt.tight_layout()
+plt.show()</pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>노드 해석법:</strong>
+    <ul>
+      <li><strong>조건</strong>: 노드의 상단 (예: "지역인지도 ≤ 77.5")</li>
+      <li><strong>gini</strong>: 노드의 순도(Gini impurity) - 0에 가까울수록 순수</li>
+      <li><strong>samples</strong>: 이 노드의 샘플 개수</li>
+      <li><strong>value</strong>: [낙선, 당선] 샘플 개수</li>
+    </ul>
+  </div>
+
+  <h3>과적합 제어</h3>
+  <p>의사결정나무는 학습 데이터에 과도하게 적응하는 경향이 있습니다. 깊이와 노드 크기를 제한하여 과적합을 방지합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 과적합 제어 파라미터</span>
+tree_shallow = DecisionTreeClassifier(
+    max_depth=<span class="num">3</span>,              <span class="cm"># 최대 깊이 3</span>
+    min_samples_split=<span class="num">5</span>,      <span class="cm"># 분할 최소 샘플 5개</span>
+    min_samples_leaf=<span class="num">2</span>,       <span class="cm"># 잎 노드 최소 샘플 2개</span>
+    random_state=<span class="num">42</span>
+)
+tree_shallow.fit(X, y)
+
+<span class="cm"># 검증</span>
+train_score = tree_shallow.score(X, y)
+<span class="fn">print</span>(<span class="str">f"학습 데이터 정확도: {train_score:.3f}"</span>)</pre>
+  </div>
+
+  <div class="callout warn">
+    <strong>과적합 vs 과소적합:</strong> max_depth가 너무 크면 과적합(훈련 정확도 높음, 테스트 정확도 낮음), 너무 작으면 과소적합(두 정확도 모두 낮음)이 발생합니다.
+  </div>
+
+  <h3>특성 중요도 (Feature Importance)</h3>
+  <p>모델이 학습 중에 각 특성을 얼마나 중요하게 평가했는지 확인합니다. 뉴스룸에서 "어떤 요소가 독자 이탈에 가장 영향을 미치나?"를 파악할 수 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 특성 중요도 추출</span>
+importances = tree.feature_importances_
+feature_names = X.columns.tolist()
+
+<span class="cm"># 데이터프레임으로 정렬</span>
+importance_df = pd.DataFrame({
+    <span class="str">'특성'</span>: feature_names,
+    <span class="str">'중요도'</span>: importances
+}).sort_values(<span class="str">'중요도'</span>, ascending=<span class="kw">False</span>)
+
+<span class="fn">print</span>(importance_df)
+
+<span class="cm"># 시각화</span>
+plt.figure(figsize=(<span class="num">8</span>, <span class="num">5</span>))
+plt.barh(importance_df[<span class="str">'특성'</span>], importance_df[<span class="str">'중요도'</span>])
+plt.xlabel(<span class="str">'중요도'</span>)
+plt.title(<span class="str">'특성 중요도 (선거 당선 예측)'</span>)
+plt.tight_layout()
+plt.show()</pre>
+  </div>
+
+  <h3>한국 와인 분류 예제</h3>
+  <p>Iris 대신 한국 와인(막걸리, 소주, 맥주)의 화학적 특성으로 분류해봅시다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 한국 와인 샘플 데이터</span>
+wine_data = {
+    <span class="str">'알코올도수'</span>: [<span class="num">16</span>, <span class="num">20</span>, <span class="num">4</span>, <span class="num">15</span>, <span class="num">21</span>],
+    <span class="str">'산도'</span>: [<span class="num">3.2</span>, <span class="num">2.8</span>, <span class="num">3.5</span>, <span class="num">3.1</span>, <span class="num">2.9</span>],
+    <span class="str">'당도'</span>: [<span class="num">5</span>, <span class="num">2</span>, <span class="num">18</span>, <span class="num">3</span>, <span class="num">1</span>],
+    <span class="str">'와인종류'</span>: [<span class="str">'소주'</span>, <span class="str">'소주'</span>, <span class="str">'막걸리'</span>, <span class="str">'맥주'</span>, <span class="str">'소주'</span>]
+}
+wine_df = pd.DataFrame(wine_data)
+
+<span class="cm"># 인코딩</span>
+le_wine = LabelEncoder()
+wine_df[<span class="str">'와인종류'</span>] = le_wine.fit_transform(wine_df[<span class="str">'와인종류'</span>])
+
+X_wine = wine_df.drop(<span class="str">'와인종류'</span>, axis=<span class="num">1</span>)
+y_wine = wine_df[<span class="str">'와인종류'</span>]
+
+wine_tree = DecisionTreeClassifier(max_depth=<span class="num">2</span>, random_state=<span class="num">42</span>)
+wine_tree.fit(X_wine, y_wine)
+
+<span class="fn">print</span>(<span class="str">f"와인 분류 정확도: {wine_tree.score(X_wine, y_wine):.3f}"</span>)</pre>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-btn">더 알아보기: 가지치기(Pruning)</button>
+    <div class="accordion-content">
+      <p>가지치기는 복잡한 나무를 단순화하여 과적합을 줄이는 기법입니다. scikit-learn의 <code>cost_complexity_pruning</code>을 사용할 수 있습니다.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre><span class="cm"># 복잡도-정확도 경로 구하기</span>
+path = tree.cost_complexity_pruning_path(X, y)
+ccp_alphas = path.ccp_alphas
+
+<span class="cm"># 다양한 alpha 값으로 모델 학습</span>
+trees = []
+<span class="kw">for</span> ccp_alpha <span class="kw">in</span> ccp_alphas:
+    tree_pruned = DecisionTreeClassifier(
+        random_state=<span class="num">42</span>,
+        ccp_alpha=ccp_alpha
+    )
+    tree_pruned.fit(X, y)
+    trees.append(tree_pruned)
+
+<span class="fn">print</span>(<span class="str">f"가지치기 완료: {len(trees)}개 모델"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Quiz: 의사결정나무 해석</h3>
+  <div class="quiz">
+    <p><strong>Q1:</strong> 의사결정나무에서 gini 값이 0에 가까운 노드는 무엇을 의미하나요?</p>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ 노드가 순수하다는 뜻입니다. 즉, 한 클래스의 샘플만 포함되어 있거나 매우 유사한 패턴만 있다는 의미입니다.</p>
+    </details>
+
+    <p><strong>Q2:</strong> max_depth를 1로 설정하면 어떤 일이 발생할까요?</p>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ 루트 노드에서 단 하나의 조건만 확인하는 "스텀프(stump)"가 되어 과소적합 위험이 높습니다.</p>
+    </details>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <button class="nav-btn" onclick="document.getElementById('sec-m8').scrollIntoView()">다음: 특성 엔지니어링</button>
+  </div>
+</div>
+
+<!-- ===== MODULE 8: 특성 엔지니어링 (Feature Engineering) ===== -->
+<div class="section" id="sec-m8">
+  <div class="module-header m3">
+    <h2>특성 엔지니어링 (Feature Engineering)</h2>
+    <div class="tags">
+      <span class="tag-level">고급</span>
+      <span class="tag-time">45분</span>
+    </div>
+  </div>
+
+  <h3>특성 엔지니어링이란?</h3>
+  <p>특성 엔지니어링(Feature Engineering)은 원본 데이터에서 기계학습 모델에 입력할 수 있는 의미 있는 특성을 만드는 과정입니다.</p>
+
+  <div class="callout warn">
+    <strong>GIGO 원칙 (Garbage In, Garbage Out):</strong> 아무리 좋은 모델도 나쁜 특성으로는 좋은 결과를 기대할 수 없습니다. 좋은 특성이 좋은 모델을 만듭니다!
+  </div>
+
+  <h3>원핫인코딩 (One-Hot Encoding)</h3>
+  <p>범주형(Categorical) 특성을 기계학습에 사용할 수 있도록 이진(Binary) 변수로 변환합니다. 한국 정치 데이터 예시로 해봅시다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 정당 데이터 예시</span>
+candidates = pd.DataFrame({
+    <span class="str">'이름'</span>: [<span class="str">'김순신'</span>, <span class="str">'이순신'</span>, <span class="str">'박순신'</span>],
+    <span class="str">'정당'</span>: [<span class="str">'더불어민주당'</span>, <span class="str">'국민의힘'</span>, <span class="str">'더불어민주당'</span>],
+    <span class="str">'투표율'</span>: [<span class="num">0.65</span>, <span class="num">0.72</span>, <span class="num">0.58</span>]
+})
+
+<span class="cm"># 원핫인코딩</span>
+party_encoded = pd.get_dummies(candidates[<span class="str">'정당'</span>], prefix=<span class="str">'정당'</span>)
+<span class="fn">print</span>(party_encoded)</pre>
+  </div>
+
+  <p><strong>출력:</strong></p>
+  <pre>   정당_더불어민주당  정당_국민의힘
+0            1         0
+1            0         1
+2            1         0</pre>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 전체 데이터에 병합</span>
+candidates_encoded = pd.concat([
+    candidates[[<span class="str">'이름'</span>, <span class="str">'투표율'</span>]],
+    party_encoded
+], axis=<span class="num">1</span>)
+
+<span class="fn">print</span>(candidates_encoded)</pre>
+  </div>
+
+  <div class="callout warn">
+    <strong>더미변수 함정(Dummy Variable Trap):</strong> 원핫인코딩으로 생성된 변수가 완벽히 다중공선성(multicollinearity)을 가질 수 있습니다. 한 변수를 제거하거나 drop_first=True를 사용하세요.
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 함정 피하기: 첫 번째 변수 제거</span>
+party_encoded_safe = pd.get_dummies(
+    candidates[<span class="str">'정당'</span>],
+    prefix=<span class="str">'정당'</span>,
+    drop_first=<span class="kw">True</span>
+)
+<span class="fn">print</span>(party_encoded_safe)</pre>
+  </div>
+
+  <h3>수치형 특성 변환</h3>
+  <p>연속형 수치 특성의 스케일을 조정합니다. 정규화(Normalization)와 표준화(Standardization)는 언제 쓸까요?</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> MinMaxScaler, StandardScaler
+
+data_raw = pd.DataFrame({
+    <span class="str">'구독자수'</span>: [<span class="num">1000</span>, <span class="num">5000</span>, <span class="num">2000</span>, <span class="num">8000</span>],
+    <span class="str">'클릭률'</span>: [<span class="num">0.05</span>, <span class="num">0.12</span>, <span class="num">0.08</span>, <span class="num">0.15</span>]
+})
+
+<span class="cm"># 정규화 (0~1 범위)</span>
+scaler_minmax = MinMaxScaler()
+data_normalized = scaler_minmax.fit_transform(data_raw)
+
+<span class="cm"># 표준화 (평균 0, 표준편차 1)</span>
+scaler_standard = StandardScaler()
+data_standardized = scaler_standard.fit_transform(data_raw)
+
+<span class="fn">print</span>(<span class="str">"정규화:"</span>)
+<span class="fn">print</span>(data_normalized)
+<span class="fn">print</span>(<span class="str">"\n표준화:"</span>)
+<span class="fn">print</span>(data_standardized)</pre>
+  </div>
+
+  <div class="callout info">
+    <strong>정규화 vs 표준화:</strong>
+    <ul>
+      <li><strong>정규화:</strong> 데이터를 [0, 1] 범위로 변환. 특성의 범위가 다를 때 사용 (예: KNN, K-means)</li>
+      <li><strong>표준화:</strong> 데이터를 평균 0, 표준편차 1로 변환. 정규분포 가정 모델에 유용 (예: 로지스틱 회귀, SVM)</li>
+    </ul>
+  </div>
+
+  <h3>이산화 (Discretization)</h3>
+  <p>연속형 특성을 범주형으로 변환합니다. 예를 들어 나이를 연령대로 나누는 경우입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 연령대 이산화</span>
+df_age = pd.DataFrame({
+    <span class="str">'나이'</span>: [<span class="num">25</span>, <span class="num">34</span>, <span class="num">45</span>, <span class="num">56</span>, <span class="num">68</span>]
+})
+
+<span class="cm"># pd.cut()로 구간 나누기</span>
+df_age[<span class="str">'연령대'</span>] = pd.cut(
+    df_age[<span class="str">'나이'</span>],
+    bins=[<span class="num">0</span>, <span class="num">29</span>, <span class="num">39</span>, <span class="num">49</span>, <span class="num">59</span>, <span class="num">100</span>],
+    labels=[<span class="str">'20대'</span>, <span class="str">'30대'</span>, <span class="str">'40대'</span>, <span class="str">'50대'</span>, <span class="str">'60대+'</span>]
+)
+
+<span class="fn">print</span>(df_age)</pre>
+  </div>
+
+  <p><strong>출력:</strong></p>
+  <pre>  나이 연령대
+0  25  20대
+1  34  30대
+2  45  40대
+3  56  50대
+4  68  60대+</pre>
+
+  <h3>새로운 특성 생성</h3>
+  <p>기존 특성들을 조합하여 새로운 특성을 만듭니다. 뉴스 기사 분석 예시입니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 기사 데이터</span>
+articles = pd.DataFrame({
+    <span class="str">'제목'</span>: [
+        <span class="str">'뉴스 제목 1'</span>,
+        <span class="str">'아주 긴 뉴스 제목 두 번째'</span>,
+        <span class="str">'짧음'</span>
+    ],
+    <span class="str">'발행_시간'</span>: [<span class="num">9</span>, <span class="num">14</span>, <span class="num">20</span>]
+})
+
+<span class="cm"># 제목 길이 특성</span>
+articles[<span class="str">'제목길이'</span>] = articles[<span class="str">'제목'</span>].apply(<span class="kw">lambda</span> x: <span class="fn">len</span>(x))
+
+<span class="cm"># 발행 시간대 특성</span>
+<span class="kw">def</span> <span class="fn">classify_time</span>(hour):
+    <span class="kw">if</span> hour < <span class="num">12</span>:
+        <span class="kw">return</span> <span class="str">'아침'</span>
+    <span class="kw">elif</span> hour < <span class="num">18</span>:
+        <span class="kw">return</span> <span class="str">'오후'</span>
+    <span class="kw">else</span>:
+        <span class="kw">return</span> <span class="str">'저녁'</span>
+
+articles[<span class="str">'시간대'</span>] = articles[<span class="str">'발행_시간'</span>].apply(classify_time)
+
+<span class="fn">print</span>(articles)</pre>
+  </div>
+
+  <h3>텍스트에서 특성 추출</h3>
+  <p>기사 텍스트에서 정량적 특성을 추출합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 기사 텍스트 샘플</span>
+texts = [
+    <span class="str">'오늘은 날씨가 맑습니다!!!'</span>,
+    <span class="str">'정치 뉴스입니다.'</span>,
+    <span class="str">'엄청 중요한 속보!!!???'</span>
+]
+
+df_text = pd.DataFrame({<span class="str">'기사'</span>: texts})
+
+<span class="cm"># 단어 수</span>
+df_text[<span class="str">'단어수'</span>] = df_text[<span class="str">'기사'</span>].apply(
+    <span class="kw">lambda</span> x: <span class="fn">len</span>(x.split())
+)
+
+<span class="cm"># 특수문자 비율</span>
+df_text[<span class="str">'특수문자율'</span>] = df_text[<span class="str">'기사'</span>].apply(
+    <span class="kw">lambda</span> x: <span class="fn">sum</span>(<span class="num">1</span> <span class="kw">for</span> c <span class="kw">in</span> x <span class="kw">if</span> <span class="kw">not</span> c.isalnum()) / <span class="fn">len</span>(x)
+)
+
+<span class="cm"># 감성 단어 수 (간단한 예)</span>
+positive_words = [<span class="str">'좋다'</span>, <span class="str">'맑다'</span>, <span class="str">'잘'</span>]
+df_text[<span class="str">'긍정단어수'</span>] = df_text[<span class="str">'기사'</span>].apply(
+    <span class="kw">lambda</span> x: <span class="fn">sum</span>(word <span class="kw">in</span> x <span class="kw">for</span> word <span class="kw">in</span> positive_words)
+)
+
+<span class="fn">print</span>(df_text)</pre>
+  </div>
+
+  <h3>기사 클릭률 예측을 위한 특성 설계</h3>
+  <p>뉴스룸 실전: 어떤 특성이 클릭률에 영향을 미칠까요?</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 기사-독자 상호작용 데이터</span>
+interaction_df = pd.DataFrame({
+    <span class="str">'기사ID'</span>: [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>],
+    <span class="str">'카테고리'</span>: [<span class="str">'정치'</span>, <span class="str">'연예'</span>, <span class="str">'정치'</span>, <span class="str">'스포츠'</span>],
+    <span class="str">'제목길이'</span>: [<span class="num">25</span>, <span class="num">30</span>, <span class="num">35</span>, <span class="num">28</span>],
+    <span class="str">'발행시간'</span>: [<span class="num">8</span>, <span class="num">14</span>, <span class="num">12</span>, <span class="num">19</span>],
+    <span class="str">'댓글수'</span>: [<span class="num">152</span>, <span class="num">45</span>, <span class="num">203</span>, <span class="num">89</span>],
+    <span class="str">'클릭수'</span>: [<span class="num">2500</span>, <span class="num">1200</span>, <span class="num">3100</span>, <span class="num">1800</span>]
+})
+
+<span class="cm"># 파생 특성 생성</span>
+interaction_df[<span class="str">'댓글클릭비'</span>] = \
+    interaction_df[<span class="str">'댓글수'</span>] / interaction_df[<span class="str">'클릭수'</span>]
+
+<span class="cm"># 카테고리 인코딩</span>
+cat_encoded = pd.get_dummies(
+    interaction_df[<span class="str">'카테고리'</span>],
+    prefix=<span class="str">'카테고리'</span>,
+    drop_first=<span class="kw">True</span>
+)
+
+interaction_df = pd.concat([interaction_df, cat_encoded], axis=<span class="num">1</span>)
+<span class="fn">print</span>(interaction_df)</pre>
+  </div>
+
+  <h3>Quiz: 이 데이터에 어떤 특성 엔지니어링이 필요할까?</h3>
+  <div class="quiz">
+    <p><strong>Q1:</strong> 다음 중 원핫인코딩이 필요한 특성은?</p>
+    <ol>
+      <li>기사의 클릭수</li>
+      <li>기사의 카테고리 (정치, 연예, 스포츠...)</li>
+      <li>독자의 나이</li>
+    </ol>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ <strong>B번</strong>. 카테고리는 범주형(문자열) 특성이므로 원핫인코딩이 필요합니다.</p>
+    </details>
+
+    <p><strong>Q2:</strong> 정규화(MinMaxScaler)와 표준화(StandardScaler) 중 어느 것을 쓸까요?</p>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ 모델에 따라 다릅니다. KNN, K-means는 정규화, 로지스틱 회귀/SVM은 표준화가 좋습니다.</p>
+    </details>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <button class="nav-btn" onclick="document.getElementById('sec-m9').scrollIntoView()">다음: 모델 검증과 교차검증</button>
+  </div>
+</div>
+
+<!-- ===== MODULE 9: 모델 검증과 교차검증 (Model Validation & Cross-Validation) ===== -->
+<div class="section" id="sec-m9">
+  <div class="module-header m4">
+    <h2>모델 검증과 교차검증 (Model Validation & Cross-Validation)</h2>
+    <div class="tags">
+      <span class="tag-level">고급</span>
+      <span class="tag-time">45분</span>
+    </div>
+  </div>
+
+  <h3>왜 모델 검증이 중요한가?</h3>
+  <p>뉴스룸에서 ML 모델을 사용한다면, 그 모델이 얼마나 신뢰할 수 있는지 검증해야 합니다. 잘못된 예측으로 팩트체크 없이 보도하면 큰 문제가 발생합니다.</p>
+
+  <div class="callout warn">
+    <strong>실제 사례:</strong> "이 모델은 훈련 데이터에서 99% 정확도를 보였습니다"라고 해도, 새로운 데이터에서 50% 정확도만 나올 수 있습니다. 이것이 과적합(overfitting)입니다!
+  </div>
+
+  <h3>Holdout 검증</h3>
+  <p>데이터를 훈련(train)과 테스트(test) 세트로 나누어 검증합니다. 하지만 데이터가 적을 때는 한계가 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> accuracy_score
+
+<span class="cm"># 데이터 분할 (70% 훈련, 30% 테스트)</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=<span class="num">0.3</span>,
+    random_state=<span class="num">42</span>
+)
+
+<span class="cm"># 모델 학습</span>
+model = LogisticRegression(random_state=<span class="num">42</span>)
+model.fit(X_train, y_train)
+
+<span class="cm"># 검증</span>
+train_score = model.score(X_train, y_train)
+test_score = model.score(X_test, y_test)
+
+<span class="fn">print</span>(<span class="str">f"훈련 정확도: {train_score:.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"테스트 정확도: {test_score:.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"차이: {train_score - test_score:.3f} (클수록 과적합)"</span>)</pre>
+  </div>
+
+  <div class="callout info">
+    <strong>Holdout의 한계:</strong> 데이터가 100개 미만이면 30개 테스트 세트는 너무 작아서 신뢰성이 떨어집니다. 이때는 교차검증을 사용하세요.
+  </div>
+
+  <h3>K-fold 교차검증</h3>
+  <p>데이터를 K개로 나누어, 각각을 돌아가며 테스트 세트로 사용합니다. 더 안정적인 성능 평가가 가능합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> cross_val_score
+
+<span class="cm"># 5-fold 교차검증</span>
+model = LogisticRegression(random_state=<span class="num">42</span>)
+scores = cross_val_score(
+    model,
+    X, y,
+    cv=<span class="num">5</span>  <span class="cm"># 5개 폴드</span>
+)
+
+<span class="fn">print</span>(<span class="str">f"각 폴드 정확도: {scores}"</span>)
+<span class="fn">print</span>(<span class="str">f"평균 정확도: {scores.mean():.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"표준편차: {scores.std():.3f}"</span>)</pre>
+  </div>
+
+  <p><strong>해석:</strong></p>
+  <ul>
+    <li>5개 폴드가 각각: [0.92, 0.88, 0.90, 0.89, 0.91]</li>
+    <li>평균: 0.900 (모델의 예상 성능)</li>
+    <li>표준편차: 0.014 (성능의 안정성 - 작을수록 좋음)</li>
+  </ul>
+
+  <h3>K-fold 시각화</h3>
+  <p>교차검증의 원리를 시각적으로 이해해봅시다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> KFold
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># KFold 객체 생성</span>
+kf = KFold(n_splits=<span class="num">5</span>, shuffle=<span class="kw">True</span>, random_state=<span class="num">42</span>)
+
+<span class="cm"># 각 폴드의 인덱스 출력</span>
+<span class="kw">for</span> fold_num, (train_idx, test_idx) <span class="kw">in</span> <span class="fn">enumerate</span>(kf.split(X)):
+    <span class="fn">print</span>(<span class="str">f"폴드 {fold_num + 1}:"</span>)
+    <span class="fn">print</span>(<span class="str">f"  훈련: {train_idx[:5]}... (총 {len(train_idx)}개)"</span>)
+    <span class="fn">print</span>(<span class="str">f"  테스트: {test_idx[:5]}... (총 {len(test_idx)}개)"</span>)</pre>
+  </div>
+
+  <h3>앙상블 방법: 랜덤 포레스트</h3>
+  <p>한 가지 모델보다 여러 모델의 투표가 더 정확합니다. 뉴스룸 비유: 한 기자의 보도보다 여러 기자의 교차취재가 더 신뢰할 수 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+
+<span class="cm"># 랜덤 포레스트: 100개의 의사결정나무 투표</span>
+rf = RandomForestClassifier(
+    n_estimators=<span class="num">100</span>,  <span class="cm"># 트리 개수</span>
+    max_depth=<span class="num">10</span>,       <span class="cm"># 각 트리의 최대 깊이</span>
+    random_state=<span class="num">42</span>
+)
+
+<span class="cm"># 학습</span>
+rf.fit(X_train, y_train)
+
+<span class="cm"># 검증</span>
+train_score = rf.score(X_train, y_train)
+test_score = rf.score(X_test, y_test)
+
+<span class="fn">print</span>(<span class="str">f"랜덤 포레스트 훈련 정확도: {train_score:.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"랜덤 포레스트 테스트 정확도: {test_score:.3f}"</span>)</pre>
+  </div>
+
+  <h3>하이퍼파라미터 튜닝</h3>
+  <p>최적의 파라미터를 자동으로 찾기 위해 GridSearchCV를 사용합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> GridSearchCV
+
+<span class="cm"># 시도해볼 파라미터 범위</span>
+param_grid = {
+    <span class="str">'max_depth'</span>: [<span class="num">3</span>, <span class="num">5</span>, <span class="num">7</span>, <span class="num">10</span>],
+    <span class="str">'min_samples_split'</span>: [<span class="num">2</span>, <span class="num">5</span>, <span class="num">10</span>],
+    <span class="str">'n_estimators'</span>: [<span class="num">50</span>, <span class="num">100</span>, <span class="num">200</span>]
+}
+
+<span class="cm"># GridSearchCV로 최적 조합 찾기</span>
+grid_search = GridSearchCV(
+    RandomForestClassifier(random_state=<span class="num">42</span>),
+    param_grid,
+    cv=<span class="num">5</span>,
+    scoring=<span class="str">'accuracy'</span>
+)
+
+grid_search.fit(X_train, y_train)
+
+<span class="fn">print</span>(<span class="str">f"최적 파라미터: {grid_search.best_params_}"</span>)
+<span class="fn">print</span>(<span class="str">f"최적 교차검증 점수: {grid_search.best_score_:.3f}"</span>)
+<span class="fn">print</span>(<span class="str">f"테스트 정확도: {grid_search.score(X_test, y_test):.3f}"</span>)</pre>
+  </div>
+
+  <div class="callout tip">
+    <strong>GridSearchCV 팁:</strong> 많은 파라미터 조합은 계산 시간이 오래 걸립니다. RandomizedSearchCV를 사용하면 무작위로 샘플링하여 빠르게 최적값을 찾을 수 있습니다.
+  </div>
+
+  <h3>모델 비교: 선거 예측</h3>
+  <p>로지스틱 회귀 vs 의사결정나무 vs 랜덤포레스트 비교</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeClassifier
+
+<span class="cm"># 세 가지 모델 정의</span>
+models = {
+    <span class="str">'로지스틱 회귀'</span>: LogisticRegression(random_state=<span class="num">42</span>),
+    <span class="str">'의사결정나무'</span>: DecisionTreeClassifier(max_depth=<span class="num">5</span>, random_state=<span class="num">42</span>),
+    <span class="str">'랜덤포레스트'</span>: RandomForestClassifier(n_estimators=<span class="num">100</span>, random_state=<span class="num">42</span>)
+}
+
+<span class="cm"># 각 모델의 성능 비교</span>
+results = {}
+<span class="kw">for</span> name, model <span class="kw">in</span> models.items():
+    scores = cross_val_score(model, X, y, cv=<span class="num">5</span>)
+    results[name] = {
+        <span class="str">'평균'</span>: scores.mean(),
+        <span class="str">'표준편차'</span>: scores.std()
+    }
+
+<span class="cm"># 결과 출력</span>
+<span class="kw">for</span> name, metrics <span class="kw">in</span> results.items():
+    <span class="fn">print</span>(<span class="str">f"{name:15} | 평균: {metrics['평균']:.3f} | 표준편차: {metrics['표준편차']:.3f}"</span>)</pre>
+  </div>
+
+  <h3>Quiz: 교차검증 결과 해석</h3>
+  <div class="quiz">
+    <p><strong>Q1:</strong> 5-fold 교차검증에서 평균 정확도가 0.85이고 표준편차가 0.15라면?</p>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ 표준편차가 크다는 것은 폴드마다 성능이 많이 변한다는 뜻입니다. 모델이 불안정할 수 있으니 더 많은 데이터나 특성 엔지니어링이 필요합니다.</p>
+    </details>
+
+    <p><strong>Q2:</strong> 훈련 정확도 0.98, 테스트 정확도 0.72라면?</p>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ 심한 과적합입니다. max_depth를 줄이거나, 더 많은 정규화를 적용하세요.</p>
+    </details>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-btn">더 알아보기: 층화 K-fold (Stratified K-fold)</button>
+    <div class="accordion-content">
+      <p>클래스 불균형 데이터에서는 StratifiedKFold를 사용하여 각 폴드에서 클래스 비율을 유지합니다.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> StratifiedKFold
+
+<span class="cm"># 층화 K-fold (클래스 비율 유지)</span>
+skf = StratifiedKFold(n_splits=<span class="num">5</span>, shuffle=<span class="kw">True</span>, random_state=<span class="num">42</span>)
+scores = cross_val_score(model, X, y, cv=skf)
+<span class="fn">print</span>(<span class="str">f"점수: {scores}"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <button class="nav-btn" onclick="document.getElementById('sec-m10').scrollIntoView()">다음: 나이브 베이즈와 텍스트 분류</button>
+  </div>
+</div>
+
+<!-- ===== MODULE 10: 나이브 베이즈와 텍스트 분류 (Naive Bayes & Text Classification) ===== -->
+<div class="section" id="sec-m10">
+  <div class="module-header m5">
+    <h2>나이브 베이즈와 텍스트 분류 (Naive Bayes & Text Classification)</h2>
+    <div class="tags">
+      <span class="tag-level">고급</span>
+      <span class="tag-time">50분</span>
+    </div>
+  </div>
+
+  <h3>나이브 베이즈란?</h3>
+  <p>나이브 베이즈(Naive Bayes)는 확률 기반 분류 알고리즘으로, 특히 텍스트 분류에 매우 효과적입니다. "나이브(naive)"라는 이름은 각 특성이 서로 독립적이라는 단순한(naive) 가정 때문입니다.</p>
+
+  <div class="callout info">
+    <strong>실생활 예시:</strong> 스팸 필터가 이메일을 스팸인지 판단할 때, "무료"라는 단어가 있으면 스팸일 확률이 높다고 학습합니다. 나이브 베이즈는 이런 식으로 단어들의 확률을 계산합니다.
+  </div>
+
+  <h3>베이즈 정리와 직관적 이해</h3>
+  <p>기사 제목에 "속보"라는 단어가 있으면 실제 속보(breaking news)일 확률은?</p>
+
+  <ul>
+    <li><strong>사전확률 P(속보):</strong> 전체 기사 중 속보의 비율 (예: 5%)</li>
+    <li><strong>우도 P("속보" | 속보):</strong> 실제 속보 기사 중 "속보"라는 단어가 있을 확률 (예: 90%)</li>
+    <li><strong>증거 P("속보"):</strong> 전체 기사 중 "속보"라는 단어가 있을 확률</li>
+    <li><strong>사후확률:</strong> "속보"라는 단어가 있을 때 실제 속보일 확률</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 베이즈 정리 예시: 속보 감지</span>
+<span class="cm"># P(속보 | "속보" 단어 있음) = P("속보" | 속보) * P(속보) / P("속보")</span>
+
+P_breaking = <span class="num">0.05</span>          <span class="cm"># 사전확률: 5%는 속보</span>
+P_word_given_breaking = <span class="num">0.9</span>  <span class="cm"># 우도: 속보의 90%가 "속보" 단어 포함</span>
+P_word = <span class="num">0.15</span>           <span class="cm"># 증거: 전체 기사의 15%가 "속보" 단어 포함</span>
+
+<span class="cm"># 사후확률 계산</span>
+P_breaking_given_word = (P_word_given_breaking * P_breaking) / P_word
+
+<span class="fn">print</span>(<span class="str">f"'속보' 단어가 있으면 실제 속보일 확률: {P_breaking_given_word:.1%}"</span>)</pre>
+  </div>
+
+  <h3>텍스트를 숫자로 변환</h3>
+  <p>기계학습 모델은 숫자만 이해하므로, 텍스트를 벡터로 변환해야 합니다.</p>
+
+  <h4>CountVectorizer: 단어 빈도</h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.feature_extraction.text <span class="kw">import</span> CountVectorizer
+
+<span class="cm"># 기사 텍스트 샘플</span>
+articles = [
+    <span class="str">'정부가 새 정책을 발표했다'</span>,
+    <span class="str">'주식시장이 하락했다'</span>,
+    <span class="str">'정부 정책이 경제에 영향을 미친다'</span>
+]
+
+<span class="cm"># CountVectorizer로 변환</span>
+vectorizer = CountVectorizer()
+X_count = vectorizer.fit_transform(articles)
+
+<span class="cm"># 단어 목록 확인</span>
+<span class="fn">print</span>(<span class="str">"단어 목록:"</span>, vectorizer.get_feature_names_out())
+
+<span class="cm"># 각 기사의 단어 빈도 (희소 행렬)</span>
+<span class="fn">print</span>(<span class="str">"\n기사 1의 단어 빈도:"</span>)
+<span class="fn">print</span>(X_count[<span class="num">0</span>].toarray())</pre>
+  </div>
+
+  <h4>TfidfVectorizer: TF-IDF 점수</h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.feature_extraction.text <span class="kw">import</span> TfidfVectorizer
+
+<span class="cm"># TF-IDF로 변환 (자주 나오지 않는 단어 강조)</span>
+tfidf_vectorizer = TfidfVectorizer(max_features=<span class="num">1000</span>)
+X_tfidf = tfidf_vectorizer.fit_transform(articles)
+
+<span class="fn">print</span>(<span class="str">"TF-IDF 점수:"</span>)
+<span class="fn">print</span>(X_tfidf[<span class="num">0</span>].toarray())</pre>
+  </div>
+
+  <div class="callout info">
+    <strong>TF-IDF란?</strong> "Term Frequency-Inverse Document Frequency"의 약자로, 자주 나오는 흔한 단어(예: "과", "이")는 낮은 점수, 드물지만 의미 있는 단어는 높은 점수를 줍니다.
+  </div>
+
+  <h3>한국 뉴스 기사 카테고리 자동 분류</h3>
+  <p>GaussianNB와 텍스트 특성으로 뉴스 기사를 자동 분류합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.naive_bayes <span class="kw">import</span> GaussianNB
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> LabelEncoder
+
+<span class="cm"># 한국 뉴스 샘플 데이터</span>
+news_data = {
+    <span class="str">'기사'</span>: [
+        <span class="str">'정부가 새로운 세금 정책을 발표했습니다'</span>,
+        <span class="str">'국회가 법안을 통과시켰습니다'</span>,
+        <span class="str">'삼성전자 주가가 상승했습니다'</span>,
+        <span class="str">'경제 성장률이 3%입니다'</span>,
+        <span class="str">'연기금이 주식에 투자합니다'</span>,
+        <span class="str">'사회적 거리두기가 해제되었습니다'</span>
+    ],
+    <span class="str">'카테고리'</span>: [<span class="str">'정치'</span>, <span class="str">'정치'</span>, <span class="str">'경제'</span>, <span class="str">'경제'</span>, <span class="str">'경제'</span>, <span class="str">'사회'</span>]
+}
+
+df_news = pd.DataFrame(news_data)
+
+<span class="cm"># TF-IDF로 텍스트 변환</span>
+vectorizer = TfidfVectorizer(max_features=<span class="num">100</span>)
+X_news = vectorizer.fit_transform(df_news[<span class="str">'기사'</span>])
+
+<span class="cm"># 카테고리 인코딩</span>
+le_cat = LabelEncoder()
+y_news = le_cat.fit_transform(df_news[<span class="str">'카테고리'</span>])
+
+<span class="fn">print</span>(<span class="str">"카테고리 매핑:"</span>, {i: cat <span class="kw">for</span> i, cat <span class="kw">in</span> <span class="fn">enumerate</span>(le_cat.classes_)})</pre>
+  </div>
+
+  <h3>MultinomialNB로 텍스트 분류</h3>
+  <p>텍스트 데이터에는 MultinomialNB가 더 적합합니다. (단어 빈도는 음수가 아니기 때문)</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.naive_bayes <span class="kw">import</span> MultinomialNB
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+
+<span class="cm"># 훈련-테스트 분할</span>
+X_train_nb, X_test_nb, y_train_nb, y_test_nb = train_test_split(
+    X_news, y_news,
+    test_size=<span class="num">0.3</span>,
+    random_state=<span class="num">42</span>
+)
+
+<span class="cm"># 나이브 베이즈 모델 학습</span>
+nb_model = MultinomialNB()
+nb_model.fit(X_train_nb, y_train_nb)
+
+<span class="cm"># 예측</span>
+y_pred = nb_model.predict(X_test_nb)
+
+<span class="cm"># 성능 평가</span>
+accuracy = nb_model.score(X_test_nb, y_test_nb)
+<span class="fn">print</span>(<span class="str">f"분류 정확도: {accuracy:.3f}"</span>)
+
+<span class="cm"># 새로운 기사 분류</span>
+new_article = [<span class="str">'국회의원 선거가 다가왔습니다'</span>]
+new_vector = vectorizer.transform(new_article)
+prediction = nb_model.predict(new_vector)
+predicted_category = le_cat.inverse_transform(prediction)
+<span class="fn">print</span>(<span class="str">f"예측 카테고리: {predicted_category[0]}"</span>)</pre>
+  </div>
+
+  <h3>분류 성능 평가</h3>
+  <p>정확도 외에 정밀도, 재현율, F1 점수도 확인합시다.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">from</span> sklearn.metrics <span class="kw">import</span> classification_report, confusion_matrix
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># 분류 보고서</span>
+<span class="fn">print</span>(classification_report(y_test_nb, y_pred,
+                              target_names=le_cat.classes_))
+
+<span class="cm"># 혼동행렬</span>
+cm = confusion_matrix(y_test_nb, y_pred)
+<span class="fn">print</span>(<span class="str">"\n혼동행렬:"</span>)
+<span class="fn">print</span>(cm)</pre>
+  </div>
+
+  <h3>뉴스룸 실전 프로젝트</h3>
+
+  <h4>1. 가짜뉴스 탐지 파이프라인</h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 가짜뉴스 탐지 파이프라인</span>
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+
+fake_news_pipeline = Pipeline([
+    (<span class="str">'tfidf'</span>, TfidfVectorizer(max_features=<span class="num">1000</span>, max_df=<span class="num">0.8</span>)),
+    (<span class="str">'classifier'</span>, MultinomialNB())
+])
+
+<span class="cm"># 학습</span>
+fake_news_pipeline.fit(X_train_nb, y_train_nb)
+
+<span class="cm"># 평가</span>
+score = fake_news_pipeline.score(X_test_nb, y_test_nb)
+<span class="fn">print</span>(<span class="str">f"가짜뉴스 탐지 정확도: {score:.3f}"</span>)</pre>
+  </div>
+
+  <h4>2. 댓글 감성 분석</h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 댓글 감성 분석 예제</span>
+comments = [
+    <span class="str">'정말 좋은 기사입니다'</span>,
+    <span class="str">'너무 실망했습니다'</span>,
+    <span class="str">'흥미로운 내용이네요'</span>,
+    <span class="str">'틀린 정보가 많습니다'</span>
+]
+sentiments = [<span class="num">1</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">0</span>]  <span class="cm"># 1: 긍정, 0: 부정</span>
+
+<span class="cm"># 감성 분석 파이프라인</span>
+sentiment_pipeline = Pipeline([
+    (<span class="str">'tfidf'</span>, TfidfVectorizer()),
+    (<span class="str">'nb'</span>, MultinomialNB())
+])
+
+sentiment_pipeline.fit(comments, sentiments)</pre>
+  </div>
+
+  <h4>3. 기사 자동 태깅</h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 기사 자동 태깅 (다중 라벨 분류)</span>
+<span class="cm"># 한 기사가 여러 카테고리에 속할 수 있음</span>
+
+articles_multilabel = [
+    <span class="str">'정부가 경제 정책을 발표했습니다'</span>,
+    <span class="str">'스포츠 경기에서 신기록이 나왔습니다'</span>,
+    <span class="str">'유명 배우가 영화에 출연합니다'</span>
+]
+
+<span class="cm"># 다중 라벨</span>
+labels_multilabel = [
+    [<span class="num">1</span>, <span class="num">1</span>, <span class="num">0</span>],  <span class="cm"># 정치, 경제</span>
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>],  <span class="cm"># 스포츠</span>
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>]   <span class="cm"># 문화</span>
+]
+
+<span class="fn">print</span>(<span class="str">"다중 라벨 분류 설정 완료"</span>)</pre>
+  </div>
+
+  <h3>Quiz: 나이브 베이즈 확률 계산</h3>
+  <div class="quiz">
+    <p><strong>Q1:</strong> 스팸 필터에서 "무료"라는 단어의 확률이 다음과 같을 때, 이 이메일이 스팸일 확률은?</p>
+    <ul>
+      <li>P(스팸) = 0.2</li>
+      <li>P("무료" | 스팸) = 0.8</li>
+      <li>P("무료") = 0.3</li>
+    </ul>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ P(스팸 | "무료") = (0.8 × 0.2) / 0.3 = 0.533 (약 53%)</p>
+    </details>
+
+    <p><strong>Q2:</strong> MultinomialNB와 GaussianNB의 차이는?</p>
+    <details>
+      <summary>정답 보기</summary>
+      <p>✓ MultinomialNB는 텍스트처럼 음수가 아닌 카운트 데이터에 사용, GaussianNB는 연속형 수치 데이터에 사용합니다.</p>
+    </details>
+  </div>
+
+  <div class="accordion">
+    <button class="accordion-btn">더 알아보기: 라플라스 스무딩(Laplace Smoothing)</button>
+    <div class="accordion-content">
+      <p>훈련 데이터에 없는 단어가 테스트 데이터에 나타나면 확률이 0이 되는 문제를 해결합니다.</p>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">복사</button>
+        </div>
+        <pre><span class="cm"># 라플라스 스무딩</span>
+nb_smoothed = MultinomialNB(alpha=<span class="num">1.0</span>)  <span class="cm"># alpha=1.0이 라플라스 스무딩</span>
+nb_smoothed.fit(X_train_nb, y_train_nb)
+<span class="fn">print</span>(<span class="str">f"스무딩 적용 정확도: {nb_smoothed.score(X_test_nb, y_test_nb):.3f}"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <button class="nav-btn" onclick="document.getElementById('sec-ref').scrollIntoView()">다음: 레퍼런스 카드</button>
+  </div>
+</div>
+
+<!-- ===== REFERENCE CARD ===== -->
+<div class="section" id="sec-ref">
+  <div class="module-header m2">
+    <h2>레퍼런스 카드</h2>
+    <div class="tags">
+      <span class="tag-time">빠른 참조</span>
+    </div>
+  </div>
+
+  <h3>scikit-learn 주요 모델 요약</h3>
+  <table class="reference-table">
+    <thead>
+      <tr>
+        <th>모델</th>
+        <th>용도</th>
+        <th>주요 파라미터</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>LogisticRegression</strong></td>
+        <td>이진/다중 분류</td>
+        <td>C (정규화), max_iter (반복)</td>
+      </tr>
+      <tr>
+        <td><strong>DecisionTreeClassifier</strong></td>
+        <td>분류 (해석가능)</td>
+        <td>max_depth, min_samples_split</td>
+      </tr>
+      <tr>
+        <td><strong>RandomForestClassifier</strong></td>
+        <td>분류 (앙상블)</td>
+        <td>n_estimators, max_depth</td>
+      </tr>
+      <tr>
+        <td><strong>SVC (Support Vector Machine)</strong></td>
+        <td>분류 (선형/비선형)</td>
+        <td>kernel, C, gamma</td>
+      </tr>
+      <tr>
+        <td><strong>KNeighborsClassifier</strong></td>
+        <td>분류 (인스턴스 기반)</td>
+        <td>n_neighbors, weights</td>
+      </tr>
+      <tr>
+        <td><strong>MultinomialNB</strong></td>
+        <td>텍스트 분류</td>
+        <td>alpha (라플라스 스무딩)</td>
+      </tr>
+      <tr>
+        <td><strong>GaussianNB</strong></td>
+        <td>연속형 데이터 분류</td>
+        <td>var_smoothing</td>
+      </tr>
+      <tr>
+        <td><strong>KMeans</strong></td>
+        <td>클러스터링</td>
+        <td>n_clusters, init, max_iter</td>
+      </tr>
+      <tr>
+        <td><strong>LinearRegression</strong></td>
+        <td>선형 회귀</td>
+        <td>fit_intercept</td>
+      </tr>
+      <tr>
+        <td><strong>Ridge/Lasso</strong></td>
+        <td>정규화 회귀</td>
+        <td>alpha (정규화 강도)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>모델 선택 가이드</h3>
+  <div class="callout info">
+    <strong>어떤 모델을 쓸까?</strong>
+    <ul>
+      <li><strong>빠르고 간단:</strong> Logistic Regression, Naive Bayes</li>
+      <li><strong>해석 가능:</strong> Decision Tree</li>
+      <li><strong>높은 정확도:</strong> Random Forest, Gradient Boosting</li>
+      <li><strong>텍스트 분류:</strong> Naive Bayes, SVM</li>
+      <li><strong>이미지:</strong> CNN (심화 학습)</li>
+      <li><strong>시계열:</strong> ARIMA, LSTM</li>
+    </ul>
+  </div>
+
+  <h3>pandas/numpy 통계 함수 치트시트</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># DataFrame 기본 통계</span>
+df.describe()           <span class="cm"># 기본 통계량 (평균, 표준편차, 사분위)</span>
+df.info()               <span class="cm"># 컬럼 정보</span>
+df.isnull().sum()       <span class="cm"># 결측치 개수</span>
+df.value_counts()       <span class="cm"># 값의 개수</span>
+
+<span class="cm"># 행렬 연산</span>
+np.mean(data)           <span class="cm"># 평균</span>
+np.median(data)         <span class="cm"># 중앙값</span>
+np.std(data)            <span class="cm"># 표준편차</span>
+np.percentile(data, 75) <span class="cm"># 75 백분위수</span>
+np.corrcoef(x, y)       <span class="cm"># 상관계수</span></pre>
+  </div>
+
+  <h3>matplotlib 시각화 치트시트</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cm"># 기본 설정</span>
+plt.figure(figsize=(<span class="num">10</span>, <span class="num">6</span>))
+plt.title(<span class="str">'제목'</span>)
+plt.xlabel(<span class="str">'X축'</span>)
+plt.ylabel(<span class="str">'Y축'</span>)
+
+<span class="cm"># 플롯 종류</span>
+plt.plot(x, y)           <span class="cm"># 선 그래프</span>
+plt.scatter(x, y)        <span class="cm"># 산점도</span>
+plt.bar(x, y)            <span class="cm"># 막대 그래프</span>
+plt.hist(data)           <span class="cm"># 히스토그램</span>
+plt.boxplot(data)        <span class="cm"># 박스 플롯</span>
+plt.heatmap(cm)          <span class="cm"># 히트맵</span>
+
+<span class="cm"># 한글 폰트 설정 (Windows)</span>
+plt.rcParams[<span class="str">'font.family'</span>] = <span class="str">'Malgun Gothic'</span>
+plt.rcParams[<span class="str">'axes.unicode_minus'</span>] = <span class="kw">False</span></pre>
+  </div>
+
+  <h3>자주 쓰는 sklearn 패턴</h3>
+  <div class="code-block">
+    <div class="code-header">
+      <span>Python</span>
+      <button class="copy-btn" onclick="copyCode(this)">복사</button>
+    </div>
+    <pre><span class="cm"># 표준 머신러닝 워크플로우</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split, cross_val_score
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> classification_report
+
+<span class="cm"># 1. 데이터 전처리</span>
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+<span class="cm"># 2. 데이터 분할</span>
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=<span class="num">0.2</span>, random_state=<span class="num">42</span>
+)
+
+<span class="cm"># 3. 모델 생성 및 학습</span>
+model = RandomForestClassifier(n_estimators=<span class="num">100</span>, random_state=<span class="num">42</span>)
+model.fit(X_train, y_train)
+
+<span class="cm"># 4. 검증</span>
+cv_scores = cross_val_score(model, X_train, y_train, cv=<span class="num">5</span>)
+
+<span class="cm"># 5. 평가</span>
+y_pred = model.predict(X_test)
+<span class="fn">print</span>(classification_report(y_test, y_pred))</pre>
+  </div>
+
+  <h3>추가 학습 자료 (한국어)</h3>
+  <ul>
+    <li><strong>Python 공식 문서:</strong> python.org (한국어 번역)</li>
+    <li><strong>scikit-learn:</strong> scikit-learn.org/stable (영문, 한국어 커뮤니티 많음)</li>
+    <li><strong>pandas 공식:</strong> pandas.pydata.org</li>
+    <li><strong>Fast.ai:</strong> Practical Deep Learning (무료 강의)</li>
+    <li><strong>한국 자료:</strong> 데이터캠프, 노마드 코더 (유료 강의)</li>
+    <li><strong>Kaggle:</strong> 실제 데이터셋과 대회 (영문)</li>
+  </ul>
+
+  <h3>저널리즘 ML 윤리 체크리스트</h3>
+  <div class="callout warn">
+    <strong>머신러닝을 사용한 뉴스 보도 시 반드시 확인하세요:</strong>
+    <ul>
+      <li>☐ 데이터 출처가 신뢰할 수 있는가?</li>
+      <li>☐ 데이터가 편향되지 않았는가? (예: 특정 집단 제외)</li>
+      <li>☐ 모델이 과거 데이터의 편견을 학습하지 않았는가?</li>
+      <li>☐ 모델의 예측을 사람이 검증했는가?</li>
+      <li>☐ 뉴스에서 "AI 모델이 예측했다"고 명시했는가?</li>
+      <li>☐ 모델의 한계와 오류율을 공개했는가?</li>
+      <li>☐ 개인정보 보호법을 준수했는가?</li>
+      <li>☐ 차별적 결과를 야기하지 않는가?</li>
+    </ul>
+  </div>
+
+  <div style="margin-top: 30px; text-align: center;">
+    <p style="color: #999; font-size: 14px;">Part 3 완료. Part 1, 2와 함께 Columbia Lede Program 알고리즘 코스를 마칩니다.</p>
+  </div>
+</div>
+
+</div>
+<script>
+const sections=['intro','m1','m2','m3','m4','m5','m6','m7','m8','m9','m10','ref'];
+let visited=new Set(['intro']);
+function showSection(id){visited.add(id);document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));const el=document.getElementById('sec-'+id);if(el)el.classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const nav=document.querySelector('[data-section="'+id+'"]');if(nav)nav.classList.add('active');updateProgress();window.scrollTo(0,0);document.getElementById('sidebar').classList.remove('open');}
+function updateProgress(){const pct=Math.round(visited.size/sections.length*100);document.getElementById('progressFill').style.width=pct+'%';document.getElementById('progressLabel').textContent='진행률 '+visited.size+'/'+sections.length;}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function toggleAccordion(h){const acc=h.closest?h.closest('.accordion'):h.parentElement;acc.classList.toggle('open');}
+function switchTab(btn,panelId){const tabs=btn.parentElement;tabs.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const container=tabs.parentElement;container.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById(panelId);if(panel)panel.classList.add('active');}
+function copyCode(btn){const pre=btn.closest('.code-block').querySelector('pre');navigator.clipboard.writeText(pre.textContent).then(()=>{btn.textContent='복사됨!';setTimeout(()=>btn.textContent='복사',1500);});}
+function checkQuiz(option,correct,fbId){const quiz=option.closest('.quiz');if(quiz.dataset.answered)return;quiz.dataset.answered='true';const fb=document.getElementById(fbId);if(correct){option.classList.add('correct');if(fb){fb.style.background='#f0fdf4';fb.style.color='#166534';fb.style.display='block';fb.textContent='정답입니다!';}}else{option.classList.add('wrong');if(fb){fb.style.background='#fef2f2';fb.style.color='#991b1b';fb.style.display='block';fb.textContent='다시 생각해보세요.';}}}
+function toggleAnswer(el){const answer=el.nextElementSibling;if(answer){answer.style.display=answer.style.display==='block'?'none':'block';}}
+updateProgress();
+</script>
+</body></html>
