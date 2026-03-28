@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 뉴스룸 실전 매뉴얼</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --text-secondary: #78716c;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --accent-dark: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --orange: #ea580c;
+    --orange-light: #fff7ed;
+    --purple: #7c3aed;
+    --purple-light: #f5f3ff;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --code-bg: #1e293b;
+    --code-text: #e2e8f0;
+    --sidebar-w: 280px;
+    --header-h: 64px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  /* Header */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: var(--header-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px;
+    gap: 16px;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .header .badge {
+    font-size: 11px; font-weight: 600;
+    background: var(--accent-light); color: var(--accent);
+    padding: 3px 10px; border-radius: 12px;
+  }
+  .menu-btn {
+    display: none; background: none; border: none; cursor: pointer;
+    font-size: 24px; color: var(--text);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed; top: var(--header-h); left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 20px 0;
+    z-index: 90;
+    transition: transform 0.3s;
+  }
+  .sidebar .nav-group { margin-bottom: 8px; }
+  .sidebar .nav-group-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    padding: 8px 20px 4px;
+  }
+  .sidebar .nav-item {
+    display: block; padding: 8px 20px 8px 28px;
+    font-size: 14px; color: var(--text-secondary);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sidebar .nav-item:hover { color: var(--text); background: var(--bg); }
+  .sidebar .nav-item.active {
+    color: var(--accent); font-weight: 600;
+    border-left-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .sidebar .progress-bar {
+    margin: 16px 20px; padding: 12px;
+    background: var(--bg); border-radius: 8px;
+  }
+  .sidebar .progress-bar .bar-bg {
+    height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+  }
+  .sidebar .progress-bar .bar-fill {
+    height: 100%; background: var(--accent); border-radius: 3px;
+    transition: width 0.4s;
+  }
+  .sidebar .progress-bar .label {
+    font-size: 12px; color: var(--text-secondary); margin-top: 6px;
+  }
+
+  /* Main */
+  .main {
+    margin-left: var(--sidebar-w);
+    margin-top: var(--header-h);
+    padding: 40px 48px 80px;
+    max-width: 900px;
+  }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Typography */
+  h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  h3 { font-size: 20px; font-weight: 700; margin: 32px 0 12px; color: var(--text); }
+  h4 { font-size: 16px; font-weight: 700; margin: 24px 0 8px; }
+  p { margin-bottom: 16px; }
+  ul, ol { margin: 0 0 16px 20px; }
+  li { margin-bottom: 6px; }
+
+  /* Module Header */
+  .module-header {
+    padding: 24px 28px; border-radius: 12px; margin-bottom: 32px;
+  }
+  .module-header.m1 { background: var(--accent-light); border-left: 4px solid var(--accent); }
+  .module-header.m2 { background: var(--green-light); border-left: 4px solid var(--green); }
+  .module-header.m3 { background: var(--purple-light); border-left: 4px solid var(--purple); }
+  .module-header.m4 { background: var(--orange-light); border-left: 4px solid var(--orange); }
+  .module-header.m5 { background: var(--red-light); border-left: 4px solid var(--red); }
+  .module-header .subtitle {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em; margin-bottom: 4px;
+  }
+  .module-header .m1 .subtitle { color: var(--accent); }
+  .module-header .learning-goals {
+    font-size: 14px; color: var(--text-secondary); margin-top: 8px;
+  }
+
+  /* Tags */
+  .tag {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px; margin-right: 4px;
+  }
+  .tag.beginner { background: #dcfce7; color: #166534; }
+  .tag.intermediate { background: #fef3c7; color: #92400e; }
+  .tag.advanced { background: #fce7f3; color: #9d174d; }
+  .tag.time { background: #e0e7ff; color: #3730a3; }
+
+  /* Code Block */
+  .code-block {
+    position: relative; margin: 16px 0 24px;
+    background: var(--code-bg); border-radius: 10px;
+    overflow: hidden;
+  }
+  .code-block .code-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.05);
+    font-size: 12px; color: #94a3b8;
+  }
+  .code-block .copy-btn {
+    background: rgba(255,255,255,0.1); border: none;
+    color: #94a3b8; font-size: 12px; padding: 3px 10px;
+    border-radius: 4px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .code-block .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .code-block pre {
+    padding: 16px; overflow-x: auto;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 13.5px; line-height: 1.6;
+    color: var(--code-text);
+  }
+  .code-block pre .kw { color: #c084fc; }
+  .code-block pre .fn { color: #67e8f9; }
+  .code-block pre .str { color: #86efac; }
+  .code-block pre .cm { color: #64748b; font-style: italic; }
+  .code-block pre .num { color: #fbbf24; }
+  .code-block pre .op { color: #f472b6; }
+
+  /* Callout */
+  .callout {
+    padding: 16px 20px; border-radius: 8px; margin: 20px 0;
+    font-size: 14.5px;
+  }
+  .callout.tip { background: #f0fdf4; border-left: 3px solid var(--green); }
+  .callout.warn { background: #fffbeb; border-left: 3px solid #f59e0b; }
+  .callout.info { background: var(--accent-light); border-left: 3px solid var(--accent); }
+  .callout.danger { background: var(--red-light); border-left: 3px solid var(--red); }
+  .callout .callout-title {
+    font-weight: 700; font-size: 13px; margin-bottom: 4px;
+  }
+
+  /* Accordion */
+  .accordion {
+    border: 1px solid var(--border); border-radius: 8px;
+    margin: 16px 0; overflow: hidden;
+  }
+  .accordion-header {
+    padding: 14px 20px;
+    background: var(--surface);
+    cursor: pointer;
+    font-weight: 600; font-size: 15px;
+    display: flex; justify-content: space-between; align-items: center;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .accordion-header:hover { background: var(--bg); }
+  .accordion-header .arrow {
+    transition: transform 0.25s; font-size: 12px;
+  }
+  .accordion.open .accordion-header .arrow { transform: rotate(90deg); }
+  .accordion-body {
+    display: none; padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .accordion.open .accordion-body { display: block; }
+
+  /* Step */
+  .step {
+    display: flex; gap: 16px; margin: 20px 0; align-items: flex-start;
+  }
+  .step-num {
+    flex-shrink: 0; width: 32px; height: 32px;
+    background: var(--accent); color: white;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+  .step-content { flex: 1; }
+  .step-content h4 { margin-top: 4px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--bg); font-weight: 700;
+    font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.04em; color: var(--text-secondary);
+  }
+  td code {
+    background: #f1f5f9; padding: 1px 6px; border-radius: 4px;
+    font-size: 13px;
+  }
+
+  /* Tabs */
+  .tabs { margin: 20px 0; }
+  .tab-buttons {
+    display: flex; gap: 0; border-bottom: 2px solid var(--border);
+  }
+  .tab-btn {
+    padding: 10px 20px; border: none; background: none;
+    font-size: 14px; font-weight: 600; color: var(--text-secondary);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; padding: 20px 0; }
+  .tab-panel.active { display: block; }
+
+  /* Checklist */
+  .checklist { list-style: none; margin: 12px 0; padding: 0; }
+  .checklist li {
+    padding: 8px 12px; display: flex; align-items: center; gap: 10px;
+    border-radius: 6px; cursor: pointer; font-size: 14.5px;
+    transition: background 0.15s;
+  }
+  .checklist li:hover { background: var(--bg); }
+  .checklist li .check {
+    width: 20px; height: 20px; border: 2px solid var(--border);
+    border-radius: 4px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: transparent; transition: all 0.2s;
+  }
+  .checklist li.done .check {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+  .checklist li.done span { text-decoration: line-through; color: var(--text-secondary); }
+
+  /* Diagram */
+  .diagram {
+    text-align: center; margin: 24px 0; padding: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .diagram .flow {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .diagram .flow-box {
+    background: var(--accent-light); border: 1px solid #bfdbfe;
+    padding: 10px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; color: var(--accent-dark);
+  }
+  .diagram .flow-arrow { font-size: 18px; color: var(--text-secondary); }
+
+  /* Quiz */
+  .quiz {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin: 24px 0;
+  }
+  .quiz h4 { margin-top: 0; }
+  .quiz-option {
+    display: block; padding: 10px 16px; margin: 6px 0;
+    border: 1px solid var(--border); border-radius: 8px;
+    cursor: pointer; font-size: 14px;
+    transition: all 0.15s;
+  }
+  .quiz-option:hover { border-color: var(--accent); background: var(--accent-light); }
+  .quiz-option.correct { border-color: var(--green); background: var(--green-light); }
+  .quiz-option.wrong { border-color: var(--red); background: var(--red-light); }
+  .quiz-feedback { margin-top: 12px; font-size: 14px; display: none; padding: 12px; border-radius: 8px; }
+
+  /* Nav buttons */
+  .nav-buttons {
+    display: flex; justify-content: space-between; margin-top: 48px;
+    padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .nav-btn {
+    padding: 10px 24px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--surface);
+    font-size: 14px; font-weight: 600; color: var(--text);
+    cursor: pointer; text-decoration: none;
+    transition: all 0.15s;
+  }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .nav-btn.primary:hover { background: var(--accent-dark); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 24px 16px 80px; }
+    .menu-btn { display: block; }
+  }
+
+  /* Print */
+  @media print {
+    .sidebar, .header, .nav-buttons, .menu-btn { display: none !important; }
+    .main { margin: 0; max-width: 100%; }
+    .section { display: block !important; page-break-before: always; }
+    .code-block { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
+  <h1>AI 뉴스룸 실전 매뉴얼</h1>
+  <span class="badge">NICAR 2025 기반</span>
+</div>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="progress-bar">
+    <div class="bar-bg"><div class="bar-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="label" id="progressLabel">진행률 0/6</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-title">시작하기</div>
+    <a class="nav-item active" data-section="intro" onclick="showSection('intro')">개요 및 준비</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">모듈</div>
+    <a class="nav-item" data-section="m1" onclick="showSection('m1')">1. API 기초와 구조화 출력</a>
+    <a class="nav-item" data-section="m2" onclick="showSection('m2')">2. 다양한 AI 모델 활용</a>
+    <a class="nav-item" data-section="m3" onclick="showSection('m3')">3. 임베딩과 문서 검색</a>
+    <a class="nav-item" data-section="m4" onclick="showSection('m4')">4. Gradio로 앱 만들기</a>
+    <a class="nav-item" data-section="m5" onclick="showSection('m5')">5. 실험과 자동화</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-title">부록</div>
+    <a class="nav-item" data-section="ref" onclick="showSection('ref')">빠른 참조 카드</a>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+
+<!-- ==================== INTRO ==================== -->
+<div class="section active" id="sec-intro">
+  <div class="module-header m1">
+    <div class="subtitle" style="color:var(--accent)">AI 뉴스룸 실전 매뉴얼</div>
+    <h2>뉴스룸을 위한 AI 도구 실전 가이드</h2>
+    <div class="learning-goals">NICAR 2025 워크숍(Jonathan Soma) 교육 프로그램을 한국 뉴스룸에 맞게 재구성한 실행 매뉴얼입니다.</div>
+  </div>
+
+  <h3>이 매뉴얼의 구성</h3>
+  <p>총 5개 모듈로 구성되어 있으며, 각 모듈은 독립적으로 진행할 수 있습니다. 하지만 순서대로 진행하면 개념이 자연스럽게 연결됩니다.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>모듈</th><th>주제</th><th>핵심 기술</th><th>난이도</th><th>소요시간</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td>API 기초와 구조화 출력</td><td>OpenAI API, Pydantic, 분류</td><td><span class="tag beginner">입문</span></td><td><span class="tag time">60분</span></td></tr>
+      <tr><td><strong>2</strong></td><td>다양한 AI 모델 활용</td><td>Whisper, Gemini, 로컬 모델, HuggingFace</td><td><span class="tag intermediate">중급</span></td><td><span class="tag time">90분</span></td></tr>
+      <tr><td><strong>3</strong></td><td>임베딩과 문서 검색</td><td>임베딩, RAG, LlamaIndex</td><td><span class="tag intermediate">중급</span></td><td><span class="tag time">60분</span></td></tr>
+      <tr><td><strong>4</strong></td><td>Gradio로 앱 만들기</td><td>Gradio, 웹 인터페이스</td><td><span class="tag beginner">입문</span></td><td><span class="tag time">60분</span></td></tr>
+      <tr><td><strong>5</strong></td><td>실험과 자동화</td><td>Cursor, GitHub Actions</td><td><span class="tag advanced">심화</span></td><td><span class="tag time">자유</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>사전 준비</h3>
+  <ul class="checklist" id="prepChecklist">
+    <li onclick="this.classList.toggle('done')"><div class="check">&#10003;</div><span>Python 3.10 이상 설치</span></li>
+    <li onclick="this.classList.toggle('done')"><div class="check">&#10003;</div><span>OpenAI API 키 발급 (<a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com</a>)</span></li>
+    <li onclick="this.classList.toggle('done')"><div class="check">&#10003;</div><span>Google Gemini API 키 발급 (<a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>)</span></li>
+    <li onclick="this.classList.toggle('done')"><div class="check">&#10003;</div><span>Jupyter Notebook 실행 환경 (또는 <a href="https://colab.research.google.com" target="_blank">Google Colab</a>)</span></li>
+    <li onclick="this.classList.toggle('done')"><div class="check">&#10003;</div><span>ffmpeg 설치 (음성 처리용)</span></li>
+  </ul>
+
+  <div class="callout info">
+    <div class="callout-title">💡 Google Colab 추천</div>
+    설치가 번거롭다면 <a href="http://colab.research.google.com/github/jsoma/nicar25-ai-newsroom/" target="_blank">Google Colab에서 바로 실행</a>할 수 있습니다. 별도 설치 없이 브라우저에서 모든 실습이 가능합니다.
+  </div>
+
+  <h3>필수 패키지 설치</h3>
+  <div class="code-block">
+    <div class="code-header"><span>Terminal</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre>pip install openai pandas pydantic tqdm gradio
+pip install openai-whisper whisperx torch
+pip install llama-index sentence-transformers
+pip install transformers yt-dlp google-genai</pre>
+  </div>
+
+  <div class="nav-buttons">
+    <span></span>
+    <a class="nav-btn primary" onclick="showSection('m1')">모듈 1 시작하기 →</a>
+  </div>
+</div>
+
+<!-- ==================== MODULE 1 ==================== -->
+<div class="section" id="sec-m1">
+  <div class="module-header m1">
+    <div class="subtitle" style="color:var(--accent)">모듈 1</div>
+    <h2>API 기초와 구조화 출력</h2>
+    <div class="learning-goals">
+      <span class="tag beginner">입문</span> <span class="tag time">60분</span><br>
+      OpenAI API로 질문하기, 자동 분류, 결과 검증, 구조화된 출력 받기
+    </div>
+  </div>
+
+  <h3>1-1. API란 무엇인가</h3>
+  <p>ChatGPT 웹사이트는 GPT와 소통하는 방법 중 하나일 뿐입니다. <strong>API(Application Programming Interface)</strong>를 사용하면 Python 코드로 직접 GPT와 대화할 수 있습니다. 웹사이트를 거치지 않고 컴퓨터끼리 직접 소통하는 방식이라고 생각하면 됩니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">Python 코드</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">OpenAI API</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">GPT 모델</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">응답 반환</div>
+    </div>
+  </div>
+
+  <h3>1-2. 첫 번째 API 호출</h3>
+  <p>아래 코드가 기본 구조입니다. <code>messages</code> 리스트에 시스템 프롬프트와 사용자 질문을 담아 보냅니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+client = OpenAI(api_key=<span class="str">"여기에_API키_입력"</span>)
+
+messages = [
+    {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"당신은 유능한 비서입니다."</span>},
+    {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: <span class="str">"김치를 담글 때 소금과 배추의 비율은?"</span>}
+]
+
+completion = client.chat.completions.create(
+    messages=messages,
+    model=<span class="str">'gpt-4o-mini'</span>
+)
+
+<span class="fn">print</span>(completion.choices[<span class="num">0</span>].message.content)</pre>
+  </div>
+
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span>핵심 개념: system / user / assistant 역할</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <p><strong>system</strong> — 모델의 행동 방식을 지정하는 시스템 프롬프트입니다. "당신은 유능한 비서입니다"와 같은 지시를 넣습니다.</p>
+      <p><strong>user</strong> — 사용자의 질문이나 요청입니다.</p>
+      <p><strong>assistant</strong> — 모델의 이전 응답입니다. 대화 맥락을 이어가고 싶을 때 이전 응답을 포함시킵니다.</p>
+    </div>
+  </div>
+
+  <h3>1-3. 모델 선택과 비용</h3>
+  <p>OpenAI는 여러 모델을 제공하며, 각각 성능과 비용이 다릅니다.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>모델</th><th>특징</th><th>용도</th><th>상대 비용</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>gpt-4o-mini</code></td><td>빠르고 저렴</td><td>대량 분류, 단순 작업</td><td>💰</td></tr>
+      <tr><td><code>gpt-4o</code></td><td>균형잡힌 성능</td><td>분석, 요약, 복잡한 질문</td><td>💰💰💰</td></tr>
+      <tr><td><code>gpt-4.5</code></td><td>최신, 매우 비쌈</td><td>특수 목적</td><td>💰💰💰💰💰</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">⚠️ 비용 주의</div>
+    API 사용은 유료입니다. 대량 처리 전에 반드시 소량으로 테스트하고, <a href="https://platform.openai.com/docs/pricing" target="_blank">가격표</a>를 확인하세요. gpt-4o-mini로도 대부분의 분류 작업은 충분합니다.
+  </div>
+
+  <h3>1-4. 온도(Temperature) 설정</h3>
+  <p><strong>온도</strong>는 모델 응답의 "창의성" 수준을 조절하는 파라미터입니다. 통계적으로 말하면, 다음에 올 단어를 선택할 때 얼마나 덜 가능성 있는 단어도 허용할지를 결정합니다.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>온도</th><th>특성</th><th>취재 활용</th></tr></thead>
+    <tbody>
+      <tr><td><code>0.0</code></td><td>거의 동일한 결과 재현</td><td>분류, 데이터 추출 (추천)</td></tr>
+      <tr><td><code>0.7</code></td><td>적당한 변화 (기본값)</td><td>일반적인 질의응답</td></tr>
+      <tr><td><code>2.0</code></td><td>매우 창의적/예측 불가</td><td>브레인스토밍용</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 온도 0으로 재현 가능한 결과 얻기</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre>completion = client.chat.completions.create(
+    messages=messages,
+    model=<span class="str">'gpt-4o-mini'</span>,
+    temperature=<span class="num">0.0</span>  <span class="cm"># 분류 작업에는 0을 권장</span>
+)</pre>
+  </div>
+
+  <h3>1-5. 자동 분류 — 뉴스룸 활용의 핵심</h3>
+  <p>API의 가장 실용적인 활용 중 하나가 <strong>텍스트 자동 분류</strong>입니다. 법안, 민원, 보도자료 등을 카테고리로 분류할 수 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 법안 자동 분류</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+client = OpenAI(api_key=<span class="str">"여기에_API키_입력"</span>)
+
+prompt = <span class="str">"""
+다음 법안을 환경, 보건, 이민, 세금, 기타 중 하나로 분류하세요.
+카테고리 이름만 답하세요.
+
+법안 제목: 우주 산림 녹화 법안 — 지구 밖 생태계에
+나무를 심어 녹지를 확장하는 계획
+"""</span>
+
+messages = [
+    {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"당신은 입법 보좌관입니다."</span>},
+    {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: prompt}
+]
+
+completion = client.chat.completions.create(
+    messages=messages,
+    model=<span class="str">"gpt-4o-mini"</span>,
+    temperature=<span class="num">0</span>
+)
+
+<span class="fn">print</span>(completion.choices[<span class="num">0</span>].message.content)</pre>
+  </div>
+
+  <h3>1-6. 대량 처리 — pandas와 함께</h3>
+  <p>스프레드시트의 모든 행에 대해 분류를 자동 실행하는 패턴입니다. 실제 취재에서 수백~수천 건의 문서를 처리할 때 사용합니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">CSV/엑셀 데이터</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">프롬프트 템플릿</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">행별 API 호출</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">결과 병합·저장</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 대량 분류 패턴</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> tqdm.notebook <span class="kw">import</span> tqdm
+
+df = pd.read_csv(<span class="str">"my-data.csv"</span>)
+
+prompt_template = <span class="str">"""
+다음 법안을 환경, 보건, 이민, 세금, 기타 중 하나로 분류하세요.
+카테고리 이름만 답하세요.
+
+법안 제목: {text}
+"""</span>
+
+<span class="kw">def</span> <span class="fn">llm_request</span>(row):
+    prompt = prompt_template.format(text=row[<span class="str">'title'</span>])
+    messages = [
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"당신은 입법 보좌관입니다."</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: prompt}
+    ]
+    completion = client.chat.completions.create(
+        messages=messages, model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>
+    )
+    <span class="kw">return</span> completion.choices[<span class="num">0</span>].message.content
+
+<span class="cm"># 아직 처리 안 된 행만 처리 (중단 후 재실행 대비)</span>
+<span class="kw">if</span> <span class="str">'answer'</span> <span class="kw">not in</span> df.columns:
+    df[<span class="str">'answer'</span>] = <span class="kw">None</span>
+
+mask = df[<span class="str">'answer'</span>].isna()
+<span class="kw">for</span> row <span class="kw">in</span> tqdm(df[mask].itertuples(), total=mask.sum()):
+    <span class="kw">try</span>:
+        result = llm_request(row)
+        df.loc[row.Index, <span class="str">'answer'</span>] = result
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="fn">print</span>(<span class="str">f"오류 발생 (행 {row.Index}): {e}"</span>)</pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-title">✅ 실전 팁: 중단 복구 패턴</div>
+    위 코드에서 <code>df['answer'].isna()</code>로 미처리 행만 필터링합니다. API 호출 중 오류가 나도 이미 처리한 데이터는 보존되므로, 코드를 다시 실행하면 남은 행부터 이어서 처리됩니다.
+  </div>
+
+  <h3>1-7. 결과 검증 — 반드시 필요한 단계</h3>
+  <p>"AI가 그럴듯해 보인다"는 것으로 끝내면 안 됩니다. 저널리스트로서 <strong>반드시 결과를 체계적으로 검증</strong>해야 합니다.</p>
+
+  <div class="tabs">
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="switchTab(this, 'verify-tab1')">방법 1: 사후 샘플 검증</button>
+      <button class="tab-btn" onclick="switchTab(this, 'verify-tab2')">방법 2: 사전 테스트셋 (추천)</button>
+    </div>
+    <div class="tab-panel active" id="verify-tab1">
+      <p>전체 데이터를 먼저 분류한 뒤, 결과에서 무작위 표본을 추출해 사람이 직접 확인합니다. 이미 구축된 워크플로를 점검할 때 유용합니다.</p>
+    </div>
+    <div class="tab-panel" id="verify-tab2">
+      <p><strong>추천하는 방법입니다.</strong> 소규모 데이터에 사람이 먼저 라벨링한 뒤, AI의 분류 결과와 교차 비교합니다. 프롬프트를 조정하고 다시 테스트하는 반복이 가능합니다.</p>
+      <div class="code-block">
+        <div class="code-header"><span>Python — 교차 비교표</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="cm"># 사람 라벨 vs AI 라벨 교차표</span>
+pd.crosstab(df.human_label, df.llm_category, margins=<span class="kw">True</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>1-8. 구조화 출력 (Structured Outputs)</h3>
+  <p>LLM은 규칙을 어기고 예상 밖의 형식으로 응답할 수 있습니다. <strong>구조화 출력</strong>을 사용하면 원하는 형태로 정확하게 응답을 받을 수 있습니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — Pydantic으로 출력 구조 정의</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field
+<span class="kw">from</span> typing <span class="kw">import</span> Literal
+
+<span class="kw">class</span> <span class="fn">Comment</span>(BaseModel):
+    <span class="str">"""댓글 데이터 모델"""</span>
+    name: str = Field(description=<span class="str">"작성자 이름"</span>)
+    food_item: str = Field(description=<span class="str">"논의 중인 음식, 영문"</span>)
+    email: str = Field(description=<span class="str">"작성자 이메일"</span>)
+    emotion: Literal[<span class="str">"positive"</span>, <span class="str">"negative"</span>, <span class="str">"neutral"</span>] = Field(
+        description=<span class="str">"댓글의 감성"</span>
+    )</pre>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 구조화 출력으로 API 호출</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre>completion = client.beta.chat.completions.<span class="fn">parse</span>(
+    model=<span class="str">"gpt-4o-mini"</span>,
+    messages=[
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"관련 정보를 추출하세요."</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: email_text},
+    ],
+    response_format=Comment,  <span class="cm"># 위에서 정의한 Pydantic 모델</span>
+)
+
+result = completion.choices[<span class="num">0</span>].message.parsed
+<span class="fn">print</span>(result.model_dump())
+<span class="cm"># {'name': '홍길동', 'food_item': 'broccoli', 'email': '...', 'emotion': 'negative'}</span></pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-title">✅ 취재 활용 예시: 기사에서 정보 자동 추출</div>
+    다국어 기사를 분석할 때 Pydantic 모델을 이렇게 정의할 수 있습니다:
+    <code>headline</code>(제목), <code>outlet_name</code>(매체명), <code>summary</code>(요약), <code>language</code>(언어코드), <code>sources</code>(취재원 목록), <code>category</code>(분야).
+    수백 건의 기사를 한 번에 구조화된 스프레드시트로 변환할 수 있습니다.
+  </div>
+
+  <!-- Quiz -->
+  <div class="quiz">
+    <h4>확인 퀴즈</h4>
+    <p>대량 분류 작업에서 <code>temperature</code>를 어떤 값으로 설정하는 것이 가장 좋을까요?</p>
+    <div class="quiz-option" onclick="checkQuiz(this, true, 'quiz1-fb')">0.0 — 일관된 결과를 위해</div>
+    <div class="quiz-option" onclick="checkQuiz(this, false, 'quiz1-fb')">0.7 — 기본값이 가장 무난하므로</div>
+    <div class="quiz-option" onclick="checkQuiz(this, false, 'quiz1-fb')">2.0 — 다양한 관점을 위해</div>
+    <div class="quiz-feedback" id="quiz1-fb"></div>
+  </div>
+
+  <div class="nav-buttons">
+    <a class="nav-btn" onclick="showSection('intro')">← 개요</a>
+    <a class="nav-btn primary" onclick="showSection('m2')">모듈 2 →</a>
+  </div>
+</div>
+
+<!-- ==================== MODULE 2 ==================== -->
+<div class="section" id="sec-m2">
+  <div class="module-header m2">
+    <div class="subtitle" style="color:var(--green)">모듈 2</div>
+    <h2>다양한 AI 모델 활용</h2>
+    <div class="learning-goals">
+      <span class="tag intermediate">중급</span> <span class="tag time">90분</span><br>
+      음성 전사(Whisper), 다른 LLM(Gemini), 로컬 모델, Hugging Face 모델 탐색
+    </div>
+  </div>
+
+  <h3>2-1. Whisper — 음성을 텍스트로</h3>
+  <p><strong>Whisper</strong>는 OpenAI가 공개한 음성 전사(speech-to-text) 모델입니다. GPT와 달리 <strong>직접 다운로드해서 로컬에서 실행</strong>할 수 있습니다. 인터뷰 녹음, 회의록, 브리핑 영상 등을 텍스트로 변환하는 데 활용됩니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — Whisper 기본 사용법</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> whisper
+
+<span class="cm"># 모델 크기: tiny, base, small, medium, large, turbo</span>
+model = whisper.load_model(<span class="str">"medium"</span>)  <span class="cm"># 한국어는 medium 이상 권장</span>
+
+result = model.transcribe(<span class="str">"interview.mp3"</span>)
+<span class="fn">print</span>(result[<span class="str">"text"</span>])</pre>
+  </div>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>모델</th><th>크기</th><th>속도</th><th>정확도</th><th>한국어</th></tr></thead>
+    <tbody>
+      <tr><td><code>tiny</code></td><td>39MB</td><td>매우 빠름</td><td>낮음</td><td>❌ 비추천</td></tr>
+      <tr><td><code>small</code></td><td>244MB</td><td>빠름</td><td>보통</td><td>⚠️ 기초적</td></tr>
+      <tr><td><code>medium</code></td><td>769MB</td><td>보통</td><td>좋음</td><td>✅ 사용 가능</td></tr>
+      <tr><td><code>turbo</code></td><td>809MB</td><td>빠름</td><td>좋음</td><td>✅ 추천</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout danger">
+    <div class="callout-title">🚨 Whisper의 치명적 문제: 환각(Hallucination)</div>
+    AP통신 보도에 따르면 Whisper는 <strong>심각한 오류</strong>를 만들 수 있습니다. 특히 무음 구간에서 존재하지 않는 문장을 생성하는 경우가 보고되었습니다.
+    반드시 결과를 사람이 검수해야 합니다. 전사 결과를 그대로 보도에 사용하지 마세요.
+  </div>
+
+  <h3>2-2. WhisperX — 개선된 전사</h3>
+  <p><strong>WhisperX</strong>는 Whisper에 음성 활동 감지(VAD), 화자 분리, 타임스탬프 정렬 등을 추가한 라이브러리입니다. 무음 구간의 환각 문제를 크게 줄여줍니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — WhisperX 사용법</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> whisperx, torch
+
+device = <span class="str">"cuda"</span> <span class="kw">if</span> torch.cuda.is_available() <span class="kw">else</span> <span class="str">"cpu"</span>
+
+<span class="cm"># 1. 전사</span>
+model = whisperx.load_model(<span class="str">"turbo"</span>, device)
+audio = whisperx.load_audio(<span class="str">"interview.mp3"</span>)
+result = model.transcribe(audio, batch_size=<span class="num">4</span>)
+
+<span class="cm"># 2. 타임스탬프 정렬</span>
+model_a, metadata = whisperx.load_align_model(
+    language_code=result[<span class="str">"language"</span>], device=device
+)
+result = whisperx.align(
+    result[<span class="str">"segments"</span>], model_a, metadata, audio, device
+)
+
+<span class="cm"># 3. 결과를 DataFrame으로</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+df = pd.json_normalize(result[<span class="str">'segments'</span>])
+text = <span class="str">"\n"</span>.join(df[<span class="str">'text'</span>])
+<span class="fn">print</span>(text[:<span class="num">500</span>])</pre>
+  </div>
+
+  <h3>2-3. YouTube 영상 다운로드</h3>
+  <p><strong>yt-dlp</strong>는 YouTube, TikTok 등에서 영상이나 오디오를 다운로드하는 도구입니다. 회견 영상, 공청회 등을 전사하기 전에 먼저 오디오를 추출할 때 유용합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 오디오만 추출</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> yt_dlp
+
+url = <span class="str">"https://www.youtube.com/watch?v=VIDEO_ID"</span>
+
+ydl_opts = {
+    <span class="str">'format'</span>: <span class="str">'bestaudio/best'</span>,
+    <span class="str">'outtmpl'</span>: <span class="str">'%(title)s.%(ext)s'</span>,
+    <span class="str">'postprocessors'</span>: [
+        {<span class="str">'key'</span>: <span class="str">'FFmpegExtractAudio'</span>, <span class="str">'preferredcodec'</span>: <span class="str">'mp3'</span>},
+    ],
+}
+
+<span class="kw">with</span> yt_dlp.YoutubeDL(ydl_opts) <span class="kw">as</span> ydl:
+    ydl.download([url])</pre>
+  </div>
+
+  <h3>2-4. 전사 결과를 LLM으로 요약하기</h3>
+  <p>긴 전사 텍스트를 모듈 1에서 배운 구조화 출력과 결합하면, 자동 요약과 핵심 포인트 추출이 가능합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 전사 요약 모델 정의</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field
+
+<span class="kw">class</span> <span class="fn">TranscriptSummary</span>(BaseModel):
+    <span class="str">"""전사 요약 모델"""</span>
+    topic: str = Field(description=<span class="str">"한 줄 주제 설명"</span>)
+    summary: str = Field(description=<span class="str">"주요 내용 요약"</span>)
+    highlights: str = Field(description=<span class="str">"가장 흥미로운 사실"</span>)
+
+completion = client.beta.chat.completions.<span class="fn">parse</span>(
+    model=<span class="str">"gpt-4o-mini"</span>,
+    messages=[
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"다음 전사 내용에서 정보를 추출하세요."</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: transcript},
+    ],
+    response_format=TranscriptSummary,
+)</pre>
+  </div>
+
+  <h3>2-5. GPT가 아닌 다른 모델 사용하기</h3>
+
+  <div class="tabs">
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="switchTab(this, 'model-gemini')">Gemini (Google)</button>
+      <button class="tab-btn" onclick="switchTab(this, 'model-local')">로컬 모델</button>
+      <button class="tab-btn" onclick="switchTab(this, 'model-hf')">Hugging Face</button>
+    </div>
+
+    <div class="tab-panel active" id="model-gemini">
+      <p>Google의 <strong>Gemini</strong>는 텍스트뿐 아니라 오디오·이미지·영상을 직접 입력받을 수 있습니다. OpenAI와 동일한 라이브러리 형식을 사용합니다.</p>
+      <div class="code-block">
+        <div class="code-header"><span>Python — Gemini 사용</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+client = OpenAI(
+    api_key=<span class="str">"GEMINI_API_KEY"</span>,
+    base_url=<span class="str">"https://generativelanguage.googleapis.com/v1beta/openai/"</span>
+)
+
+response = client.chat.completions.create(
+    model=<span class="str">"gemini-2.0-flash-lite"</span>,
+    messages=[
+        {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"오늘의 날씨를 알려줘"</span>}
+    ]
+)
+<span class="fn">print</span>(response.choices[<span class="num">0</span>].message.content)</pre>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="model-local">
+      <p><strong>로컬 모델</strong>은 클라우드를 거치지 않고 자체 컴퓨터에서 실행합니다. 비용이 들지 않고, 민감한 취재 데이터의 외부 유출 우려가 없습니다.</p>
+
+      <p><strong>LM Studio</strong>나 <strong>Msty</strong>를 설치하면 다양한 오픈소스 모델을 쉽게 사용할 수 있습니다. 코드 변경은 <code>base_url</code>과 <code>api_key</code>만 바꾸면 됩니다.</p>
+
+      <div class="code-block">
+        <div class="code-header"><span>Python — 로컬 모델 연결</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre>client = OpenAI(
+    base_url=<span class="str">"http://127.0.0.1:10000/v1"</span>,  <span class="cm"># Msty 기본 포트</span>
+    api_key=<span class="str">"lm-studio"</span>
+)
+
+completion = client.chat.completions.create(
+    model=<span class="str">"deepseek-r1:1.5b"</span>,
+    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"자기소개 해줘"</span>}]
+)</pre>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion(this)">
+          <span>양자화(Quantization) 이해하기</span>
+          <span class="arrow">▶</span>
+        </div>
+        <div class="accordion-body">
+          <p>거대 모델을 일반 컴퓨터에서 실행하려면 <strong>양자화</strong>가 필요합니다. 모델 내부의 숫자를 반올림해서 크기를 줄이는 기법입니다.</p>
+          <p>q8(고품질) → q6 → q4(추천) → q2(저품질) 순으로 작아집니다. 보통 <strong>q4</strong>면 충분한 성능을 유지합니다. 36B 모델의 q4 버전이 7B 원본 모델보다 더 나은 경우가 많습니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="model-hf">
+      <p><strong>Hugging Face</strong>는 AI 모델의 YouTube와 같습니다. 수만 개의 모델이 공개되어 있으며, 특정 작업에 특화된 모델을 찾아 쓸 수 있습니다.</p>
+
+      <div class="code-block">
+        <div class="code-header"><span>Python — 제로샷 분류</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="kw">from</span> transformers <span class="kw">import</span> pipeline
+
+classifier = pipeline(<span class="str">"zero-shot-classification"</span>,
+                      model=<span class="str">"facebook/bart-large-mnli"</span>)
+
+result = classifier(
+    <span class="str">"세종시 신도시에 아파트 1만 가구 공급 확정"</span>,
+    candidate_labels=[<span class="str">'부동산'</span>, <span class="str">'정치'</span>, <span class="str">'경제'</span>, <span class="str">'사회'</span>]
+)
+<span class="fn">print</span>(result[<span class="str">'labels'</span>][<span class="num">0</span>])  <span class="cm"># 가장 높은 확률의 카테고리</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header"><span>Python — 번역</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="kw">from</span> transformers <span class="kw">import</span> pipeline
+
+translator = pipeline(
+    <span class="str">"translation"</span>,
+    model=<span class="str">"facebook/nllb-200-distilled-600M"</span>,
+    src_lang=<span class="str">'kor_Hang'</span>,  <span class="cm"># FLORES 언어 코드</span>
+    tgt_lang=<span class="str">'eng_Latn'</span>
+)
+translator(<span class="str">"안녕하세요, 반갑습니다"</span>)</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">💡 어떤 모델을 언제 쓸까?</div>
+    <strong>대량 분류</strong> → gpt-4o-mini (저렴, 빠름) 또는 facebook/bart-large-mnli (무료, 로컬)<br>
+    <strong>음성 전사</strong> → Whisper turbo + WhisperX (로컬, 무료)<br>
+    <strong>민감한 데이터</strong> → 로컬 모델 (LM Studio + DeepSeek/Qwen)<br>
+    <strong>멀티미디어 분석</strong> → Gemini (오디오/이미지 직접 입력 가능)
+  </div>
+
+  <div class="nav-buttons">
+    <a class="nav-btn" onclick="showSection('m1')">← 모듈 1</a>
+    <a class="nav-btn primary" onclick="showSection('m3')">모듈 3 →</a>
+  </div>
+</div>
+
+<!-- ==================== MODULE 3 ==================== -->
+<div class="section" id="sec-m3">
+  <div class="module-header m3">
+    <div class="subtitle" style="color:var(--purple)">모듈 3</div>
+    <h2>임베딩과 문서 검색</h2>
+    <div class="learning-goals">
+      <span class="tag intermediate">중급</span> <span class="tag time">60분</span><br>
+      텍스트를 숫자로 변환(임베딩), 문서 유사도 비교, RAG 기반 문서 Q&amp;A
+    </div>
+  </div>
+
+  <h3>3-1. 임베딩이란?</h3>
+  <p>컴퓨터는 숫자만 이해합니다. <strong>임베딩(embedding)</strong>은 텍스트를 숫자 벡터(리스트)로 변환하는 기술입니다. 의미가 비슷한 문장은 비슷한 숫자 패턴을 갖게 됩니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">"고양이가 생선을 먹었다"</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">임베딩 모델</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">[0.23, -0.41, 0.87, ...]</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 문장 임베딩 생성</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> sentence_transformers <span class="kw">import</span> SentenceTransformer
+
+model = SentenceTransformer(<span class="str">'sentence-transformers/all-MiniLM-L6-v2'</span>)
+
+sentences = [<span class="str">"고양이가 생선을 먹었다"</span>]
+embeddings = model.encode(sentences)
+
+<span class="fn">print</span>(embeddings[<span class="num">0</span>][:<span class="num">10</span>])  <span class="cm"># 처음 10개 숫자만 출력</span></pre>
+  </div>
+
+  <h3>3-2. 문서 유사도 비교</h3>
+  <p>임베딩을 이용하면 문장 간 의미적 유사도를 계산할 수 있습니다. 코사인 유사도(cosine similarity)가 1에 가까울수록 의미가 비슷합니다.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — 유사도 행렬 생성</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+sentences = [
+    <span class="str">"아파트 가격이 급등했다"</span>,
+    <span class="str">"부동산 시장이 과열되고 있다"</span>,
+    <span class="str">"오늘 야구 경기에서 홈런이 나왔다"</span>,
+    <span class="str">"Цены на недвижимость выросли"</span>,  <span class="cm"># 러시아어: 부동산 가격 상승</span>
+]
+
+embeddings = model.encode(sentences)
+similarities = cosine_similarity(embeddings)
+
+pd.DataFrame(similarities,
+    index=sentences, columns=sentences
+).style.background_gradient(axis=<span class="kw">None</span>)</pre>
+  </div>
+
+  <div class="callout tip">
+    <div class="callout-title">✅ 다국어 임베딩</div>
+    <code>all-MiniLM-L6-v2</code>는 영어 전용입니다. 한국어를 포함한 다국어 문서를 비교하려면 <code>distiluse-base-multilingual-cased-v2</code>나 <code>BAAI/bge-m3</code>를 사용하세요. ICIJ의 루안다 리크스 탐사보도에서도 300GB 이상의 다국어 데이터를 임베딩으로 탐색했습니다.
+  </div>
+
+  <h3>3-3. RAG — 문서 기반 질의응답</h3>
+  <p><strong>RAG(Retrieval-Augmented Generation)</strong>는 LLM이 보유 문서에서 관련 내용을 찾아 답변하는 방식입니다. LlamaIndex를 사용하면 간단하게 구현할 수 있습니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">질문 입력</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">관련 문서 검색<br><small>(임베딩 유사도)</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">LLM에 질문+문서 전달</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">근거 기반 답변</div>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — LlamaIndex로 문서 Q&A</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> os
+os.environ[<span class="str">'OPENAI_API_KEY'</span>] = <span class="str">'여기에_API키'</span>
+
+<span class="kw">from</span> llama_index.core <span class="kw">import</span> VectorStoreIndex, SimpleDirectoryReader
+
+<span class="cm"># 1. 문서 폴더 로드 (PDF, TXT 등)</span>
+documents = SimpleDirectoryReader(<span class="str">"documents"</span>).load_data()
+index = VectorStoreIndex.from_documents(documents)
+
+<span class="cm"># 2. 질의</span>
+query_engine = index.as_query_engine(similarity_top_k=<span class="num">5</span>)
+response = query_engine.query(<span class="str">"직원의 팁을 가져가도 되나요?"</span>)
+<span class="fn">print</span>(response)
+
+<span class="cm"># 3. 출처 확인</span>
+<span class="kw">for</span> node <span class="kw">in</span> response.source_nodes:
+    <span class="fn">print</span>(<span class="str">f"파일: {node.node.metadata}"</span>)
+    <span class="fn">print</span>(<span class="str">f"관련도: {node.score:.3f}"</span>)</pre>
+  </div>
+
+  <div class="callout warn">
+    <div class="callout-title">⚠️ RAG의 한계</div>
+    뉴욕시가 만든 AI 챗봇이 RAG를 사용했지만 <strong>사업자에게 법을 어기라고 조언</strong>한 사례가 있습니다 (The Markup 보도). RAG 결과를 그대로 독자에게 서비스하지 말고, 취재의 보조 도구로만 활용하세요.
+  </div>
+
+  <h3>3-4. 로컬 임베딩으로 비용 절감</h3>
+  <div class="code-block">
+    <div class="code-header"><span>Python — Hugging Face 로컬 임베딩</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> llama_index.core <span class="kw">import</span> Settings
+<span class="kw">from</span> llama_index.embeddings.huggingface <span class="kw">import</span> HuggingFaceEmbedding
+
+<span class="cm"># 다국어 지원 모델 (한국어 포함)</span>
+embed_model = HuggingFaceEmbedding(model_name=<span class="str">"BAAI/bge-m3"</span>)
+Settings.embed_model = embed_model
+
+<span class="cm"># 이후 LlamaIndex가 OpenAI 대신 로컬 임베딩 사용</span>
+index = VectorStoreIndex.from_documents(documents)</pre>
+  </div>
+
+  <div class="nav-buttons">
+    <a class="nav-btn" onclick="showSection('m2')">← 모듈 2</a>
+    <a class="nav-btn primary" onclick="showSection('m4')">모듈 4 →</a>
+  </div>
+</div>
+
+<!-- ==================== MODULE 4 ==================== -->
+<div class="section" id="sec-m4">
+  <div class="module-header m4">
+    <div class="subtitle" style="color:var(--orange)">모듈 4</div>
+    <h2>Gradio로 앱 만들기</h2>
+    <div class="learning-goals">
+      <span class="tag beginner">입문</span> <span class="tag time">60분</span><br>
+      비개발자도 사용할 수 있는 웹 인터페이스를 Python 코드 몇 줄로 만들기
+    </div>
+  </div>
+
+  <h3>왜 앱을 만들어야 할까?</h3>
+  <p>기술팀만 AI를 테스트하면 시각이 편향됩니다. <strong>뉴스룸의 비기술 동료들이 직접 도구를 시험</strong>할 수 있게 하면, 맹점을 발견하고 더 나은 결과를 얻을 수 있습니다. Gradio는 Python 함수를 웹 인터페이스로 즉시 변환해 줍니다.</p>
+
+  <h3>4-1. Gradio 기본 패턴</h3>
+  <p>모든 Gradio 앱은 동일한 3단계 구조를 따릅니다.</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>함수 정의</h4>
+      <p>입력을 받아 결과를 반환하는 Python 함수를 작성합니다.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>인터페이스 설정</h4>
+      <p><code>gr.Interface(fn=함수, inputs=입력타입, outputs=출력타입)</code>으로 UI를 구성합니다.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>실행</h4>
+      <p><code>iface.launch()</code>로 브라우저에서 바로 접속 가능한 웹앱을 띄웁니다.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span>Python — Gradio 기본 예제</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> gradio <span class="kw">as</span> gr
+
+<span class="kw">def</span> <span class="fn">greet</span>(name):
+    <span class="kw">return</span> <span class="str">"안녕하세요, "</span> + name + <span class="str">"님!"</span>
+
+iface = gr.Interface(fn=greet, inputs=<span class="str">"text"</span>, outputs=<span class="str">"text"</span>)
+iface.launch()  <span class="cm"># 브라우저에서 http://127.0.0.1:7860 접속</span></pre>
+  </div>
+
+  <h3>4-2. 실전 예제 모음</h3>
+  <div class="tabs">
+    <div class="tab-buttons">
+      <button class="tab-btn active" onclick="switchTab(this, 'gradio-whisper')">음성 전사 앱</button>
+      <button class="tab-btn" onclick="switchTab(this, 'gradio-classify')">자동 분류 앱</button>
+      <button class="tab-btn" onclick="switchTab(this, 'gradio-editor')">기사 교정 앱</button>
+    </div>
+
+    <div class="tab-panel active" id="gradio-whisper">
+      <p>녹음 파일을 업로드하면 텍스트로 전사해주는 앱입니다. 모델 크기를 달리 해서 결과를 비교할 수도 있습니다.</p>
+      <div class="code-block">
+        <div class="code-header"><span>Python — 음성 전사 앱 (모델 비교)</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="kw">import</span> gradio <span class="kw">as</span> gr
+<span class="kw">import</span> whisper
+
+tiny_model = whisper.load_model(<span class="str">"tiny"</span>)
+med_model = whisper.load_model(<span class="str">"medium"</span>)
+
+<span class="kw">def</span> <span class="fn">transcribe</span>(audio_file):
+    result_tiny = tiny_model.transcribe(audio_file)
+    result_med = med_model.transcribe(audio_file)
+    <span class="kw">return</span> result_tiny[<span class="str">'text'</span>], result_med[<span class="str">'text'</span>]
+
+iface = gr.Interface(
+    fn=transcribe,
+    inputs=gr.Audio(type=<span class="str">"filepath"</span>, label=<span class="str">"녹음 파일 업로드"</span>),
+    outputs=[
+        gr.Text(label=<span class="str">"Tiny 모델 결과"</span>),
+        gr.Text(label=<span class="str">"Medium 모델 결과"</span>),
+    ],
+    allow_flagging=<span class="str">'never'</span>
+)
+iface.launch()</pre>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="gradio-classify">
+      <p>텍스트를 입력하면 미리 정한 카테고리로 분류해주는 앱입니다. <code>gr.Label</code> 컴포넌트로 확률 분포를 시각화합니다.</p>
+      <div class="code-block">
+        <div class="code-header"><span>Python — 분류 앱</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="kw">import</span> gradio <span class="kw">as</span> gr
+<span class="kw">from</span> transformers <span class="kw">import</span> pipeline
+
+classifier = pipeline(<span class="str">"zero-shot-classification"</span>,
+                      model=<span class="str">"facebook/bart-large-mnli"</span>)
+
+<span class="kw">def</span> <span class="fn">classify</span>(text):
+    labels = [<span class="str">'정치'</span>, <span class="str">'경제'</span>, <span class="str">'사회'</span>, <span class="str">'국제'</span>, <span class="str">'스포츠'</span>, <span class="str">'문화'</span>]
+    result = classifier(text, labels)
+    <span class="kw">return</span> <span class="fn">dict</span>(<span class="fn">zip</span>(result[<span class="str">'labels'</span>], result[<span class="str">'scores'</span>]))
+
+iface = gr.Interface(fn=classify, inputs=<span class="str">"text"</span>, outputs=<span class="str">"label"</span>)
+iface.launch()</pre>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="gradio-editor">
+      <p>기사 원고를 붙여넣으면 AP 스타일가이드 기준으로 교정 제안을 해주는 앱입니다.</p>
+      <div class="code-block">
+        <div class="code-header"><span>Python — 기사 교정 앱 (핵심부)</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+        <pre><span class="kw">def</span> <span class="fn">get_feedback</span>(story_text):
+    prompt = <span class="str">f"""
+    아래 기사의 문체와 맞춤법을 교정해주세요.
+    한국어 기사 작성 기준을 따르고,
+    구체적인 수정 사항을 제시하세요.
+
+    기사 원문:
+    {story_text}
+    """</span>
+
+    messages = [
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"당신은 숙련된 교열 기자입니다."</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: prompt}
+    ]
+
+    completion = client.chat.completions.create(
+        messages=messages, model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="num">0</span>
+    )
+    <span class="kw">return</span> completion.choices[<span class="num">0</span>].message.content
+
+iface = gr.Interface(
+    fn=get_feedback,
+    inputs=gr.Textbox(lines=<span class="num">15</span>, label=<span class="str">"기사 원문"</span>),
+    outputs=gr.Textbox(label=<span class="str">"교정 제안"</span>),
+    allow_flagging=<span class="str">'never'</span>
+)
+iface.launch()</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-buttons">
+    <a class="nav-btn" onclick="showSection('m3')">← 모듈 3</a>
+    <a class="nav-btn primary" onclick="showSection('m5')">모듈 5 →</a>
+  </div>
+</div>
+
+<!-- ==================== MODULE 5 ==================== -->
+<div class="section" id="sec-m5">
+  <div class="module-header m5">
+    <div class="subtitle" style="color:var(--red)">모듈 5</div>
+    <h2>실험과 자동화</h2>
+    <div class="learning-goals">
+      <span class="tag advanced">심화</span> <span class="tag time">자유 진행</span><br>
+      AI 코딩 도구(Cursor)로 프로젝트 빌드, GitHub Actions로 자동화
+    </div>
+  </div>
+
+  <h3>5-1. AI 코딩 도구로 빠르게 만들기</h3>
+  <p><a href="https://www.cursor.com/" target="_blank"><strong>Cursor</strong></a>는 AI가 코드를 대신 작성해주는 에디터입니다. 앞서 배운 기술들을 조합해서 실제 프로젝트를 빠르게 만들어볼 수 있습니다.</p>
+
+  <h3>5-2. 프로젝트 아이디어</h3>
+  <p>아래는 워크숍에서 제안된 프로젝트들입니다. 한국 뉴스룸에 맞게 변형해서 시도해 보세요.</p>
+
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span>PDF 문서 일괄 처리기</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <p>PDF를 드래그앤드롭하면 각 문서의 내용이 스프레드시트 한 행이 됩니다. OCR 기능을 추가하면 스캔된 문서도 처리 가능합니다.</p>
+      <p><strong>활용 예:</strong> 국정감사 자료, 법원 판결문, 감사보고서 등을 일괄 분석할 때</p>
+    </div>
+  </div>
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span>지방의회 회의록 자동 요약기</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <p>YouTube URL(의회 영상)을 입력하고 관심 키워드를 지정하면, 해당 부분만 발췌·요약해줍니다. Whisper + RAG + Gradio 조합입니다.</p>
+      <p><strong>활용 예:</strong> 지자체 의회, 시도교육청 회의 모니터링</p>
+    </div>
+  </div>
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span>문서 시맨틱 검색 도구</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <p>대량의 문서(인터뷰 노트, 보도자료 등)에서 의미 기반 검색을 수행합니다. 정확한 키워드를 모를 때도 관련 내용을 찾을 수 있습니다.</p>
+      <p><strong>활용 예:</strong> 수십 건의 인터뷰 노트에서 특정 주제 언급 부분 일괄 검색</p>
+    </div>
+  </div>
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion(this)">
+      <span>뉴스 퀴즈 생성기</span>
+      <span class="arrow">▶</span>
+    </div>
+    <div class="accordion-body">
+      <p>질문·답·이미지를 입력하면 인터랙티브 뉴스 퀴즈 HTML이 생성됩니다. CMS에 바로 삽입 가능합니다.</p>
+    </div>
+  </div>
+
+  <h3>5-3. GitHub Actions로 자동화</h3>
+  <p>정기적으로 실행해야 하는 작업(예: 매주 월요일 특정 유튜브 채널 최신 영상 전사·요약 후 이메일 발송)을 GitHub Actions로 자동화할 수 있습니다.</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-box">GitHub Actions<br><small>매주 월요일 트리거</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">yt-dlp로<br>최신 영상 다운로드</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Whisper로<br>전사</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">GPT로<br>요약</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">이메일<br>발송</div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">💡 자동화 시작 팁</div>
+    AI 코딩 도구(Cursor, Claude 등)에 이렇게 요청해 보세요: "Jupyter 노트북 코드를 GitHub Actions 워크플로로 변환해줘. 매주 월요일에 실행되게 하고, API 키는 GitHub Secrets에서 읽도록 해줘."
+  </div>
+
+  <div class="nav-buttons">
+    <a class="nav-btn" onclick="showSection('m4')">← 모듈 4</a>
+    <a class="nav-btn primary" onclick="showSection('ref')">빠른 참조 카드 →</a>
+  </div>
+</div>
+
+<!-- ==================== REFERENCE ==================== -->
+<div class="section" id="sec-ref">
+  <div class="module-header m1">
+    <div class="subtitle" style="color:var(--accent)">부록</div>
+    <h2>빠른 참조 카드</h2>
+    <div class="learning-goals">자주 쓰는 패턴과 코드 스니펫을 한눈에</div>
+  </div>
+
+  <h3>API 호출 기본 패턴</h3>
+  <div class="code-block">
+    <div class="code-header"><span>Python — OpenAI 기본 호출</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+client = OpenAI(api_key=<span class="str">"KEY"</span>)
+
+result = client.chat.completions.create(
+    messages=[
+        {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"지시사항"</span>},
+        {<span class="str">"role"</span>: <span class="str">"user"</span>,   <span class="str">"content"</span>: <span class="str">"질문"</span>}
+    ],
+    model=<span class="str">"gpt-4o-mini"</span>,
+    temperature=<span class="num">0</span>
+)
+<span class="fn">print</span>(result.choices[<span class="num">0</span>].message.content)</pre>
+  </div>
+
+  <h3>구조화 출력 패턴</h3>
+  <div class="code-block">
+    <div class="code-header"><span>Python — Pydantic + Structured Output</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field
+<span class="kw">from</span> typing <span class="kw">import</span> Literal, List
+
+<span class="kw">class</span> <span class="fn">MyModel</span>(BaseModel):
+    field1: str = Field(description=<span class="str">"설명"</span>)
+    category: Literal[<span class="str">"A"</span>, <span class="str">"B"</span>, <span class="str">"C"</span>] = Field(description=<span class="str">"분류"</span>)
+    items: List[str] = Field(description=<span class="str">"항목 리스트"</span>)
+
+result = client.beta.chat.completions.<span class="fn">parse</span>(
+    model=<span class="str">"gpt-4o-mini"</span>,
+    messages=[...],
+    response_format=MyModel
+)
+data = result.choices[<span class="num">0</span>].message.parsed.model_dump()</pre>
+  </div>
+
+  <h3>대량 처리 패턴</h3>
+  <div class="code-block">
+    <div class="code-header"><span>Python — pandas + tqdm 대량 처리</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> tqdm.notebook <span class="kw">import</span> tqdm
+
+df = pd.read_csv(<span class="str">"data.csv"</span>)
+<span class="kw">if</span> <span class="str">'result'</span> <span class="kw">not in</span> df.columns:
+    df[<span class="str">'result'</span>] = <span class="kw">None</span>
+
+mask = df[<span class="str">'result'</span>].isna()
+<span class="kw">for</span> row <span class="kw">in</span> tqdm(df[mask].itertuples(), total=mask.sum()):
+    <span class="kw">try</span>:
+        df.loc[row.Index, <span class="str">'result'</span>] = llm_request(row)
+    <span class="kw">except</span> Exception <span class="kw">as</span> e:
+        <span class="fn">print</span>(<span class="str">f"오류: {e}"</span>)
+
+df.to_csv(<span class="str">"data-with-results.csv"</span>, index=<span class="kw">False</span>)</pre>
+  </div>
+
+  <h3>Gradio 앱 패턴</h3>
+  <div class="code-block">
+    <div class="code-header"><span>Python — Gradio 기본 템플릿</span><button class="copy-btn" onclick="copyCode(this)">복사</button></div>
+    <pre><span class="kw">import</span> gradio <span class="kw">as</span> gr
+
+<span class="kw">def</span> <span class="fn">process</span>(input_text):
+    <span class="cm"># 여기에 AI 로직 작성</span>
+    <span class="kw">return</span> <span class="str">"결과"</span>
+
+iface = gr.Interface(
+    fn=process,
+    inputs=gr.Textbox(lines=<span class="num">10</span>, label=<span class="str">"입력"</span>),
+    outputs=gr.Textbox(label=<span class="str">"출력"</span>),
+    allow_flagging=<span class="str">'never'</span>
+)
+iface.launch()</pre>
+  </div>
+
+  <h3>주요 리소스</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>리소스</th><th>URL</th><th>용도</th></tr></thead>
+    <tbody>
+      <tr><td>OpenAI API 문서</td><td><a href="https://platform.openai.com/docs" target="_blank">platform.openai.com/docs</a></td><td>GPT API 레퍼런스</td></tr>
+      <tr><td>Hugging Face</td><td><a href="https://huggingface.co/models" target="_blank">huggingface.co/models</a></td><td>오픈소스 모델 검색</td></tr>
+      <tr><td>LM Arena 리더보드</td><td><a href="https://lmarena.ai/?leaderboard" target="_blank">lmarena.ai</a></td><td>모델 성능 비교</td></tr>
+      <tr><td>Gradio 문서</td><td><a href="https://gradio.app/docs" target="_blank">gradio.app/docs</a></td><td>UI 컴포넌트 목록</td></tr>
+      <tr><td>원본 교육자료</td><td><a href="https://github.com/jsoma/nicar25-ai-newsroom" target="_blank">GitHub</a></td><td>Jonathan Soma 원본</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">💡 한 줄 요약</div>
+    AI는 하나의 도구가 아니라 다양한 도구의 모음입니다. 각 도구의 특성과 한계를 이해하고, <strong>반드시 결과를 검증</strong>하며, 뉴스룸 전체가 함께 실험할 수 있는 환경을 만드세요.
+  </div>
+
+  <div style="text-align:center; margin-top:48px; padding:24px; color:var(--text-secondary); font-size:13px;">
+    원본: NICAR 2025 "AI in the Newsroom" — Jonathan Soma<br>
+    한국어 매뉴얼 재구성: AI 저널리즘 프로젝트 (2026)
+  </div>
+
+  <div class="nav-buttons">
+    <a class="nav-btn" onclick="showSection('m5')">← 모듈 5</a>
+    <a class="nav-btn" onclick="showSection('intro')">처음으로</a>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// Navigation
+const sections = ['intro','m1','m2','m3','m4','m5','ref'];
+let visited = new Set();
+
+function showSection(id) {
+  visited.add(id);
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('[data-section="'+id+'"]').classList.add('active');
+  updateProgress();
+  window.scrollTo(0,0);
+  // Close mobile sidebar
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+function updateProgress() {
+  const pct = Math.round(visited.size / sections.length * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = '진행률 ' + visited.size + '/' + sections.length;
+}
+
+// Sidebar toggle (mobile)
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Accordion
+function toggleAccordion(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+// Tabs
+function switchTab(btn, panelId) {
+  const tabs = btn.parentElement;
+  tabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const container = tabs.parentElement;
+  container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+// Copy code
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '복사됨!';
+    setTimeout(() => btn.textContent = '복사', 1500);
+  });
+}
+
+// Quiz
+function checkQuiz(option, correct, fbId) {
+  const quiz = option.closest('.quiz');
+  if (quiz.dataset.answered) return;
+  quiz.dataset.answered = 'true';
+
+  const fb = document.getElementById(fbId);
+  if (correct) {
+    option.classList.add('correct');
+    fb.textContent = '정답입니다! 분류 작업에서는 temperature=0으로 설정해 일관된 결과를 얻는 것이 중요합니다.';
+    fb.style.background = '#f0fdf4';
+    fb.style.color = '#166534';
+  } else {
+    option.classList.add('wrong');
+    quiz.querySelectorAll('.quiz-option').forEach(o => {
+      if (!o.classList.contains('wrong')) {
+        // find correct one (first option)
+      }
+    });
+    quiz.querySelector('.quiz-option:first-child').classList.add('correct');
+    fb.textContent = '아쉽습니다. 분류 작업에서는 temperature=0이 최선입니다. 0.7이나 2.0은 매번 다른 결과가 나올 수 있어 체계적 분석에 적합하지 않습니다.';
+    fb.style.background = '#fef2f2';
+    fb.style.color = '#991b1b';
+  }
+  fb.style.display = 'block';
+}
+
+// Init
+updateProgress();
+</script>
+</body>
+</html>
