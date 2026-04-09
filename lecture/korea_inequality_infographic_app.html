@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>한국 사회 불평등 인포그래픽</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --text: #18202a;
+      --muted: #667085;
+      --line: #e6eaf2;
+      --blue: #2563eb;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --violet: #7c3aed;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius: 22px;
+      --max: 1280px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #f6f7fb 100%);
+      color: var(--text);
+    }
+
+    .container {
+      width: min(var(--max), calc(100vw - 32px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 56px 0 24px;
+    }
+
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(37,99,235,.15), transparent 28%),
+        radial-gradient(circle at 85% 15%, rgba(124,58,237,.14), transparent 26%),
+        linear-gradient(135deg, #ffffff, #f3f7ff);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: var(--shadow);
+      border-radius: 30px;
+      padding: 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(37,99,235,.08);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+
+    h1 {
+      font-size: clamp(34px, 5vw, 64px);
+      line-height: 1.02;
+      margin: 16px 0 14px;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 880px;
+      color: var(--muted);
+      font-size: clamp(15px, 2vw, 19px);
+      line-height: 1.7;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .summary-box,
+    .floating-panel,
+    .card,
+    .narrative,
+    .footer-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+    }
+
+    .summary-box {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .metric {
+      padding: 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fbfdff, #f6f8fc);
+      border: 1px solid #eef2f7;
+    }
+
+    .metric .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .metric .value {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 6px;
+    }
+
+    .metric .desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .floating-panel {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .floating-panel h3,
+    .section-head h2,
+    .card h3,
+    .narrative h3,
+    .footer-box h3 {
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: #f3f6fb;
+      border: 1px solid #e8edf5;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .pill:hover,
+    .pill.active {
+      background: #1d4ed8;
+      color: #fff;
+      border-color: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    .legend {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 10px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    section {
+      padding: 18px 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 18px 0;
+    }
+
+    .section-head p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      grid-column: span 4;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+    }
+
+    .card.hidden {
+      display: none;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #1e40af;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .card p {
+      color: var(--muted);
+      line-height: 1.65;
+      margin: 12px 0 0;
+      font-size: 14px;
+    }
+
+    .key-number {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      margin-top: 16px;
+      margin-bottom: 10px;
+    }
+
+    .key-number strong {
+      font-size: clamp(36px, 4vw, 54px);
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .key-number span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding-bottom: 7px;
+    }
+
+    .bar-group {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .bar-item {
+      display: grid;
+      grid-template-columns: 80px 1fr 58px;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #334155;
+    }
+
+    .bar-track {
+      height: 12px;
+      background: #edf2f8;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0;
+      border-radius: 999px;
+      transition: width 1.2s cubic-bezier(.2,.8,.2,1);
+      background: linear-gradient(90deg, #60a5fa, #2563eb);
+    }
+
+    .bar.green { background: linear-gradient(90deg, #34d399, #10b981); }
+    .bar.orange { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+    .bar.red { background: linear-gradient(90deg, #fb7185, #ef4444); }
+    .bar.violet { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+    .bar.cyan { background: linear-gradient(90deg, #67e8f9, #06b6d4); }
+
+    .mini-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px dashed #dbe4f0;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .span-6 { grid-column: span 6; }
+    .span-8 { grid-column: span 8; }
+    .span-12 { grid-column: span 12; }
+
+    .narrative {
+      padding: 26px;
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .flow-step {
+      background: #f8fafc;
+      border: 1px solid #e5ebf4;
+      border-radius: 16px;
+      padding: 14px 16px;
+      min-width: 160px;
+      flex: 1 1 160px;
+    }
+
+    .flow-step strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .flow-arrow {
+      align-self: center;
+      font-weight: 900;
+      color: var(--blue);
+      padding: 0 2px;
+    }
+
+    .quote-box {
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(180deg, #f7faff, #eef4ff);
+      border: 1px solid #dce7ff;
+    }
+
+    .quote-box .big {
+      font-size: clamp(22px, 3vw, 34px);
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin-bottom: 10px;
+    }
+
+    .quote-box p {
+      margin: 0;
+      color: #475569;
+      line-height: 1.7;
+    }
+
+    .footer {
+      padding: 18px 0 50px;
+    }
+
+    .footer-box {
+      padding: 24px;
+    }
+
+    .footer-box p,
+    .footer-box li {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .source-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(14px);
+      background: rgba(246,247,251,.7);
+      border-bottom: 1px solid rgba(230,234,242,.8);
+    }
+
+    .topbar .container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+
+    .brand-badge {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(37,99,235,.25);
+    }
+
+    .topnav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topnav a {
+      text-decoration: none;
+      color: #334155;
+      background: #fff;
+      border: 1px solid #e5eaf3;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1100px) {
+      .hero-grid,
+      .narrative,
+      .footer-grid { grid-template-columns: 1fr; }
+      .summary-box { grid-template-columns: repeat(2, 1fr); }
+      .card { grid-column: span 6; }
+    }
+
+    @media (max-width: 760px) {
+      .container { width: min(var(--max), calc(100vw - 20px)); }
+      .hero-card { padding: 22px; }
+      .summary-box { grid-template-columns: 1fr; }
+      .card, .span-6, .span-8, .span-12 { grid-column: span 12; }
+      .bar-item { grid-template-columns: 68px 1fr 48px; }
+      .topbar .container { align-items: flex-start; flex-direction: column; }
+      .topnav { overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 4px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <div class="brand">
+        <div class="brand-badge">격차</div>
+        <div>한국 사회 불평등 인포그래픽</div>
+      </div>
+      <nav class="topnav">
+        <a href="#overview">개요</a>
+        <a href="#issues">쟁점</a>
+        <a href="#structure">구조</a>
+        <a href="#sources">출처</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="overview">
+      <div class="container">
+        <div class="hero-card">
+          <div class="eyebrow">한 페이지로 보는 불평등 구조</div>
+          <h1>출발선의 격차가<br>교육·건강·취업으로 이어진다</h1>
+          <p>
+            이 페이지는 한국 사회의 불평등을 <strong>소득</strong>, <strong>교육 자원</strong>, <strong>부모 배경</strong>,
+            <strong>지역 격차</strong>, <strong>학력/대학</strong>, <strong>노동시장</strong>, <strong>젠더</strong>라는 축으로 재구성한
+            인포그래픽 웹앱입니다. 숫자를 빠르게 훑고, 필터로 쟁점을 골라 보며,
+            각 지표가 어떤 구조를 통해 연결되는지 한눈에 이해하도록 설계했습니다.
+          </p>
+
+          <div class="hero-grid">
+            <div class="summary-box">
+              <div class="metric">
+                <div class="label">상위권 대학 진학률 격차</div>
+                <div class="value">5.4배</div>
+                <div class="desc">소득 1분위 대비 5분위의 상위권 대학 진학률 차이</div>
+              </div>
+              <div class="metric">
+                <div class="label">건강수명 격차</div>
+                <div class="value">11.3년</div>
+                <div class="desc">소득 상위 20%와 하위 20% 사이의 차이</div>
+              </div>
+              <div class="metric">
+                <div class="label">수도권-비수도권 청년 고용률 격차</div>
+                <div class="value">8.3%p</div>
+                <div class="desc">2015년 5.1%p에서 2024년 8.3%p로 확대</div>
+              </div>
+              <div class="metric">
+                <div class="label">한국의 성별 임금 격차</div>
+                <div class="value">31%</div>
+                <div class="desc">OECD 비교에서 매우 큰 수준으로 제시된 격차</div>
+              </div>
+            </div>
+
+            <aside class="floating-panel">
+              <h3>필터로 쟁점 보기</h3>
+              <div class="pill-row" id="filters">
+                <button class="pill active" data-filter="all">전체</button>
+                <button class="pill" data-filter="income">소득</button>
+                <button class="pill" data-filter="education">교육</button>
+                <button class="pill" data-filter="family">부모 배경</button>
+                <button class="pill" data-filter="region">지역</button>
+                <button class="pill" data-filter="degree">학력/대학</button>
+                <button class="pill" data-filter="labor">노동시장</button>
+                <button class="pill" data-filter="gender">젠더</button>
+              </div>
+              <div class="legend">
+                <div class="legend-item"><span class="dot" style="background:#2563eb"></span><span>수치 중심 카드</span><strong>비교형</strong></div>
+                <div class="legend-item"><span class="dot" style="background:#10b981"></span><span>원인·경로 카드</span><strong>구조형</strong></div>
+                <div class="legend-item"><span class="dot" style="background:#f59e0b"></span><span>정책 시사점 카드</span><strong>해석형</strong></div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="issues">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>핵심 쟁점 인포그래픽</h2>
+            <p>각 카드는 발표 자료의 핵심 수치와 해석을 압축한 것입니다. 막대 길이는 같은 카드 안에서 상대 비교를 돕기 위한 시각화입니다.</p>
+          </div>
+        </div>
+
+        <div class="grid" id="cardGrid">
+          <article class="card" data-cat="income education">
+            <div class="tag">소득 × 교육</div>
+            <h3>부모 소득이 높을수록 상위권 대학 진학률이 높다</h3>
+            <div class="key-number"><strong>5.4배</strong><span>1분위 대비 5분위</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>1분위</span><div class="bar-track"><div class="bar" data-width="19"></div></div><strong>기준</strong></div>
+              <div class="bar-item"><span>3분위</span><div class="bar-track"><div class="bar" data-width="54"></div></div><strong>중간</strong></div>
+              <div class="bar-item"><span>5분위</span><div class="bar-track"><div class="bar" data-width="100"></div></div><strong>5.4배</strong></div>
+            </div>
+            <p>부모 소득은 대학 진학 여부뿐 아니라 어느 수준의 대학에 진학하는지까지 연결된다. 교육 격차가 노동시장 진입 격차로 번지는 전형적인 경로다.</p>
+          </article>
+
+          <article class="card" data-cat="income">
+            <div class="tag">소득 × 건강</div>
+            <h3>돈의 차이는 오래 사는 시간보다 건강하게 사는 시간을 더 크게 가른다</h3>
+            <div class="key-number"><strong>11.3년</strong><span>건강수명 격차</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>기대수명</span><div class="bar-track"><div class="bar green" data-width="58"></div></div><strong>6.5년</strong></div>
+              <div class="bar-item"><span>건강수명</span><div class="bar-track"><div class="bar green" data-width="100"></div></div><strong>11.3년</strong></div>
+            </div>
+            <p>소득 상위 20%는 하위 20%보다 더 오래 살 뿐 아니라, 훨씬 더 오랜 기간 질병 없이 생활한다. 불평등은 건강의 질을 통해 체감된다.</p>
+          </article>
+
+          <article class="card" data-cat="income family">
+            <div class="tag">소득 × 세대 이동</div>
+            <h3>부모의 소득은 자녀의 소득에도 이어진다</h3>
+            <div class="key-number"><strong>+18%</strong><span>1분위 대비 5분위 자녀 임금</span></div>
+            <div class="mini-note">자료는 부모의 고소득이 교육투자, 정보 접근, 상속·증여, 기회비용의 안전망을 통해 자녀의 임금 프리미엄으로 이어질 수 있음을 지적한다.</div>
+            <p>핵심은 ‘노력보다 출발선’이다. 부모의 소득은 교육 경로를 경유해 자녀 세대의 직업과 임금에 구조적으로 개입한다.</p>
+          </article>
+
+          <article class="card" data-cat="education income">
+            <div class="tag">교육 자원</div>
+            <h3>코로나19 원격수업은 소득별 학습 격차를 키웠다</h3>
+            <div class="key-number"><strong>격차 확대</strong><span>사교육·디지털 환경 차이</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>고소득</span><div class="bar-track"><div class="bar orange" data-width="88"></div></div><strong>보완 가능</strong></div>
+              <div class="bar-item"><span>저소득</span><div class="bar-track"><div class="bar orange" data-width="39"></div></div><strong>공백 확대</strong></div>
+            </div>
+            <p>같은 원격수업이라도 조용한 학습 공간, 디지털 리터러시, 부모의 보조 여부가 달랐다. 학교가 사라지자 가정환경 격차가 바로 드러났다.</p>
+          </article>
+
+          <article class="card" data-cat="education income">
+            <div class="tag">사교육</div>
+            <h3>사교육 참여와 대학 진학률 사이에는 뚜렷한 상관관계가 있다</h3>
+            <div class="key-number"><strong>약 20%p</strong><span>참여·미참여 집단 차이</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>미참여</span><div class="bar-track"><div class="bar cyan" data-width="60"></div></div><strong>50~60%</strong></div>
+              <div class="bar-item"><span>참여</span><div class="bar-track"><div class="bar cyan" data-width="82"></div></div><strong>70~80%</strong></div>
+            </div>
+            <p>다만 이는 단순 인과라기보다 가구 소득, 부모 학력, 기존 성취도 등과 얽혀 있다. 사교육은 격차의 결과이면서 동시에 격차를 재생산한다.</p>
+          </article>
+
+          <article class="card" data-cat="education family">
+            <div class="tag">주거 × 교육</div>
+            <h3>자가·전세·월세 차이는 성적과 직접 연결되기보다 주거 안정성과 교육 투자 여력의 차이다</h3>
+            <div class="key-number"><strong>8.5배</strong><span>소득 상·하위 20% 교육비 구성비 차이</span></div>
+            <p>자가는 잦은 이사를 줄이고 장기적인 교육 계획을 세우기 쉽다. 반대로 월세는 주거비 부담이 커 사교육과 학습 환경 투자에 제약을 만든다.</p>
+          </article>
+
+          <article class="card" data-cat="education income">
+            <div class="tag">특목고 진학</div>
+            <h3>특목고 진학 준비는 이미 중학교 단계의 경제력 경쟁이다</h3>
+            <div class="key-number"><strong>79만원</strong><span>월소득 800만원 이상 중학생 1인당 사교육비</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>저소득</span><div class="bar-track"><div class="bar violet" data-width="46"></div></div><strong>36만원대</strong></div>
+              <div class="bar-item"><span>고소득</span><div class="bar-track"><div class="bar violet" data-width="100"></div></div><strong>79만원</strong></div>
+            </div>
+            <p>심화 커리큘럼, 면접 대비, 입시 컨설팅 같은 ‘진학 패키지’는 경제적 진입장벽으로 작동한다. 특목고 경쟁은 공교육 내부 경쟁만이 아니다.</p>
+          </article>
+
+          <article class="card" data-cat="family education">
+            <div class="tag">부모 배경</div>
+            <h3>부모의 학력은 자녀의 학업성취에 직접·간접으로 작용한다</h3>
+            <div class="key-number"><strong>0.16</strong><span>직접 효과 경로계수</span></div>
+            <div class="mini-note">낮은 부모 학력 → 빈곤 가능성 증가 → 부모-자녀 관계, 자아존중감, 비행 위험, 학업성취에 연쇄적 영향</div>
+            <p>유전보다 중요한 것은 환경의 연쇄 반응이다. 언어 자극, 문화 자본, 기대 수준, 경제적 안정이 학업 격차의 토대를 만든다.</p>
+          </article>
+
+          <article class="card" data-cat="family labor">
+            <div class="tag">부모 배경 × 직업</div>
+            <h3>부모의 직업은 자녀의 직업포부와 직업 성취를 형성한다</h3>
+            <div class="key-number"><strong>계층 고착화</strong><span>심화되는 경향</span></div>
+            <p>높은 사회경제적 지위는 높은 교육 기대와 학업 성취, 그리고 상급 직업 진입의 토대로 이어진다. 교육은 이동 사다리이면서 동시에 선별 장치가 된다.</p>
+          </article>
+
+          <article class="card" data-cat="family education">
+            <div class="tag">자산 × 교육</div>
+            <h3>부모 자산은 초기 교육부터 대학 졸업까지 누적 격차를 만든다</h3>
+            <div class="key-number"><strong>3배</strong><span>고등교육 부모의 자녀 대학 졸업 확률</span></div>
+            <p>저소득 가정은 유아교육 참여율이 낮고 학습활동 노출도 적다. 격차는 대학 입시 직전에 생기는 것이 아니라 아주 이른 시기부터 누적된다.</p>
+          </article>
+
+          <article class="card" data-cat="family labor">
+            <div class="tag">사회적 네트워크</div>
+            <h3>인맥은 채용 과정의 정보·추천·비공개 기회에 영향을 준다</h3>
+            <div class="key-number"><strong>57%</strong><span>주변 취업 지원 사례를 봤다는 응답</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>취업특례 체감</span><div class="bar-track"><div class="bar red" data-width="57"></div></div><strong>57%</strong></div>
+              <div class="bar-item"><span>부모 인맥 영향</span><div class="bar-track"><div class="bar red" data-width="53"></div></div><strong>52.7%</strong></div>
+              <div class="bar-item"><span>비공개채용 동료</span><div class="bar-track"><div class="bar red" data-width="67"></div></div><strong>67%</strong></div>
+            </div>
+            <p>인맥은 스펙 바깥의 정보 접근성을 만든다. 기업 문화, 면접 포인트, 내부 채용 기회 같은 비공식 정보가 경쟁의 비대칭을 키운다.</p>
+          </article>
+
+          <article class="card" data-cat="family education">
+            <div class="tag">문화 자본</div>
+            <h3>부모의 문화 자본은 학업 성취도와 비인지 역량까지 만든다</h3>
+            <div class="key-number"><strong>+4.81점</strong><span>전문대졸 이하 대비 대졸 이상 집단</span></div>
+            <p>높은 학력의 부모는 자녀에게 더 많은 독서, 여행, 문화 경험과 언어적 리터러시를 제공한다. 학교는 이미 축적된 자본 위에서 작동한다.</p>
+          </article>
+
+          <article class="card" data-cat="region education">
+            <div class="tag">지역 격차</div>
+            <h3>수도권이 항상 대학 진학률이 높은 것은 아니다</h3>
+            <div class="key-number"><strong>46.2%</strong><span>서울 일반고 4년제 진학률</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>서울</span><div class="bar-track"><div class="bar" data-width="58"></div></div><strong>46.2%</strong></div>
+              <div class="bar-item"><span>전국 평균</span><div class="bar-track"><div class="bar" data-width="79"></div></div><strong>63.5%</strong></div>
+              <div class="bar-item"><span>경북</span><div class="bar-track"><div class="bar" data-width="100"></div></div><strong>80.2%</strong></div>
+            </div>
+            <p>이는 수도권 우위가 사라졌다는 뜻이 아니라, 서울권 주요 대학 초집중 구조 때문에 서울 학생들이 지방 대학 진학을 덜 선택하는 현상으로 해석된다.</p>
+          </article>
+
+          <article class="card" data-cat="region labor">
+            <div class="tag">지역 × 취업</div>
+            <h3>청년 고용은 여전히 수도권이 유리하고, 격차는 더 커졌다</h3>
+            <div class="key-number"><strong>8.3%p</strong><span>2024년 수도권-비수도권 고용률 격차</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>2015</span><div class="bar-track"><div class="bar green" data-width="61"></div></div><strong>5.1%p</strong></div>
+              <div class="bar-item"><span>2024</span><div class="bar-track"><div class="bar green" data-width="100"></div></div><strong>8.3%p</strong></div>
+            </div>
+            <p>지식기반 산업과 고임금 일자리가 수도권에 집중되면서, 지방의 문제는 단순한 일자리 수보다 ‘양질의 일자리와 생활 인프라의 묶음’ 문제로 바뀌고 있다.</p>
+          </article>
+
+          <article class="card" data-cat="region education">
+            <div class="tag">지역 × 사교육</div>
+            <h3>지역에 따른 사교육 접근성 차이는 학습 기회 차이로 이어진다</h3>
+            <div class="key-number"><strong>49.9만원</strong><span>학생 1인당 월평균 사교육비</span></div>
+            <p>사교육이 사실상 표준 경로가 된 상황에서, 지역별 학원 밀도와 강사 질, 이동 비용 차이는 단순한 생활환경의 차이가 아니라 교육 기회의 차이다.</p>
+          </article>
+
+          <article class="card" data-cat="region education">
+            <div class="tag">정시 × 지역</div>
+            <h3>지방 학생은 수능·정시에서 구조적으로 불리할 수 있다</h3>
+            <div class="key-number"><strong>67.3만원</strong><span>서울 고교생 월평균 사교육비</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>서울</span><div class="bar-track"><div class="bar orange" data-width="100"></div></div><strong>67.3만</strong></div>
+              <div class="bar-item"><span>전북</span><div class="bar-track"><div class="bar orange" data-width="45"></div></div><strong>30만</strong></div>
+              <div class="bar-item"><span>전남</span><div class="bar-track"><div class="bar orange" data-width="48"></div></div><strong>32만</strong></div>
+            </div>
+            <p>정시는 표면적으로 동일 시험이지만, 실제 준비 과정은 대형 학원, 강사, 재수 인프라, 경제력의 지역 편중을 강하게 반영한다.</p>
+          </article>
+
+          <article class="card" data-cat="region income">
+            <div class="tag">지역 × 평생소득</div>
+            <h3>어디에 사는가는 단지 주소가 아니라 경제적 상한선과 연결된다</h3>
+            <div class="key-number"><strong>761만원</strong><span>2024년 서울-최하위 지역 1인당 소득 격차</span></div>
+            <p>수도권에는 양질의 일자리와 네트워크, 자산 상승 기회가 함께 몰린다. 거주지는 기회의 총량을 결정하는 변수로 작동한다.</p>
+          </article>
+
+          <article class="card" data-cat="degree labor">
+            <div class="tag">학력/대학</div>
+            <h3>출신 대학은 취업 확률과 임금에 여전히 간접적 영향을 준다</h3>
+            <div class="key-number"><strong>613만원</strong><span>대기업 월평균 소득</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>중소기업</span><div class="bar-track"><div class="bar violet" data-width="50"></div></div><strong>307만</strong></div>
+              <div class="bar-item"><span>대기업</span><div class="bar-track"><div class="bar violet" data-width="100"></div></div><strong>613만</strong></div>
+            </div>
+            <p>채용에서 학벌의 직접 반영은 줄어드는 흐름도 있지만, 높은 대학이 대기업 진입 확률을 높여 임금 격차로 이어지는 경로는 여전히 남아 있다.</p>
+          </article>
+
+          <article class="card" data-cat="degree region education">
+            <div class="tag">수시/정시</div>
+            <h3>정시 확대는 수도권·교육특구·N수생에게 더 유리한 구조가 되기 쉽다</h3>
+            <div class="key-number"><strong>78.4%</strong><span>서울대 정시 합격자 중 수도권 출신 비중</span></div>
+            <p>수능은 ‘같은 시험’이지만, 준비 인프라와 재도전 비용이 지역·계층별로 다르다. 반면 수시는 비수도권 재학생의 방어 장치로도 작동한다.</p>
+          </article>
+
+          <article class="card" data-cat="degree income">
+            <div class="tag">성적 × 소득</div>
+            <h3>고등학교 성적은 장기 소득에 간접 영향을 준다</h3>
+            <div class="key-number"><strong>654.8만원</strong><span>대학원졸 월임금총액</span></div>
+            <div class="bar-group">
+              <div class="bar-item"><span>중졸 이하</span><div class="bar-track"><div class="bar cyan" data-width="31"></div></div><strong>202만</strong></div>
+              <div class="bar-item"><span>고졸</span><div class="bar-track"><div class="bar cyan" data-width="43"></div></div><strong>278.7만</strong></div>
+              <div class="bar-item"><span>대졸</span><div class="bar-track"><div class="bar cyan" data-width="70"></div></div><strong>459.1만</strong></div>
+              <div class="bar-item"><span>대학원졸</span><div class="bar-track"><div class="bar cyan" data-width="100"></div></div><strong>654.8만</strong></div>
+            </div>
+            <p>성적은 곧바로 소득이 되지 않지만, 상위 학력 경로 진입 가능성을 높여 장기 임금 격차에 간접적으로 개입한다.</p>
+          </article>
+
+          <article class="card" data-cat="degree labor family">
+            <div class="tag">명문대 네트워크</div>
+            <h3>동문 네트워크는 취업에서 ‘결정적’이라기보다 ‘무시하기 어려운’ 구조적 자산이다</h3>
+            <div class="key-number"><strong>3.6%p</strong><span>수도권·비수도권 취업률 차이</span></div>
+            <p>멘토링, 추천, 정보 전달, 기업과의 연결 채널은 모두 사회적 자본이다. 특히 장기 고용 중심 문화에서는 네트워크가 신뢰 비용을 낮춘다.</p>
+          </article>
+
+          <article class="card" data-cat="labor family">
+            <div class="tag">노동시장</div>
+            <h3>비정규직의 대물림보다 중요한 문제는 자본과 기회의 세습 구조다</h3>
+            <div class="key-number"><strong>77.8%</strong><span>비정규직 부모 자녀의 비정규직 입직 비율</span></div>
+            <p>자료는 부모의 고용 지위가 자녀 고용 형태와 연결될 수 있음을 보여주지만, 발표는 이를 더 넓게 ‘부와 권력의 세습’ 문제로 재해석해야 한다고 지적한다.</p>
+          </article>
+
+          <article class="card" data-cat="labor">
+            <div class="tag">첫 직장</div>
+            <h3>첫 직장은 더 이상 종착지가 아니라 경력의 출발점이다</h3>
+            <div class="key-number"><strong>62.2%</strong><span>3년 내 첫 직장을 떠난 비율</span></div>
+            <p>현재의 노동시장은 첫 직장 자체보다, 그곳에서 어떤 역량을 쌓아 다음 기회로 이동하는지가 더 중요해졌다는 점을 보여준다.</p>
+          </article>
+
+          <article class="card" data-cat="gender labor">
+            <div class="tag">젠더</div>
+            <h3>같은 조건에서도 여성의 임금은 낮지만, 더 큰 문제는 ‘같은 조건’을 유지하기 어려운 구조다</h3>
+            <div class="key-number"><strong>31%</strong><span>한국의 성별 임금 격차</span></div>
+            <div class="mini-note">동조건 비교에서는 격차가 줄어들지만, 출산·육아·직무 배치·승진 기회가 다른 조건 자체를 만든다.</div>
+            <p>임금 격차의 핵심은 월급봉투의 숫자만이 아니다. 경력 35세 전후부터 벌어지는 승진·보직·돌봄 부담의 차이가 장기 격차를 키운다.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="structure">
+      <div class="container">
+        <div class="narrative">
+          <div>
+            <h3>불평등은 어떻게 재생산되는가</h3>
+            <p class="small">발표 자료 전체를 관통하는 공통 구조를 하나의 흐름도로 정리했습니다.</p>
+            <div class="flow">
+              <div class="flow-step"><strong>1. 출발선</strong>부모의 소득, 자산, 학력, 직업, 인맥, 거주지가 다르다.</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step"><strong>2. 자원 격차</strong>사교육, 주거 안정, 건강관리, 문화 경험, 입시 정보 접근이 달라진다.</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step"><strong>3. 성취 격차</strong>학교 성적, 대학 진학, 특목고·정시 경쟁력, 자기효능감이 갈린다.</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step"><strong>4. 기회 격차</strong>취업, 임금, 지역 이동, 네트워크, 경력 지속 가능성에서 차이가 난다.</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step"><strong>5. 재생산</strong>다음 세대의 교육·건강·소득 격차로 다시 이어진다.</div>
+            </div>
+          </div>
+          <div class="quote-box">
+            <div class="big">핵심 메시지</div>
+            <p>
+              한국 사회의 불평등은 개별 영역의 문제가 아니라 <strong>연결된 구조</strong>다.
+              소득 격차는 교육 격차를 만들고, 교육 격차는 취업과 임금 격차를 만들며,
+              지역과 젠더, 부모 배경은 그 과정 전체의 비용과 확률을 바꾼다.
+              따라서 해법도 단일 정책이 아니라 <strong>교육·주거·보건·노동·지역 정책의 결합</strong>이어야 한다.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="footer" id="sources">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-box">
+            <h3>이 웹앱을 읽는 방법</h3>
+            <ul class="source-list">
+              <li>상단 필터로 관심 주제만 골라 볼 수 있습니다.</li>
+              <li>각 수치는 발표 슬라이드의 핵심 비교값을 중심으로 재배치했습니다.</li>
+              <li>막대 그래프는 카드 내부 비교를 위한 시각 장치이며, 서로 다른 카드끼리 절대값 비교용은 아닙니다.</li>
+              <li>발표용으로는 이 HTML을 그대로 열어 스크롤 프레젠테이션처럼 사용할 수 있습니다.</li>
+            </ul>
+          </div>
+          <div class="footer-box">
+            <h3>원자료 범주</h3>
+            <ul class="source-list">
+              <li>소득/계층: 대학 진학, 건강수명, 세대 간 소득 이전</li>
+              <li>교육 자원: 사교육, 원격수업, 특목고, 주거 안정</li>
+              <li>부모 배경: 학력, 자산, 직업, 문화 자본, 인맥</li>
+              <li>지역 격차: 대학 진학, 고용, 사교육 인프라, 평생소득</li>
+              <li>학력/대학·노동시장·젠더: 학벌, 취업, 첫 직장, 성별 임금 격차</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const pills = document.querySelectorAll('.pill');
+    const cards = document.querySelectorAll('.card');
+
+    pills.forEach((pill) => {
+      pill.addEventListener('click', () => {
+        pills.forEach((p) => p.classList.remove('active'));
+        pill.classList.add('active');
+        const filter = pill.dataset.filter;
+
+        cards.forEach((card) => {
+          const cats = card.dataset.cat.split(' ');
+          const match = filter === 'all' || cats.includes(filter);
+          card.classList.toggle('hidden', !match);
+        });
+      });
+    });
+
+    const bars = document.querySelectorAll('.bar');
+    const animateBars = () => {
+      bars.forEach((bar) => {
+        const width = bar.dataset.width || 0;
+        bar.style.width = width + '%';
+      });
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          animateBars();
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.2 });
+
+    observer.observe(document.querySelector('#issues'));
+  </script>
+</body>
+</html>
