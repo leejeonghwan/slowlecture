@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>격차와 한계 과제 시각화</title>
+  <title>격차와 한계 과제 시각화.</title>
   <style>
     :root {
       --bg: #f8fafc;
@@ -109,11 +109,11 @@
   <div class="wrap">
     <section class="hero">
       <div class="badges">
-        <span class="badge">한계와 격차 스프린트</span>
-        <span class="badge">대안 저널리즘 특강 실습</span>
-        <span class="badge">HTML 단일 파일</span>
+        <span class="badge">한계와 격차 스프린트.</span>
+        <span class="badge">대안 저널리즘 특강 실습.</span>
+        <span class="badge">HTML 단일 파일.</span>
       </div>
-      <h1>격차와 한계 과제 시각화 대시보드</h1>
+      <h1>격차와 한계 과제 시각화 대시보드.</h1>
       <p class="sub">
         성공회대 미디어콘텐츠융합학부 이정환 교수의 대안 저널리즘 특강 프로젝트 페이지입니다.
         소득과 교육, 지역, 학력, 노동시장, 건강 영역의 핵심 질문과 데이터를 한 화면에서 탐색할 수 있도록 재구성한 웹 앱입니다.
@@ -125,7 +125,7 @@
     <section class="top-grid">
       <article class="card">
         <div class="panel-body">
-          <h2 class="section-title">주제 분포</h2>
+          <h2 class="section-title">주제 분포.</h2>
           <p class="section-desc">과제가 어떤 축에 많이 집중됐는지 빠르게 확인할 수 있습니다.</p>
           <div class="overview-bars" id="overview"></div>
         </div>
@@ -133,7 +133,7 @@
       <article class="card">
         <div class="panel-body toolbar">
           <div>
-            <h2 class="section-title">프로젝트 탐색</h2>
+            <h2 class="section-title">프로젝트 탐색.</h2>
             <p class="section-desc">카테고리 필터와 검색으로 원하는 발표만 남길 수 있습니다.</p>
           </div>
           <div class="chips" id="chips"></div>
@@ -152,7 +152,7 @@
     <section class="main-grid">
       <article class="card">
         <div class="list-wrap">
-          <h2 class="section-title">발표 목록</h2>
+          <h2 class="section-title">발표 목록.</h2>
           <p class="section-desc">카드를 클릭하면 오른쪽 상세 차트가 바뀝니다.</p>
           <div class="list" id="topicList"></div>
         </div>
@@ -165,15 +165,15 @@
 
         <section class="ideas" id="ideas">
           <article class="card idea">
-            <h4>원자료 연결</h4>
+            <h4>원자료 연결.</h4>
             <p class="section-desc">CSV나 스프레드시트 원본을 붙여 정확한 시계열, 범례, 다운로드 기능까지 확장할 수 있습니다.</p>
           </article>
           <article class="card idea">
-            <h4>스토리 모드</h4>
+            <h4>스토리 모드.</h4>
             <p class="section-desc">질문 → 근거 → 해석 → 정책 시사점 순으로 카드 넘김형 기사 인터랙션을 만들 수 있습니다.</p>
           </article>
           <article class="card idea">
-            <h4>비교 모드</h4>
+            <h4>비교 모드.</h4>
             <p class="section-desc">예를 들어 소득과 지역, 부모 배경과 취업을 동시에 나란히 비교하는 화면으로 키울 수 있습니다.</p>
           </article>
         </section>
@@ -182,7 +182,7 @@
   </div>
 
   <script>
-    const topics = [{"id": 1, "category": "income", "categoryLabel": "소득 / 계층", "title": "부모 소득과 자녀 대학 진학", "author": "김은파", "claim": "소득 5분위의 상위권 대학 진학률은 1분위 대비 약 5.4배", "insight": "가계 소득이 높을수록 일반대·상위권 대학 진학 확률이 함께 상승한다.", "metricLabel": "상대 비교", "values": [{"label": "1분위", "value": 8}, {"label": "2분위", "value": 12}, {"label": "3분위", "value": 28}, {"label": "4분위", "value": 49}, {"label": "5분위", "value": 43}], "evidence": ["부모 소득 분위가 높을수록 4년제 일반대·상위권 대학 진학률 증가", "교육격차가 노동시장 진입 격차로 이어질 가능성 제시"]}, {"id": 2, "category": "health", "categoryLabel": "건강", "title": "소득 격차와 기대수명", "author": "고은수", "claim": "고소득층과 저소득층의 건강수명 격차는 11.3년", "insight": "단순 수명보다 건강하게 사는 기간에서 격차가 더 크게 벌어진다.", "metricLabel": "연수", "values": [{"label": "기대수명(고)", "value": 85.1}, {"label": "기대수명(저)", "value": 78.6}, {"label": "건강수명(고)", "value": 72.2}, {"label": "건강수명(저)", "value": 60.9}], "evidence": ["기대수명 격차 6.5년", "저소득층의 만성질환 노출 가능성이 높음"]}, {"id": 4, "category": "education", "categoryLabel": "교육 자원", "title": "코로나19 이후 원격수업과 소득별 학습 격차", "author": "허유빈", "claim": "원격수업은 디지털 리터러시·공간 격차를 통해 학력 양극화를 키웠다", "insight": "학교라는 동일 공간이 사라지자 가정 배경 차이가 더 직접적으로 드러났다.", "metricLabel": "월평균 사교육비", "values": [{"label": "800만+ (이전)", "value": 53.9}, {"label": "800만+ (이후)", "value": 59.3}, {"label": "200만- (이전)", "value": 10.4}, {"label": "200만- (이후)", "value": 11.6}], "evidence": ["교사 79%가 학생 간 학습 격차 확대를 체감", "저소득층은 사교육·공간·디지털 접근에서 모두 불리"]}, {"id": 5, "category": "health", "categoryLabel": "건강", "title": "저소득층과 건강 불이익", "author": "권영선", "claim": "저소득 가구의 만성질환 가구원 비율은 일반 가구보다 약 1.9배", "insight": "소득은 의료, 환경, 정신건강을 동시에 매개한다.", "metricLabel": "만성질환 가구원 비율(%)", "values": [{"label": "저소득 가구", "value": 70.77}, {"label": "일반 가구", "value": 36.82}], "evidence": ["우울증상 유병률도 저소득 지역에서 더 높게 나타남", "근린환경 개선이 건강 결과에 영향"]}, {"id": 6, "category": "education", "categoryLabel": "교육 자원", "title": "사교육과 대학 진학률", "author": "양예준", "claim": "사교육 참여 학생의 대학 진학률이 미참여 학생보다 높게 나타남", "insight": "상관관계는 분명하지만 소득·부모학력·기존 성취도 통제가 필요하다.", "metricLabel": "대학 진학률 추정(%)", "values": [{"label": "사교육 참여", "value": 75}, {"label": "사교육 미참여", "value": 55}], "evidence": ["가구 소득이 높을수록 사교육 참여율 상승", "인과로 단정하기 어렵다는 유보 포함"]}, {"id": 8, "category": "education", "categoryLabel": "교육 자원", "title": "특목고 진학과 부모 경제력", "author": "윤서영", "claim": "특목고 준비 사교육비는 일반고 준비보다 약 20만 원 높음", "insight": "특목고 입시는 사교육 시장의 경제적 진입장벽과 강하게 결합돼 있다.", "metricLabel": "월평균 사교육비(만원)", "values": [{"label": "특목고 준비", "value": 65.0}, {"label": "일반고 준비", "value": 43.7}], "evidence": ["고소득 가구 중학생 사교육 참여율 86.6%", "저소득 가구 대비 교육 투자 격차가 큼"]}, {"id": 9, "category": "family", "categoryLabel": "부모 배경", "title": "부모 학력과 자녀 학력", "author": "오유신", "claim": "부모 학력은 직접·간접 경로 모두로 자녀 학업 성취에 영향", "insight": "언어 자극, 부모-자녀 관계, 자아존중감, 빈곤 경로가 함께 작동한다.", "metricLabel": "경로 영향", "values": [{"label": "직접 효과", "value": 64}, {"label": "경제 경로", "value": 82}, {"label": "관계 경로", "value": 73}, {"label": "문화 자본", "value": 78}, {"label": "비행 억제", "value": 55}], "evidence": ["부모 학력과 빈곤 사이 강한 상관", "학교 이전 가정 환경의 누적 효과 강조"]}, {"id": 10, "category": "family", "categoryLabel": "부모 배경", "title": "부모 직업과 자녀 직업", "author": "유승환", "claim": "부모 직업은 교육 기대·학업 성취를 거쳐 자녀 직업 성취에 영향", "insight": "직접 영향보다 교육 기대와 자원 집중을 통해 굴절된 영향이 크다.", "metricLabel": "영향 경로", "values": [{"label": "교육 기대", "value": 78}, {"label": "학업 성취", "value": 82}, {"label": "직업 포부", "value": 75}, {"label": "자원 집중", "value": 80}, {"label": "직접 효과", "value": 49}], "evidence": ["부모 소득 10% 증가 시 자녀 소득 3~4% 증가 연구 인용", "부부 학력 동질화가 계층 고착을 강화"]}, {"id": 12, "category": "family", "categoryLabel": "부모 배경", "title": "부모 인맥과 취업 기회", "author": "박세연", "claim": "구직자의 57%가 주변의 부모 인맥 취업 지원 사례를 봤다고 응답", "insight": "정보 접근과 비공개 채용 루트가 기회 격차를 확대할 수 있다.", "metricLabel": "응답률(%)", "values": [{"label": "주변 사례 목격", "value": 57}, {"label": "수시채용 동료 목격", "value": 67}, {"label": "인맥 영향 인식", "value": 52.7}], "evidence": ["부모 네트워크가 면접 정보·기업 문화 접근에 영향", "상류층 학교 네트워크의 장기 효과 제시"]}, {"id": 14, "category": "region", "categoryLabel": "지역 격차", "title": "수도권과 지방의 대학 진학률", "author": "채형원", "claim": "서울 일반고 4년제 진학률 46.2%, 경북 80.2%", "insight": "수도권 중심주의는 오히려 서울 학생의 비수도권 진학 유인을 약하게 만든다.", "metricLabel": "4년제 대학 진학률(%)", "values": [{"label": "서울", "value": 46.2}, {"label": "전국 평균", "value": 63.5}, {"label": "경북", "value": 80.2}], "evidence": ["서울 주요 대학 초집중", "지방대 진학에 대한 수도권 학생 지원 부족"]}, {"id": 15, "category": "region", "categoryLabel": "지역 격차", "title": "수도권 출신과 취업", "author": "배주현", "claim": "서울 청년 고용률 50.2%, 일부 비수도권은 37.1%", "insight": "지식기반 산업 집중이 수도권-지방 청년 고용격차를 키운다.", "metricLabel": "청년 고용률(%)", "values": [{"label": "서울", "value": 50.2}, {"label": "전국 평균", "value": 45.7}, {"label": "경남·전북권", "value": 37.1}], "evidence": ["2015년 5.1%p → 2024년 8.3%p로 격차 확대", "일자리·인프라·주거·대학 패키지 지원 필요"]}, {"id": 16, "category": "region", "categoryLabel": "지역 격차", "title": "지역별 사교육 접근성", "author": "홍유정", "claim": "사교육 참여율 75.7%, 1인당 월평균 49.9만 원 수준의 보편화", "insight": "보편화된 시장일수록 접근성 차이는 곧 학습 기회 차이가 된다.", "metricLabel": "지표", "values": [{"label": "사교육 참여율", "value": 75.7}, {"label": "월평균 사교육비", "value": 49.9}, {"label": "2025 총액(조원)", "value": 27.5}], "evidence": ["사교육이 필수적 교육 수단처럼 작동", "지역 격차가 연간 수백만 원 투자 차이로 이어질 수 있음"]}, {"id": 17, "category": "region", "categoryLabel": "지역 격차", "title": "지방 학생과 수능/정시 불리함", "author": "박한결", "claim": "서울 학생 1인당 월평균 사교육비 67.3만 원, 전북은 30만 원 수준", "insight": "정시는 훈련·정보·N수 인프라가 집중된 지역에 유리하게 작동할 수 있다.", "metricLabel": "월평균 사교육비(만원)", "values": [{"label": "서울", "value": 67.3}, {"label": "전남", "value": 32.0}, {"label": "전북", "value": 30.0}], "evidence": ["수도권에 학원 수와 강사 밀도 집중", "지방 학생은 이동비·추가비용 부담"]}, {"id": 18, "category": "region", "categoryLabel": "지역 격차", "title": "거주 지역과 평생 소득", "author": "김동건", "claim": "서울-최하위 지역 1인당 소득 격차는 2024년 761만 원", "insight": "거주지는 일자리·네트워크·자산 형성 기회의 총량에 영향을 준다.", "metricLabel": "격차(만원)", "values": [{"label": "2018", "value": 540}, {"label": "2024", "value": 761}], "evidence": ["수도권에 대기업 본사와 고임금 일자리 집중", "부동산 가치 상승도 장기 자산 격차 확대"]}, {"id": 19, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "출신 대학과 취업·임금", "author": "최민혁", "claim": "출신 대학 영향은 여전히 존재하지만 평가 방식은 이중적", "insight": "직접 채용 차별은 약화 논의가 있지만, 대기업 진입과 임금 경로에는 여전히 영향 가능성이 크다.", "metricLabel": "월평균 소득(만원)", "values": [{"label": "대기업 월평균", "value": 613}, {"label": "중소기업 월평균", "value": 307}, {"label": "격차", "value": 306}], "evidence": ["인사담당자 다수가 출신학교 정보를 참고한다고 응답", "대기업·중소기업 임금 격차가 매우 큼"]}, {"id": 20, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "지역별 수시·정시 합격 구조", "author": "하윤지", "claim": "서울대 정시 합격자 중 수도권 출신 78.4%, 수시는 55.8%", "insight": "정시 확대는 교육특구·N수생 중심 인프라와 결합해 지역 불평등을 키울 수 있다.", "metricLabel": "비율(%)", "values": [{"label": "수시 수도권", "value": 55.8}, {"label": "정시 수도권", "value": 78.4}, {"label": "N수생 비율", "value": 57.4}], "evidence": ["정시는 반복 훈련과 정보 인프라 영향이 큼", "비수도권은 수시·지역인재전형 방어 효과"]}, {"id": 21, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "고등학교 성적과 장기 소득", "author": "송시현", "claim": "학력이 높을수록 월임금과 시간당 임금이 모두 상승", "insight": "고교 성적은 고등교육 진학 가능성을 통해 장기 소득에 간접적 영향을 미친다.", "metricLabel": "월임금총액(만원)", "values": [{"label": "중졸 이하", "value": 202.0}, {"label": "고졸", "value": 278.7}, {"label": "대졸", "value": 459.1}, {"label": "대학원졸", "value": 654.8}], "evidence": ["시간당 임금도 학력 상승에 따라 증가", "성적 → 학력 → 임금의 간접 경로 제시"]}, {"id": 22, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "명문대 네트워크와 취업", "author": "변주현", "claim": "수도권 대학 취업률 우위가 장기적으로 유지", "insight": "동문 네트워크는 결정적 원인이라기보다 취업 접근성을 높이는 구조적 요소다.", "metricLabel": "취업률 / 격차", "values": [{"label": "수도권", "value": 71.3}, {"label": "비수도권", "value": 67.7}, {"label": "격차", "value": 3.6}], "evidence": ["멘토링·채용박람회·직접 교류 등 공식 네트워크 지원 사례", "약 3~4%p 격차 지속"]}, {"id": 23, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "비정규직 부모와 자녀의 비정규직 가능성", "author": "옥지민", "claim": "비정규직 부모 자녀의 비정규직 입직 비율이 더 높게 나타남", "insight": "직업 계층의 세습은 유효하지만, 오늘의 노동시장 언어로 재구성할 필요가 있다.", "metricLabel": "비율(%)", "values": [{"label": "정규직 부모 자녀 비정규직 입직", "value": 67.8}, {"label": "비정규직 부모 자녀 비정규직 입직", "value": 77.8}], "evidence": ["어머니 효과가 더 강하다는 추가 연구 인용", "플랫폼 노동·AI 전환 맥락에서 재해석 필요"]}, {"id": 24, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "첫 직장과 이후 경력", "author": "최다솔", "claim": "응답자의 62.2%가 첫 직장을 3년 내 퇴사", "insight": "첫 직장의 절대성은 약해졌지만 초기 경력의 학습 기회는 여전히 중요하다.", "metricLabel": "비율(%)", "values": [{"label": "3년 내 퇴사", "value": 62.2}, {"label": "10년 이상/현재까지", "value": 12.2}], "evidence": ["첫 직장이 종착지보다 경력 경유지로 인식", "이직을 통한 연봉 점프업 일반화"]}, {"id": 25, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "같은 조건에서도 여성 임금이 낮은가", "author": "최준혁", "claim": "한국의 성별 임금격차는 크고, 동일조건 비교에서도 일부 격차가 남음", "insight": "차별 자체뿐 아니라 조건을 동일하게 유지하기 어렵게 만드는 구조가 핵심이다.", "metricLabel": "임금 격차(%)", "values": [{"label": "전체 격차", "value": 31}, {"label": "동일조건 격차", "value": 10}], "evidence": ["35세 전후 마더후드 패널티 구간 확대", "직무 배치·승진·돌봄 구조의 영향"]}];
+    const topics = [{"id": 1, "category": "income", "categoryLabel": "소득 / 계층", "title": "부모 소득과 자녀 대학 진학.", "author": "김은파", "claim": "소득 5분위의 상위권 대학 진학률은 1분위 대비 약 5.4배.", "insight": "가계 소득이 높을수록 일반대·상위권 대학 진학 확률이 함께 상승한다.", "metricLabel": "상대 비교", "values": [{"label": "1분위", "value": 8}, {"label": "2분위", "value": 12}, {"label": "3분위", "value": 28}, {"label": "4분위", "value": 49}, {"label": "5분위", "value": 43}], "evidence": ["부모 소득 분위가 높을수록 4년제 일반대·상위권 대학 진학률 증가.", "교육격차가 노동시장 진입 격차로 이어질 가능성 제시."]}, {"id": 2, "category": "health", "categoryLabel": "건강", "title": "소득 격차와 기대수명.", "author": "고은수", "claim": "고소득층과 저소득층의 건강수명 격차는 11.3년.", "insight": "단순 수명보다 건강하게 사는 기간에서 격차가 더 크게 벌어진다.", "metricLabel": "연수", "values": [{"label": "기대수명(고)", "value": 85.1}, {"label": "기대수명(저)", "value": 78.6}, {"label": "건강수명(고)", "value": 72.2}, {"label": "건강수명(저)", "value": 60.9}], "evidence": ["기대수명 격차 6.5년.", "저소득층의 만성질환 노출 가능성이 높음."]}, {"id": 4, "category": "education", "categoryLabel": "교육 자원", "title": "코로나19 이후 원격수업과 소득별 학습 격차.", "author": "허유빈", "claim": "원격수업은 디지털 리터러시·공간 격차를 통해 학력 양극화를 키웠다.", "insight": "학교라는 동일 공간이 사라지자 가정 배경 차이가 더 직접적으로 드러났다.", "metricLabel": "월평균 사교육비", "values": [{"label": "800만+ (이전)", "value": 53.9}, {"label": "800만+ (이후)", "value": 59.3}, {"label": "200만- (이전)", "value": 10.4}, {"label": "200만- (이후)", "value": 11.6}], "evidence": ["교사 79%가 학생 간 학습 격차 확대를 체감.", "저소득층은 사교육·공간·디지털 접근에서 모두 불리."]}, {"id": 5, "category": "health", "categoryLabel": "건강", "title": "저소득층과 건강 불이익.", "author": "권영선", "claim": "저소득 가구의 만성질환 가구원 비율은 일반 가구보다 약 1.9배.", "insight": "소득은 의료, 환경, 정신건강을 동시에 매개한다.", "metricLabel": "만성질환 가구원 비율(%)", "values": [{"label": "저소득 가구", "value": 70.77}, {"label": "일반 가구", "value": 36.82}], "evidence": ["우울증상 유병률도 저소득 지역에서 더 높게 나타남.", "근린환경 개선이 건강 결과에 영향."]}, {"id": 6, "category": "education", "categoryLabel": "교육 자원", "title": "사교육과 대학 진학률.", "author": "양예준", "claim": "사교육 참여 학생의 대학 진학률이 미참여 학생보다 높게 나타남.", "insight": "상관관계는 분명하지만 소득·부모학력·기존 성취도 통제가 필요하다.", "metricLabel": "대학 진학률 추정(%)", "values": [{"label": "사교육 참여", "value": 75}, {"label": "사교육 미참여", "value": 55}], "evidence": ["가구 소득이 높을수록 사교육 참여율 상승.", "인과로 단정하기 어렵다는 유보 포함."]}, {"id": 8, "category": "education", "categoryLabel": "교육 자원", "title": "특목고 진학과 부모 경제력.", "author": "윤서영", "claim": "특목고 준비 사교육비는 일반고 준비보다 약 20만 원 높음.", "insight": "특목고 입시는 사교육 시장의 경제적 진입장벽과 강하게 결합돼 있다.", "metricLabel": "월평균 사교육비(만원)", "values": [{"label": "특목고 준비", "value": 65.0}, {"label": "일반고 준비", "value": 43.7}], "evidence": ["고소득 가구 중학생 사교육 참여율 86.6%.", "저소득 가구 대비 교육 투자 격차가 큼."]}, {"id": 9, "category": "family", "categoryLabel": "부모 배경", "title": "부모 학력과 자녀 학력.", "author": "오유신", "claim": "부모 학력은 직접·간접 경로 모두로 자녀 학업 성취에 영향.", "insight": "언어 자극, 부모-자녀 관계, 자아존중감, 빈곤 경로가 함께 작동한다.", "metricLabel": "경로 영향", "values": [{"label": "직접 효과", "value": 64}, {"label": "경제 경로", "value": 82}, {"label": "관계 경로", "value": 73}, {"label": "문화 자본", "value": 78}, {"label": "비행 억제", "value": 55}], "evidence": ["부모 학력과 빈곤 사이 강한 상관.", "학교 이전 가정 환경의 누적 효과 강조."]}, {"id": 10, "category": "family", "categoryLabel": "부모 배경", "title": "부모 직업과 자녀 직업.", "author": "유승환", "claim": "부모 직업은 교육 기대·학업 성취를 거쳐 자녀 직업 성취에 영향.", "insight": "직접 영향보다 교육 기대와 자원 집중을 통해 굴절된 영향이 크다.", "metricLabel": "영향 경로", "values": [{"label": "교육 기대", "value": 78}, {"label": "학업 성취", "value": 82}, {"label": "직업 포부", "value": 75}, {"label": "자원 집중", "value": 80}, {"label": "직접 효과", "value": 49}], "evidence": ["부모 소득 10% 증가 시 자녀 소득 3~4% 증가 연구 인용.", "부부 학력 동질화가 계층 고착을 강화."]}, {"id": 12, "category": "family", "categoryLabel": "부모 배경", "title": "부모 인맥과 취업 기회.", "author": "박세연", "claim": "구직자의 57%가 주변의 부모 인맥 취업 지원 사례를 봤다고 응답.", "insight": "정보 접근과 비공개 채용 루트가 기회 격차를 확대할 수 있다.", "metricLabel": "응답률(%)", "values": [{"label": "주변 사례 목격", "value": 57}, {"label": "수시채용 동료 목격", "value": 67}, {"label": "인맥 영향 인식", "value": 52.7}], "evidence": ["부모 네트워크가 면접 정보·기업 문화 접근에 영향.", "상류층 학교 네트워크의 장기 효과 제시."]}, {"id": 14, "category": "region", "categoryLabel": "지역 격차", "title": "수도권과 지방의 대학 진학률.", "author": "채형원", "claim": "서울 일반고 4년제 진학률 46.2%, 경북 80.2%.", "insight": "수도권 중심주의는 오히려 서울 학생의 비수도권 진학 유인을 약하게 만든다.", "metricLabel": "4년제 대학 진학률(%)", "values": [{"label": "서울", "value": 46.2}, {"label": "전국 평균", "value": 63.5}, {"label": "경북", "value": 80.2}], "evidence": ["서울 주요 대학 초집중.", "지방대 진학에 대한 수도권 학생 지원 부족."]}, {"id": 15, "category": "region", "categoryLabel": "지역 격차", "title": "수도권 출신과 취업.", "author": "배주현", "claim": "서울 청년 고용률 50.2%, 일부 비수도권은 37.1%.", "insight": "지식기반 산업 집중이 수도권-지방 청년 고용격차를 키운다.", "metricLabel": "청년 고용률(%)", "values": [{"label": "서울", "value": 50.2}, {"label": "전국 평균", "value": 45.7}, {"label": "경남·전북권", "value": 37.1}], "evidence": ["2015년 5.1%p → 2024년 8.3%p로 격차 확대.", "일자리·인프라·주거·대학 패키지 지원 필요."]}, {"id": 16, "category": "region", "categoryLabel": "지역 격차", "title": "지역별 사교육 접근성.", "author": "홍유정", "claim": "사교육 참여율 75.7%, 1인당 월평균 49.9만 원 수준의 보편화.", "insight": "보편화된 시장일수록 접근성 차이는 곧 학습 기회 차이가 된다.", "metricLabel": "지표", "values": [{"label": "사교육 참여율", "value": 75.7}, {"label": "월평균 사교육비", "value": 49.9}, {"label": "2025 총액(조원)", "value": 27.5}], "evidence": ["사교육이 필수적 교육 수단처럼 작동.", "지역 격차가 연간 수백만 원 투자 차이로 이어질 수 있음."]}, {"id": 17, "category": "region", "categoryLabel": "지역 격차", "title": "지방 학생과 수능/정시 불리함.", "author": "박한결", "claim": "서울 학생 1인당 월평균 사교육비 67.3만 원, 전북은 30만 원 수준.", "insight": "정시는 훈련·정보·N수 인프라가 집중된 지역에 유리하게 작동할 수 있다.", "metricLabel": "월평균 사교육비(만원)", "values": [{"label": "서울", "value": 67.3}, {"label": "전남", "value": 32.0}, {"label": "전북", "value": 30.0}], "evidence": ["수도권에 학원 수와 강사 밀도 집중.", "지방 학생은 이동비·추가비용 부담."]}, {"id": 18, "category": "region", "categoryLabel": "지역 격차", "title": "거주 지역과 평생 소득.", "author": "김동건", "claim": "서울-최하위 지역 1인당 소득 격차는 2024년 761만 원.", "insight": "거주지는 일자리·네트워크·자산 형성 기회의 총량에 영향을 준다.", "metricLabel": "격차(만원)", "values": [{"label": "2018", "value": 540}, {"label": "2024", "value": 761}], "evidence": ["수도권에 대기업 본사와 고임금 일자리 집중.", "부동산 가치 상승도 장기 자산 격차 확대."]}, {"id": 19, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "출신 대학과 취업·임금.", "author": "최민혁", "claim": "출신 대학 영향은 여전히 존재하지만 평가 방식은 이중적.", "insight": "직접 채용 차별은 약화 논의가 있지만, 대기업 진입과 임금 경로에는 여전히 영향 가능성이 크다.", "metricLabel": "월평균 소득(만원)", "values": [{"label": "대기업 월평균", "value": 613}, {"label": "중소기업 월평균", "value": 307}, {"label": "격차", "value": 306}], "evidence": ["인사담당자 다수가 출신학교 정보를 참고한다고 응답.", "대기업·중소기업 임금 격차가 매우 큼."]}, {"id": 20, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "지역별 수시·정시 합격 구조.", "author": "하윤지", "claim": "서울대 정시 합격자 중 수도권 출신 78.4%, 수시는 55.8%.", "insight": "정시 확대는 교육특구·N수생 중심 인프라와 결합해 지역 불평등을 키울 수 있다.", "metricLabel": "비율(%)", "values": [{"label": "수시 수도권", "value": 55.8}, {"label": "정시 수도권", "value": 78.4}, {"label": "N수생 비율", "value": 57.4}], "evidence": ["정시는 반복 훈련과 정보 인프라 영향이 큼.", "비수도권은 수시·지역인재전형 방어 효과."]}, {"id": 21, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "고등학교 성적과 장기 소득.", "author": "송시현", "claim": "학력이 높을수록 월임금과 시간당 임금이 모두 상승.", "insight": "고교 성적은 고등교육 진학 가능성을 통해 장기 소득에 간접적 영향을 미친다.", "metricLabel": "월임금총액(만원)", "values": [{"label": "중졸 이하", "value": 202.0}, {"label": "고졸", "value": 278.7}, {"label": "대졸", "value": 459.1}, {"label": "대학원졸", "value": 654.8}], "evidence": ["시간당 임금도 학력 상승에 따라 증가.", "성적 → 학력 → 임금의 간접 경로 제시."]}, {"id": 22, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "명문대 네트워크와 취업.", "author": "변주현", "claim": "수도권 대학 취업률 우위가 장기적으로 유지.", "insight": "동문 네트워크는 결정적 원인이라기보다 취업 접근성을 높이는 구조적 요소다.", "metricLabel": "취업률 / 격차", "values": [{"label": "수도권", "value": 71.3}, {"label": "비수도권", "value": 67.7}, {"label": "격차", "value": 3.6}], "evidence": ["멘토링·채용박람회·직접 교류 등 공식 네트워크 지원 사례.", "약 3~4%p 격차 지속."]}, {"id": 23, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "비정규직 부모와 자녀의 비정규직 가능성.", "author": "옥지민", "claim": "비정규직 부모 자녀의 비정규직 입직 비율이 더 높게 나타남.", "insight": "직업 계층의 세습은 유효하지만, 오늘의 노동시장 언어로 재구성할 필요가 있다.", "metricLabel": "비율(%)", "values": [{"label": "정규직 부모 자녀 비정규직 입직", "value": 67.8}, {"label": "비정규직 부모 자녀 비정규직 입직", "value": 77.8}], "evidence": ["어머니 효과가 더 강하다는 추가 연구 인용.", "플랫폼 노동·AI 전환 맥락에서 재해석 필요."]}, {"id": 24, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "첫 직장과 이후 경력.", "author": "최다솔", "claim": "응답자의 62.2%가 첫 직장을 3년 내 퇴사.", "insight": "첫 직장의 절대성은 약해졌지만 초기 경력의 학습 기회는 여전히 중요하다.", "metricLabel": "비율(%)", "values": [{"label": "3년 내 퇴사", "value": 62.2}, {"label": "10년 이상/현재까지", "value": 12.2}], "evidence": ["첫 직장이 종착지보다 경력 경유지로 인식.", "이직을 통한 연봉 점프업 일반화."]}, {"id": 25, "category": "career", "categoryLabel": "학력 · 노동시장", "title": "같은 조건에서도 여성 임금이 낮은가.", "author": "최준혁", "claim": "한국의 성별 임금격차는 크고, 동일조건 비교에서도 일부 격차가 남음.", "insight": "차별 자체뿐 아니라 조건을 동일하게 유지하기 어렵게 만드는 구조가 핵심이다.", "metricLabel": "임금 격차(%)", "values": [{"label": "전체 격차", "value": 31}, {"label": "동일조건 격차", "value": 10}], "evidence": ["35세 전후 마더후드 패널티 구간 확대.", "직무 배치·승진·돌봄 구조의 영향."]}];
     const categories = [
       { id: "all", label: "전체" },
       { id: "income", label: "소득 / 계층" },
@@ -229,24 +229,24 @@
       const region = filtered.filter(t => t.category === "region").length;
       statsEl.innerHTML = `
         <div class="card stat">
-          <div class="label">시각화된 주제 수</div>
+          <div class="label">시각화된 주제 수.</div>
           <div class="value">${topics.length}개</div>
-          <div class="note">발표 질문 기준</div>
+          <div class="note">발표 질문 기준.</div>
         </div>
         <div class="card stat">
-          <div class="label">현재 필터 결과</div>
+          <div class="label">현재 필터 결과.</div>
           <div class="value">${filtered.length}개</div>
-          <div class="note">검색·카테고리 반영</div>
+          <div class="note">검색·카테고리 반영.</div>
         </div>
         <div class="card stat">
-          <div class="label">지역 격차 주제</div>
+          <div class="label">지역 격차 주제.</div>
           <div class="value">${region}개</div>
-          <div class="note">수도권·비수도권 비교</div>
+          <div class="note">수도권·비수도권 비교.</div>
         </div>
         <div class="card stat">
-          <div class="label">교육 관련 주제</div>
+          <div class="label">교육 관련 주제.</div>
           <div class="value">${edu + fam}개</div>
-          <div class="note">교육 자원 + 부모 배경</div>
+          <div class="note">교육 자원 + 부모 배경.</div>
         </div>
       `;
     }
@@ -340,15 +340,15 @@
           </div>
           <div style="display:grid; gap:16px;">
             <div class="info-box">
-              <h3>핵심 해석</h3>
+              <h3>핵심 해석.</h3>
               <p>${topic.insight}</p>
             </div>
             <div class="info-box">
-              <h3>근거 요약</h3>
+              <h3>근거 요약.</h3>
               <ul>${evidence}</ul>
             </div>
             <div class="info-box">
-              <h3>차트 메모</h3>
+              <h3>차트 메모.</h3>
               <p>이 그래프는 발표 자료의 대표 수치와 핵심 비교 항목을 재구성한 요약형 시각화입니다. 원자료를 연결하면 시계열 비교, 주석, 다운로드 기능으로 확장할 수 있습니다.</p>
             </div>
           </div>
