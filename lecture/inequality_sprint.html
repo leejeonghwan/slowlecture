@@ -533,30 +533,9 @@
     <div class="stats" id="statsBand"></div>
   </section>
 
-  <section class="wrap block">
-    <div class="section-head">
-      <div class="section-eyebrow">01 · 조감도</div>
-      <h2 class="section-title">어떤 격차를 들여다봤나.</h2>
-      <p class="section-lede">
-        학생들의 질문을 분류해 보면 경제적 자원의 불균형(소득·부모 자산·노동시장)과
-        그것이 매개되는 장치(교육·지역·젠더)가 교차한다. 가장 많이 다뤄진 주제는
-        <strong>지역 격차</strong>와 <strong>학력·대학</strong>. 두 축 모두 소득 효과의 &lsquo;굴절&rsquo;이다.
-      </p>
-    </div>
-
-    <div class="overview-panel">
-      <div class="overview-grid">
-        <div class="overview-chart-wrap">
-          <canvas id="overviewChart"></canvas>
-        </div>
-        <div class="overview-legend" id="overviewLegend"></div>
-      </div>
-    </div>
-  </section>
-
   <section class="wrap block" id="projects">
     <div class="section-head">
-      <div class="section-eyebrow">02 · 프로젝트</div>
+      <div class="section-eyebrow">01 · 프로젝트</div>
       <h2 class="section-title">26개의 질문.</h2>
       <p class="section-lede">
         카드를 누르면 데이터의 맥락과 학생의 해석을 함께 볼 수 있습니다.
@@ -579,7 +558,7 @@
 
   <section class="wrap block">
     <div class="section-head">
-      <div class="section-eyebrow">03 · 방법론</div>
+      <div class="section-eyebrow">02 · 방법론</div>
       <h2 class="section-title">어떻게 읽어야 할까.</h2>
       <p class="section-lede">
         이 페이지의 시각화는 학생들이 제출한 원자료와 인용 문헌을 바탕으로 재구성한 것입니다.
@@ -1535,8 +1514,6 @@ function buildTopicChart(t) {
 }
 
 function rerenderCharts() {
-  // overview
-  renderOverview();
   // topic charts
   filtered().forEach(buildTopicChart);
 }
@@ -1571,7 +1548,6 @@ document.getElementById("searchInput").addEventListener("input", e => {
 ------------------------------------------------------------ */
 applyTheme(state.theme);
 renderStats();
-renderOverview();
 renderChips();
 renderGrid();
 
