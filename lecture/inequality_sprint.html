@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>격차와 한계 스프린트 · 성공회대 대안 저널리즘 특강</title>
+<meta name="description" content="성공회대 미디어콘텐츠융합학부 이정환 교수의 대안 저널리즘 특강 학생 26명이 소득·교육·지역·부모 배경·노동시장·젠더 7개 축으로 한국 사회의 격차를 데이터로 검증한 스프린트 결과입니다." />
+<meta name="author" content="이정환 · 성공회대 미디어콘텐츠융합학부" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="격차와 한계 스프린트 · 26개의 질문으로 본 한국 사회" />
+<meta property="og:description" content="성공회대 대안 저널리즘 특강 학생들이 데이터로 검증한 격차의 구조. 소득, 교육, 부모 배경, 지역, 학력, 노동시장, 젠더 7개 축 26개 질문." />
+<meta property="og:locale" content="ko_KR" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;700;900&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+  :root {
+    --bg: #fafaf7;
+    --bg-alt: #f2f1ec;
+    --panel: #ffffff;
+    --text: #1c1917;
+    --text-dim: #44403c;
+    --muted: #78716c;
+    --line: #e7e5e4;
+    --line-strong: #d6d3d1;
+    --accent: #134e4a;
+    --accent-soft: #ccfbf1;
+    --accent-alt: #c2410c;
+    --accent-alt-soft: #fed7aa;
+    --grid: #e7e5e4;
+    --chart-1: #134e4a;
+    --chart-2: #c2410c;
+    --chart-3: #7c2d12;
+    --chart-4: #0f766e;
+    --chart-5: #9a3412;
+    --chart-neutral: #a8a29e;
+    --shadow-sm: 0 1px 2px rgba(28,25,23,0.04), 0 1px 0 rgba(28,25,23,0.03);
+    --shadow: 0 1px 3px rgba(28,25,23,0.06), 0 2px 8px rgba(28,25,23,0.04);
+    --shadow-lg: 0 12px 32px rgba(28,25,23,0.08), 0 2px 8px rgba(28,25,23,0.04);
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, "Apple SD Gothic Neo", serif;
+    --sans: "Inter", -apple-system, "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  [data-theme="dark"] {
+    --bg: #0c0a09;
+    --bg-alt: #1c1917;
+    --panel: #171412;
+    --text: #fafaf9;
+    --text-dim: #d6d3d1;
+    --muted: #a8a29e;
+    --line: #292524;
+    --line-strong: #44403c;
+    --accent: #5eead4;
+    --accent-soft: #134e4a;
+    --accent-alt: #fb923c;
+    --accent-alt-soft: #7c2d12;
+    --grid: #292524;
+    --chart-1: #5eead4;
+    --chart-2: #fb923c;
+    --chart-3: #fca5a5;
+    --chart-4: #2dd4bf;
+    --chart-5: #fdba74;
+    --chart-neutral: #78716c;
+    --shadow-sm: 0 1px 0 rgba(0,0,0,0.3);
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background 0.3s, color 0.3s;
+    font-feature-settings: "tnum" 1, "ss01" 1;
+  }
+
+  ::selection { background: var(--accent); color: #fff; }
+
+  /* top bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(12px);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 1200px; margin: 0 auto; padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--serif); font-weight: 700; font-size: 16px;
+    letter-spacing: -0.01em; color: var(--text);
+  }
+  .brand-mark {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-alt));
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 11px; font-weight: 700; font-family: var(--sans);
+  }
+  .top-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn {
+    appearance: none; border: 1px solid var(--line); background: var(--panel);
+    color: var(--text-dim); width: 38px; height: 38px; border-radius: 10px;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 15px;
+  }
+  .icon-btn:hover { color: var(--text); border-color: var(--line-strong); transform: translateY(-1px); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* wrap */
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
+
+  /* hero */
+  .hero { padding: 80px 0 56px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    font-family: var(--sans); font-size: 12px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 20px;
+  }
+  .eyebrow::before { content: "—"; margin-right: 8px; color: var(--muted); }
+  h1.hero-title {
+    font-family: var(--serif); font-weight: 900;
+    font-size: clamp(34px, 5.6vw, 64px);
+    line-height: 1.1; letter-spacing: -0.035em;
+    margin: 0 0 24px; color: var(--text);
+  }
+  h1.hero-title em {
+    font-style: normal; font-family: var(--serif); font-weight: 900;
+    background: linear-gradient(180deg, transparent 62%, var(--accent-soft) 62%);
+    padding: 0 3px;
+  }
+  [data-theme="dark"] h1.hero-title em {
+    background: linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--accent) 35%, transparent) 62%);
+  }
+  .hero-lede {
+    font-family: var(--serif); font-size: clamp(17px, 1.6vw, 20px);
+    line-height: 1.75; color: var(--text-dim);
+    max-width: 760px; margin: 0 0 28px;
+  }
+  .hero-meta {
+    display: flex; flex-wrap: wrap; gap: 28px;
+    padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 14px; color: var(--muted);
+  }
+  .hero-meta-item { display: flex; flex-direction: column; gap: 4px; }
+  .hero-meta-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .hero-meta-value {
+    font-family: var(--serif); font-weight: 700; font-size: 16px;
+    color: var(--text);
+  }
+
+  /* stats band */
+  .stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .stat { padding: 40px 24px; border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: none; }
+  .stat-value {
+    font-family: var(--serif); font-weight: 900;
+    font-size: clamp(32px, 3.8vw, 48px); line-height: 1;
+    letter-spacing: -0.04em; color: var(--text);
+    margin-bottom: 10px; font-variant-numeric: tabular-nums;
+  }
+  .stat-value small {
+    font-size: 0.55em; font-weight: 700; color: var(--muted); margin-left: 4px;
+  }
+  .stat-label {
+    font-size: 13px; color: var(--muted); line-height: 1.5;
+  }
+
+  /* section */
+  section.block { padding: 72px 0; border-bottom: 1px solid var(--line); }
+  section.block:last-of-type { border-bottom: none; }
+  .section-head {
+    max-width: 760px; margin-bottom: 48px;
+  }
+  .section-eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent-alt);
+    margin-bottom: 16px;
+  }
+  h2.section-title {
+    font-family: var(--serif); font-weight: 900;
+    font-size: clamp(28px, 3.6vw, 42px); line-height: 1.2;
+    letter-spacing: -0.025em; margin: 0 0 16px; color: var(--text);
+  }
+  .section-lede {
+    font-family: var(--serif); font-size: 17px; line-height: 1.8;
+    color: var(--text-dim);
+  }
+
+  /* overview chart */
+  .overview-panel {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius-lg); padding: 32px;
+    box-shadow: var(--shadow-sm);
+  }
+  .overview-grid {
+    display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px;
+    align-items: start;
+  }
+  .overview-chart-wrap { position: relative; height: 320px; }
+  .overview-legend { display: grid; gap: 14px; }
+  .legend-row {
+    display: grid; grid-template-columns: 12px 1fr auto; gap: 14px;
+    align-items: center; font-size: 14px;
+    padding: 10px 0; border-bottom: 1px dashed var(--line);
+  }
+  .legend-row:last-child { border-bottom: none; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-name { color: var(--text); font-weight: 500; }
+  .legend-count {
+    font-family: var(--serif); font-weight: 700;
+    font-variant-numeric: tabular-nums; color: var(--text);
+  }
+
+  /* filter bar */
+  .filter-bar {
+    position: sticky; top: 66px; z-index: 10;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px);
+    -webkit-backdrop-filter: saturate(1.4) blur(10px);
+    padding: 18px 0; margin-bottom: 36px;
+    border-bottom: 1px solid var(--line);
+  }
+  .filter-inner { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    appearance: none; border: 1px solid var(--line); background: var(--panel);
+    color: var(--text-dim); border-radius: 999px; padding: 7px 14px;
+    cursor: pointer; font-size: 13px; font-weight: 500;
+    font-family: var(--sans); transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--line-strong); color: var(--text); }
+  .chip.active {
+    background: var(--text); color: var(--bg); border-color: var(--text);
+  }
+  .chip-count {
+    font-variant-numeric: tabular-nums; opacity: 0.7; margin-left: 6px; font-size: 12px;
+  }
+  .search-wrap { position: relative; }
+  .search-wrap svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: var(--muted); pointer-events: none;
+  }
+  .search-input {
+    width: 280px; padding: 10px 14px 10px 38px;
+    border: 1px solid var(--line); border-radius: 999px;
+    background: var(--panel); color: var(--text); font-size: 14px;
+    font-family: var(--sans);
+  }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+
+  /* topic grid */
+  .topic-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .topic-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius-lg); overflow: hidden;
+    transition: all 0.2s; display: flex; flex-direction: column;
+    scroll-margin-top: 140px;
+  }
+  .topic-card:hover {
+    transform: translateY(-2px); box-shadow: var(--shadow-lg);
+    border-color: var(--line-strong);
+  }
+  .topic-head { padding: 22px 22px 14px; }
+  .topic-meta {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; margin-bottom: 14px;
+  }
+  .topic-num {
+    font-family: var(--serif); font-weight: 900;
+    font-size: 14px; color: var(--accent-alt);
+    letter-spacing: -0.02em;
+  }
+  .topic-cat {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .topic-cat::before { content: "/"; margin-right: 10px; color: var(--line-strong); }
+  .topic-title {
+    font-family: var(--serif); font-weight: 700;
+    font-size: 19px; line-height: 1.4; letter-spacing: -0.015em;
+    color: var(--text); margin: 0 0 10px;
+  }
+  .topic-author {
+    font-size: 12px; color: var(--muted);
+  }
+  .topic-author strong { color: var(--text-dim); font-weight: 600; }
+
+  .chart-wrap {
+    position: relative; height: 220px; padding: 0 18px 16px;
+  }
+
+  .topic-claim {
+    padding: 14px 22px 16px;
+    border-top: 1px solid var(--line);
+    font-family: var(--serif); font-size: 14px; line-height: 1.65;
+    color: var(--text-dim); font-style: italic;
+  }
+
+  .topic-actions {
+    display: flex; gap: 2px; padding: 10px 14px 12px;
+    border-top: 1px solid var(--line); background: var(--bg-alt);
+  }
+  .card-btn {
+    flex: 1; background: none; border: none; padding: 8px 10px;
+    font-size: 12px; font-weight: 500; color: var(--muted);
+    cursor: pointer; font-family: var(--sans); border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .card-btn:hover { color: var(--text); background: var(--panel); }
+  .card-btn svg { width: 13px; height: 13px; }
+
+  /* detail expansion */
+  .topic-detail {
+    display: none;
+    padding: 0 22px 24px; border-top: 1px dashed var(--line);
+    background: var(--bg-alt);
+  }
+  .topic-card.expanded .topic-detail { display: block; }
+  .topic-card.expanded .chart-wrap { height: 300px; }
+  .detail-row { padding: 20px 0; border-bottom: 1px dashed var(--line); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .detail-content { font-size: 14px; line-height: 1.8; color: var(--text-dim); }
+  .detail-content ul { margin: 0; padding-left: 18px; }
+  .detail-content li { margin-bottom: 6px; }
+  .detail-content p { margin: 0 0 10px; }
+  .detail-content p:last-child { margin-bottom: 0; }
+
+  /* methodology and footer */
+  .meth-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
+  }
+  .meth-item {
+    padding-top: 24px; border-top: 2px solid var(--text);
+  }
+  .meth-label {
+    font-family: var(--serif); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent-alt); margin-bottom: 14px;
+  }
+  .meth-title {
+    font-family: var(--serif); font-weight: 700; font-size: 20px;
+    line-height: 1.4; color: var(--text); margin: 0 0 10px;
+  }
+  .meth-text { font-size: 14px; line-height: 1.75; color: var(--muted); }
+
+  /* footer */
+  footer {
+    padding: 64px 0 48px;
+    border-top: 1px solid var(--line);
+    background: var(--bg-alt);
+  }
+  .footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px;
+  }
+  .footer-title {
+    font-family: var(--serif); font-weight: 900; font-size: 22px;
+    letter-spacing: -0.02em; margin: 0 0 12px;
+  }
+  .footer-text {
+    font-size: 14px; line-height: 1.8; color: var(--muted); margin: 0 0 16px;
+  }
+  .footer-list {
+    list-style: none; padding: 0; margin: 0;
+  }
+  .footer-list li { font-size: 13px; color: var(--muted); margin-bottom: 8px; line-height: 1.6; }
+  .footer-heading {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text); margin: 0 0 14px;
+  }
+  .footer-base {
+    margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line);
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px;
+    font-size: 12px; color: var(--muted);
+  }
+  .footer-base a { color: var(--text-dim); text-decoration: none; border-bottom: 1px solid var(--line-strong); }
+  .footer-base a:hover { color: var(--accent); }
+
+  /* copy link toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+    background: var(--text); color: var(--bg); padding: 12px 20px;
+    border-radius: 999px; font-size: 14px; font-weight: 500;
+    box-shadow: var(--shadow-lg); opacity: 0; pointer-events: none;
+    transition: all 0.3s; z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .hero { padding: 56px 0 40px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat { border-right: none; border-bottom: 1px solid var(--line); }
+    .stat:nth-child(odd) { border-right: 1px solid var(--line); }
+    .overview-grid { grid-template-columns: 1fr; gap: 28px; }
+    .overview-chart-wrap { height: 260px; }
+    .meth-grid { grid-template-columns: 1fr; gap: 36px; }
+    .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+    .filter-bar { top: 62px; }
+    .search-input { width: 100%; }
+    .search-wrap { width: 100%; }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 0 20px; }
+    .topbar-inner { padding: 12px 20px; }
+    section.block { padding: 48px 0; }
+    .hero-meta { gap: 20px; }
+    .overview-panel { padding: 22px; }
+    .topic-grid { grid-template-columns: 1fr; }
+  }
+
+  /* print */
+  @media print {
+    .topbar, .filter-bar, .topic-actions, .card-btn { display: none !important; }
+    body { background: #fff; color: #000; }
+    .topic-card { break-inside: avoid; page-break-inside: avoid; border: 1px solid #ddd !important; }
+    .topic-card { box-shadow: none !important; }
+    .topic-detail { display: block !important; background: #fff !important; }
+    .chart-wrap { height: 180px !important; }
+    section.block { padding: 24px 0; }
+    .hero { padding: 32px 0; }
+  }
+
+  /* focus ring */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 10px; border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#top" class="brand" style="text-decoration:none;">
+      <span class="brand-mark">격</span>
+      <span>격차와 한계 스프린트</span>
+    </a>
+    <div class="top-actions">
+      <button class="icon-btn" id="printBtn" title="인쇄 / PDF 저장" aria-label="인쇄">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </button>
+      <button class="icon-btn" id="shareBtn" title="링크 복사" aria-label="공유">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="다크 모드 전환" aria-label="테마 변경">
+        <svg id="themeIconLight" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg id="themeIconDark" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="wrap hero">
+    <div class="eyebrow">대안 저널리즘 특강 · 2026 봄학기</div>
+    <h1 class="hero-title">
+      데이터로 열어본<br/><em>한국의 격차</em>, 26가지 질문.
+    </h1>
+    <p class="hero-lede">
+      성공회대학교 미디어콘텐츠융합학부 <strong>이정환</strong> 교수의 &lsquo;대안 저널리즘 특강&rsquo;을 수강한 학생들이
+      한국 사회의 격차를 주제로 30가지 질문을 분석하고 토론한 결과를 인터랙티브 리포트로 정리했습니다.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">강좌</span>
+        <span class="hero-meta-value">대안 저널리즘 특강</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">지도</span>
+        <span class="hero-meta-value">이정환 교수</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">소속</span>
+        <span class="hero-meta-value">성공회대 미디어콘텐츠융합학부</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">발표</span>
+        <span class="hero-meta-value">2026년 3월 19일</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="stats" id="statsBand"></div>
+  </section>
+
+  <section class="wrap block">
+    <div class="section-head">
+      <div class="section-eyebrow">01 · 조감도</div>
+      <h2 class="section-title">어떤 격차를 들여다봤나.</h2>
+      <p class="section-lede">
+        학생들의 질문을 분류해 보면 경제적 자원의 불균형(소득·부모 자산·노동시장)과
+        그것이 매개되는 장치(교육·지역·젠더)가 교차한다. 가장 많이 다뤄진 주제는
+        <strong>지역 격차</strong>와 <strong>학력·대학</strong>. 두 축 모두 소득 효과의 &lsquo;굴절&rsquo;이다.
+      </p>
+    </div>
+
+    <div class="overview-panel">
+      <div class="overview-grid">
+        <div class="overview-chart-wrap">
+          <canvas id="overviewChart"></canvas>
+        </div>
+        <div class="overview-legend" id="overviewLegend"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap block" id="projects">
+    <div class="section-head">
+      <div class="section-eyebrow">02 · 프로젝트</div>
+      <h2 class="section-title">26개의 질문.</h2>
+      <p class="section-lede">
+        카드를 누르면 데이터의 맥락과 학생의 해석을 함께 볼 수 있습니다.
+        상단 필터와 검색으로 원하는 주제만 빠르게 좁혀 보세요.
+      </p>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-inner">
+        <div class="chips" id="chips"></div>
+        <div class="search-wrap">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="searchInput" class="search-input" type="search" placeholder="주제·저자·키워드로 찾기" />
+        </div>
+      </div>
+    </div>
+
+    <div class="topic-grid" id="topicGrid"></div>
+  </section>
+
+  <section class="wrap block">
+    <div class="section-head">
+      <div class="section-eyebrow">03 · 방법론</div>
+      <h2 class="section-title">어떻게 읽어야 할까.</h2>
+      <p class="section-lede">
+        이 페이지의 시각화는 학생들이 제출한 원자료와 인용 문헌을 바탕으로 재구성한 것입니다.
+        인과관계와 상관관계의 구분, 그리고 표본의 한계를 함께 염두에 두고 읽어 주세요.
+      </p>
+    </div>
+
+    <div class="meth-grid">
+      <div class="meth-item">
+        <div class="meth-label">01 · 원자료</div>
+        <h3 class="meth-title">공공 통계와 학술 연구</h3>
+        <p class="meth-text">
+          국가데이터처(통계청), 교육부, 한국노동연구원, 한국복지패널, OECD, KRIVET 등의 공개 통계와 국내외 학술 연구를
+          1차 근거로 사용했습니다. 각 카드의 &lsquo;근거&rsquo; 영역에서 인용을 확인할 수 있습니다.
+        </p>
+      </div>
+      <div class="meth-item">
+        <div class="meth-label">02 · 해석</div>
+        <h3 class="meth-title">상관과 인과의 구분</h3>
+        <p class="meth-text">
+          많은 주제는 강한 상관을 보이지만 인과를 단정할 수 없습니다. 학생들은 대체로 가정 환경·소득·부모 학력 등
+          다른 변수의 영향을 함께 다뤘고, 수치는 &lsquo;관계의 크기&rsquo;를 가늠하는 참고선으로 제시됩니다.
+        </p>
+      </div>
+      <div class="meth-item">
+        <div class="meth-label">03 · 확장</div>
+        <h3 class="meth-title">열린 결론</h3>
+        <p class="meth-text">
+          26개 질문은 출발선일 뿐입니다. 플랫폼 노동·AI 전환·기후·돌봄 등 새로운 축이 추가되면 &lsquo;격차&rsquo;의 지도 역시
+          다시 그려질 것입니다. 보완 제안은 페이지 하단 연락처로 보내 주세요.
+        </p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h3 class="footer-title">격차와 한계 스프린트.</h3>
+        <p class="footer-text">
+          성공회대학교 미디어콘텐츠융합학부 &lsquo;대안 저널리즘 특강&rsquo; 2026 봄학기 공동 프로젝트.
+          학생 26명의 발표 자료를 단일 웹 페이지로 재구성했습니다.
+        </p>
+        <p class="footer-text">
+          편집·시각화 기획: <strong style="color:var(--text-dim);">이정환</strong>.<br/>
+          데이터 수집·분석: 수강생 일동.
+        </p>
+      </div>
+      <div>
+        <h4 class="footer-heading">강의</h4>
+        <ul class="footer-list">
+          <li>대안 저널리즘 특강</li>
+          <li>성공회대 미디어콘텐츠융합학부</li>
+          <li>2026년 봄학기</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-heading">라이선스</h4>
+        <ul class="footer-list">
+          <li>학술·교육 목적 공개</li>
+          <li>인용 시 출처 표기</li>
+          <li>CC BY-NC 4.0</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-base">
+      <span>© 2026 이정환. 성공회대 미디어콘텐츠융합학부.</span>
+      <span><a href="mailto:top@leejeonghwan.com">top@leejeonghwan.com</a> · <a href="https://leejeonghwan.com" target="_blank" rel="noopener">leejeonghwan.com</a></span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast">링크가 클립보드에 복사됐습니다.</div>
+
+<script>
+/* ------------------------------------------------------------
+   Data
+------------------------------------------------------------ */
+const CATEGORIES = [
+  { id: "income",    label: "소득 · 계층",     color: "#134e4a", dark: "#5eead4" },
+  { id: "education", label: "교육 자원",       color: "#c2410c", dark: "#fb923c" },
+  { id: "family",    label: "부모 배경",       color: "#4338ca", dark: "#a5b4fc" },
+  { id: "region",    label: "지역 격차",       color: "#0369a1", dark: "#7dd3fc" },
+  { id: "career",    label: "학력 · 대학",     color: "#9f1239", dark: "#fda4af" },
+  { id: "labor",     label: "노동시장 · 기회", color: "#065f46", dark: "#6ee7b7" },
+  { id: "gender",    label: "젠더 · 사회조건", color: "#7e22ce", dark: "#d8b4fe" }
+];
+
+const TOPICS = [
+  {
+    id: 1, cat: "income", num: 1, author: "김은파",
+    title: "부모 소득은 자녀의 대학 진학률에 영향을 미치는가.",
+    claim: "소득 5분위의 상위권 대학 진학률은 1분위의 약 5.4배.",
+    insight: "가계 소득 분위가 오를수록 4년제 일반대와 상위권 대학 진학 확률이 동시에 올라간다. 교육격차는 노동시장 진입 격차로 이어질 가능성이 높다.",
+    chart: { type: "bar",
+      labels: ["1분위", "2분위", "3분위", "4분위", "5분위"],
+      data: [8, 12, 28, 49, 43],
+      unit: "%", metric: "상위권 대학 진학 지표 (상대값)",
+      emphasis: 4
+    },
+    evidence: [
+      "부모 소득 분위가 높을수록 4년제 일반대·상위권 대학 진학률이 함께 상승.",
+      "소득 1분위와 5분위의 상위권 대학 진학률 격차 약 5.4배.",
+      "자료: 한국직업능력연구원 KRIVET Issue Brief 247호(2022); 한국교육종단연구."
+    ]
+  },
+  {
+    id: 2, cat: "income", num: 2, author: "고은수",
+    title: "소득 격차와 기대수명은 어떻게 연결되는가.",
+    claim: "고소득층과 저소득층의 건강수명 격차는 11.3년.",
+    insight: "단순히 오래 사는가(기대수명)보다 얼마나 건강하게 사는가(건강수명)에서 격차가 더 크게 벌어진다. 저소득층은 만성질환 유병률도 훨씬 높다.",
+    chart: { type: "groupedBar",
+      labels: ["기대수명", "건강수명"],
+      series: [
+        { name: "고소득층 상위 20%", data: [85.1, 72.2] },
+        { name: "저소득층 하위 20%", data: [78.6, 60.9] }
+      ],
+      unit: "년", metric: "소득 계층별 기대수명·건강수명",
+    },
+    evidence: [
+      "기대수명 격차 6.5년, 건강수명 격차 11.3년.",
+      "당뇨병 유병률: 고소득 8.5%, 저소득 14.5%.",
+      "자료: 연합뉴스(2025·2020), 질병관리청 건강형평성 통계."
+    ]
+  },
+  {
+    id: 3, cat: "income", num: 3, author: "김채린",
+    title: "부모 소득은 자녀 소득에 대물림되는가.",
+    claim: "저소득층이 평균 소득으로 진입하기까지, 북유럽은 2~3세대, 중국·브라질은 7~9세대.",
+    insight: "기회 불평등이 큰 사회일수록 부모의 경제 지위가 자녀 소득에 더 강하게 영향을 미친다. 교육은 부모 소득과 자녀 임금 사이의 다리로 작동한다.",
+    chart: { type: "bar",
+      labels: ["덴마크·북유럽", "캐나다", "한국", "미국", "중국·브라질"],
+      data: [2.5, 4, 5, 5.5, 8],
+      unit: "세대", metric: "평균 소득 진입까지 걸리는 세대 수 (OECD·WEF 추정)",
+      emphasis: 4
+    },
+    evidence: [
+      "OECD·한국은행(2026.11): 1971–1980년대 이후 부모 소득이 자녀 소득에 미치는 영향 증가.",
+      "1980~90년대생 대상 조사: 소득 1분위 대비 5분위 자녀 임금이 18% 높음(10분위 기준 상위 10분위 33% 이상).",
+      "자료: WEF Global Social Mobility Report 2020; 이지은 외(2023); Chetty et al.(2017)."
+    ]
+  },
+  {
+    id: 4, cat: "income", num: 4, author: "허유빈",
+    title: "코로나19 원격수업은 소득별 학습 격차를 키웠나.",
+    claim: "고소득 가구의 사교육비는 늘었고, 저소득 가구는 거의 움직이지 않았다.",
+    insight: "학교라는 동일한 물리 공간이 사라지자 가정 배경의 차이가 학습 결과에 더 직접 드러났다. 사교육비뿐 아니라 디지털 리터러시와 공간적 독립성이 함께 작동한다.",
+    chart: { type: "groupedBar",
+      labels: ["2019 (코로나 전)", "2021 (코로나 중)"],
+      series: [
+        { name: "월소득 800만원 이상", data: [53.9, 59.3] },
+        { name: "월소득 200만원 미만", data: [10.4, 11.6] }
+      ],
+      unit: "만원", metric: "월평균 사교육비 (초중고)"
+    },
+    evidence: [
+      "교사 79%가 원격수업 이후 학생 간 학습 격차가 커졌다고 응답.",
+      "2020~2021 학업성취도: 기초학력 미달 비율 증가 + 중위권 축소 = 학력 양극화.",
+      "자료: 통계청 초중고 사교육비 조사; KERIS(2020) 원격교육 경험·인식 분석."
+    ]
+  },
+  {
+    id: 5, cat: "income", num: 5, author: "권영선",
+    title: "저소득층은 건강에서 어떤 불이익을 받는가.",
+    claim: "저소득 가구 만성질환 가구원 비율은 일반 가구의 약 1.9배.",
+    insight: "소득은 의료 접근성, 거주 환경, 정신건강을 동시에 매개한다. 근린환경의 질(공원, 보행 적합성)이 개선되면 저소득층 건강 결과도 함께 나아진다.",
+    chart: { type: "horizontalBar",
+      labels: ["저소득 가구 만성질환 가구원 비율", "일반 가구 만성질환 가구원 비율", "저소득층 우울증상 유병률", "대구시 평균 우울증상 유병률"],
+      data: [70.77, 36.82, 24.74, 2.6],
+      unit: "%", metric: "저소득층 대비 일반 가구 비교"
+    },
+    evidence: [
+      "2022 한국복지패널: 저소득 가구 만성질환 가구원 70.77%, 일반 가구 36.82%.",
+      "저소득 가구 6개월 이상 투병·투약 66.46%.",
+      "근린환경 개선이 비만·만성질환 억제에 정적 영향."
+    ]
+  },
+  {
+    id: 6, cat: "education", num: 6, author: "양예준",
+    title: "사교육을 많이 받을수록 대학 진학률이 높아지는가.",
+    claim: "사교육 참여 학생의 대학 진학률이 미참여 학생보다 20%p 가량 높다.",
+    insight: "두 변수 사이 양의 상관관계는 분명하지만, 가정 소득·부모 학력·기존 성취도 같은 교란 변수를 통제하지 않으면 인과로 단정하기 어렵다.",
+    chart: { type: "bar",
+      labels: ["사교육 참여", "사교육 미참여"],
+      data: [75, 55],
+      unit: "%", metric: "대학 진학률 (추정)",
+      emphasis: 0
+    },
+    evidence: [
+      "통계청·교육부: 사교육 참여율 약 75%.",
+      "참여 학생 진학률 70~80%, 미참여 50~60%.",
+      "가구 소득 수준과 사교육 참여율 사이 뚜렷한 양의 상관."
+    ]
+  },
+  {
+    id: 7, cat: "education", num: 7, author: "김지수",
+    title: "자가·전세·월세의 차이가 자녀 성적과 연관이 있을까.",
+    claim: "소득 5분위 가구의 교육비 지출 구성비는 1분위의 약 8.5배.",
+    insight: "거주 형태 자체보다 주거 안정성, 경제적 여력, 이사 빈도가 누적되면서 성적 차이를 만든다. 자가 거주는 장기 교육 플랜 수립에 유리하다.",
+    chart: { type: "bar",
+      labels: ["5분위(상위 20%)", "4분위", "3분위", "2분위", "1분위(하위 20%)"],
+      data: [8.5, 5.0, 3.5, 2.0, 1.0],
+      unit: "", metric: "월평균 교육비 지출 구성비",
+      emphasis: 0
+    },
+    evidence: [
+      "보건복지포럼: 빈곤 주거 아동의 학업 성취 유의미하게 낮음.",
+      "자가 거주 자녀 평균 거주 기간이 전·월세보다 약 2.5배 길다.",
+      "자료: 통계청(2024) 가계동향; 아동의 주거상태와 발달 연구."
+    ]
+  },
+  {
+    id: 8, cat: "education", num: 8, author: "윤서영",
+    title: "특목고 진학률과 부모 경제력의 상관관계는.",
+    claim: "특목고 준비 중학생의 월 사교육비는 일반고 준비보다 20만원 이상 높다.",
+    insight: "특목고 입시는 경제적 진입장벽과 결합된 시장이다. 80만원 가까운 사교육비를 감당할 수 있는 가정만 고액 컨설팅·심화 커리큘럼·면접 대비 패키지를 수용할 수 있다.",
+    chart: { type: "bar",
+      labels: ["자율고 준비", "외고·국제고", "과고·영재학교", "특목고 평균", "일반고 준비"],
+      data: [66.5, 65.4, 63.2, 65.0, 43.7],
+      unit: "만원", metric: "중학생 월평균 사교육비 (진학 희망별)",
+      emphasis: 4
+    },
+    evidence: [
+      "월소득 800만원 이상 중학생 사교육 참여율 86.6%, 1인당 월 79만원.",
+      "월소득 300만원 미만 참여율 53.8%, 지출액 36만원.",
+      "자료: 국가데이터처 2025 초중고 사교육비 조사; 하준경(2010)."
+    ]
+  },
+  {
+    id: 9, cat: "education", num: 10, author: "조은지",
+    title: "온라인 교육은 사교육 격차를 줄였는가.",
+    claim: "소득 최상위와 최하위의 사교육비 격차는 8.9배. 온라인 교육으로도 줄지 않았다.",
+    insight: "EBS·e-러닝은 접근 기회를 넓혔지만 사교육의 대체재가 되진 못했다. 사교육 문제는 학벌주의·경쟁 구조·노동시장과 엮여 있어 교육 정책만으로 해결되지 않는다.",
+    chart: { type: "horizontalBar",
+      labels: ["사교육비 격차 (100만↓ vs 700만↑)", "영어 사교육비 격차", "수학 사교육비 격차", "참여율 격차"],
+      data: [8.9, 15.4, 10.3, 2.7],
+      unit: "배", metric: "소득 최상위 vs 최하위 사교육비 격차 (2016)",
+      emphasis: 1
+    },
+    evidence: [
+      "저소득층 86.36%가 EBS 이용 이후에도 사교육 이용 '변함없다'고 응답(범정희 2008).",
+      "2007 사교육 참여율 77.0% → 2019년에도 74.8%로 유지(전화숙 2021).",
+      "자료: 한국교육개발원; 전화숙 「한국사회의 사교육에 대한 심층적 고찰」."
+    ]
+  },
+  {
+    id: 10, cat: "family", num: 11, author: "오유신",
+    title: "부모 학력은 자녀 학력에 얼마나 영향을 미치는가.",
+    claim: "가장 강한 연결은 부모 학력과 빈곤 사이 (-0.45).",
+    insight: "학력은 직접 효과보다 경제·관계·문화 세 경로를 거쳐 자녀 성취에 도달한다. 학교에 오기 전 이미 가정에서 형성된 차이가 학교 교육의 효과보다 더 크다.",
+    chart: { type: "divergingBar",
+      labels: ["부모학력 → 학업성취 (직접)", "부모학력 → 빈곤", "빈곤 → 학업성취", "관계 → 자아존중", "자아존중 → 학업성취", "비행 → 학업성취"],
+      data: [0.16, -0.45, -0.10, 0.33, 0.12, -0.16],
+      unit: "", metric: "경로 계수 (Path coefficient)"
+    },
+    evidence: [
+      "부모학력-빈곤 (-0.45) 가장 강한 연결.",
+      "자아존중감 → 학업성취 (0.12), 비행 → 학업성취 (-0.16).",
+      "자료: Education Next, How Family Background Influences Student Achievement."
+    ]
+  },
+  {
+    id: 11, cat: "family", num: 12, author: "유승환",
+    title: "부모 직업은 자녀 직업에 어떻게 굴절되는가.",
+    claim: "부모 소득이 10% 높을 때 자녀 소득은 3~4% 높다.",
+    insight: "부모 직업의 직접 영향은 크지 않지만, 교육 기대·자녀 학업성취·학력 동질혼을 거친 간접 영향이 누적된다. 교육은 이동 사다리가 아니라 선별 기제로 작동한다.",
+    chart: { type: "bar",
+      labels: ["부부 학력 동질혼 증가", "부모 교육 기대 영향", "자녀 학업성취 매개", "부모 직업 직접 효과"],
+      data: [16, 82, 78, 25],
+      unit: "", metric: "경로별 영향 강도 (지표)",
+      emphasis: 0
+    },
+    evidence: [
+      "한국노동연구원(2024): 부모 소득 10%↑ → 자녀 소득 3~4%↑.",
+      "1980~90년대생일수록 부모 배경의 영향 강화: 계층 고착화.",
+      "자료: 김진영·유백산(2015); 고영우 외(2024) 한국의 세대간 사회이동 연구."
+    ]
+  },
+  {
+    id: 12, cat: "family", num: 13, author: "한병재",
+    title: "부모 자산은 자녀 교육 성취에 어떻게 영향을 주나.",
+    claim: "부모가 고등교육을 받은 경우 자녀의 대학 졸업 확률이 약 3배.",
+    insight: "유아기부터 진학 단계까지 차이가 누적된다. 학습 환경·입시 정보·문화 자본·사교육 접근성이 일관되게 불균형하다.",
+    chart: { type: "horizontalBar",
+      labels: ["부모 고등교육 → 자녀 대학졸업 확률", "고소득 가정 학습활동 노출", "저소득 가정 유아교육 참여 격차"],
+      data: [300, 21, -18],
+      unit: "%p / 배", metric: "격차 지표 (양수=유리, 음수=불리)"
+    },
+    evidence: [
+      "저소득 가정 유아교육 참여율 고소득 대비 18%p 낮음.",
+      "고소득 가정 학습활동 노출 21%p 높음.",
+      "자료: 홍성만(2004) 간접 인용."
+    ]
+  },
+  {
+    id: 13, cat: "family", num: 14, author: "박세연",
+    title: "부모 인맥은 취업 기회에 영향을 미치는가.",
+    claim: "구직자 57%가 주변에서 부모 인맥으로 취업한 사례를 봤다고 응답.",
+    insight: "정보 접근과 비공개 채용 루트는 &lsquo;스펙&rsquo;보다 더 큰 기회 격차를 만들 수 있다. 최상위층은 유치원·초등학교 단계에서부터 인맥을 설계한다.",
+    chart: { type: "bar",
+      labels: ["주변 취업특례 목격", "수시채용 동료 목격", "인맥 영향 인식 (사람인)"],
+      data: [57, 67, 52.7],
+      unit: "%", metric: "구직자·직장인 응답 비율",
+      emphasis: 1
+    },
+    evidence: [
+      "대기업 임원 출신 부모의 협력사 일자리 알선 사례 다수.",
+      "수시채용 신입 동료 대부분 경영진의 가족·지인.",
+      "자료: 서울신문(박현갑, 2016); 뉴시스(2020) 사람인 조사."
+    ]
+  },
+  {
+    id: 14, cat: "family", num: 15, author: "이인하",
+    title: "부모의 문화 자본은 학업 성취에 영향을 미치는가.",
+    claim: "대졸 이상 부모의 자녀 학업 성취 지표 23.54, 전문대졸 이하는 18.73.",
+    insight: "문화 자본은 경제적 부가 아니다. 가정 내 언어·독서·여행·예술 경험이 쌓이고, 그 경험이 학교 시스템이 요구하는 지적·문화적 코드를 해독하는 능력으로 이어진다.",
+    chart: { type: "groupedBar",
+      labels: ["학업성취", "여행 활동", "문화 활동", "자기조절능력", "자아존중감"],
+      series: [
+        { name: "부모 대졸 이상", data: [23.54, 2.18, 2.99, 49.27, 15.12] },
+        { name: "부모 전문대졸 이하", data: [18.73, 1.98, 2.73, 47.49, 14.80] }
+      ],
+      unit: "", metric: "부모 학력별 청소년 지표 평균 (핵가족 1,673명)"
+    },
+    evidence: [
+      "대졸 이상 집단 학업성취 5점 이상 높음.",
+      "자기조절능력·자아존중감도 부모 학력 높은 집단에서 더 높음.",
+      "자료: 한국보건사회연구원."
+    ]
+  },
+  {
+    id: 15, cat: "region", num: 16, author: "채형원",
+    title: "수도권과 지방의 대학 진학률은 실제로 다른가.",
+    claim: "서울 일반고 4년제 진학률 46.2%, 경북은 80.2%.",
+    insight: "수도권 중심주의가 오히려 서울 학생의 비수도권 진학 유인을 약하게 만든다. 지방 학생에게는 주어지는 생활비·등록금 지원이, 서울 학생이 지방 대학을 선택할 땐 거의 없다.",
+    chart: { type: "horizontalBar",
+      labels: ["경북", "전남", "충북", "전국 평균", "경기", "인천", "서울"],
+      data: [80.2, 77.5, 77.3, 63.5, 55.7, 54.5, 46.2],
+      unit: "%", metric: "일반고 4년제 대학 진학률 (2025)",
+      emphasis: 6
+    },
+    evidence: [
+      "전체 대학(전문대 포함) 진학률: 전국 79%, 서울 64.2%.",
+      "서울 주요 대학 초집중 + 지방 진학 시 지원 부족이 구조적 원인.",
+      "자료: 종로학원(2025.12.14); 에듀모닝(2025.12.16); 한국경제 생글생글(2026.01.05)."
+    ]
+  },
+  {
+    id: 16, cat: "region", num: 17, author: "배주현",
+    title: "수도권 출신이 취업에서 유리한가.",
+    claim: "수도권과 비수도권 청년 고용격차는 2015년 5.1%p에서 2024년 8.3%p로 확대.",
+    insight: "산업 구조가 지식기반으로 재편되며 수도권 집중이 가속됐다. 공공기관 분산 배치만으로는 풀리지 않는 문제. 일자리·인프라·주거·대학이 한 덩어리로 움직여야 한다.",
+    chart: { type: "line",
+      labels: ["2015", "2017", "2019", "2021", "2023", "2024"],
+      series: [
+        { name: "수도권–비수도권 청년 고용률 격차", data: [5.1, 5.6, 6.3, 7.0, 7.8, 8.3] }
+      ],
+      unit: "%p", metric: "청년 고용률 격차 추이"
+    },
+    evidence: [
+      "2분기 청년 고용률: 서울 50.2%, 전국 평균 45.7%, 경남·전북권 37.1%.",
+      "제조업 지방 이전 전략은 산업 전환기 들어 동력 상실.",
+      "자료: 국가데이터처; 한국고용정보원 「지역산업과고용」 2022."
+    ]
+  },
+  {
+    id: 17, cat: "region", num: 18, author: "홍유정",
+    title: "지역에 따라 사교육 접근성은 얼마나 차이 나는가.",
+    claim: "사교육 총액 27.5조원, 1인당 월 49.9만원, 참여율 75.7%.",
+    insight: "사교육이 사실상 필수 교육 수단이 된 상황에서 지역 간 접근성 차이는 연간 수백만 원의 교육 투자 격차로 연결된다. 격차가 더 이상 선택의 문제가 아니다.",
+    chart: { type: "bar",
+      labels: ["사교육 참여율", "월평균 사교육비(만원)", "2025 총액(조원)"],
+      data: [75.7, 49.9, 27.5],
+      unit: "", metric: "전국 평균 사교육 지표 (2025)",
+      emphasis: 1
+    },
+    evidence: [
+      "사교육비 총액 2024년 29.2조원 → 2025년 27.5조원.",
+      "연간 사교육비 약 600만원 수준이 &lsquo;기본&rsquo;이 된 상황.",
+      "자료: 연합뉴스 2025 초중고 사교육비 조사 그래픽(2026.03.12)."
+    ]
+  },
+  {
+    id: 18, cat: "region", num: 19, author: "박한결",
+    title: "지방 학생은 수능·정시에서 불리한가.",
+    claim: "서울 학생 월 사교육비 67.3만원, 전북·전남은 30만원대.",
+    insight: "사교육 투자량 차이는 수능 점수 격차로 직결된다. 대치동·목동 같은 교육특구에 밀집한 입시 특화 인프라는 지방 학생이 단기간에 따라잡기 어렵다.",
+    chart: { type: "horizontalBar",
+      labels: ["서울", "경기", "전국 평균", "전남", "전북"],
+      data: [67.3, 48.0, 44.6, 32.0, 30.0],
+      unit: "만원", metric: "학생 1인당 월평균 사교육비 (시도별)",
+      emphasis: 0
+    },
+    evidence: [
+      "사설학원 수: 경기 27.5%, 서울 포함 수도권 두 지역이 전국의 절반.",
+      "강사당 학생 수 서울 7.8명으로 최저 → 공급 밀도 최고.",
+      "자료: 시도 교육청 사교육비 통계; 학원 분포 조사."
+    ]
+  },
+  {
+    id: 19, cat: "region", num: 20, author: "김동건",
+    title: "거주 지역은 평생 소득에 영향을 미치는가.",
+    claim: "2024년 서울과 최하위 지역의 1인당 소득 격차 761만원, 역대 최대.",
+    insight: "거주지는 &lsquo;사는 곳&rsquo;이 아니라 획득 가능한 경제 기회의 총량. 부동산 가치 상승은 평생 근로 소득을 능가하는 자산 격차를 만든다.",
+    chart: { type: "line",
+      labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
+      series: [
+        { name: "서울–최하위 1인당 소득 격차", data: [540, 580, 615, 665, 705, 738, 761] }
+      ],
+      unit: "만원", metric: "지역 간 1인당 소득 격차 추이"
+    },
+    evidence: [
+      "매출액 상위 100대 기업 본사의 90% 이상이 수도권 집중.",
+      "강남·서초구 평균 연봉은 지방 소도시의 2~3배.",
+      "자료: 국가데이터처; 국세청 근로소득 연말정산; 한국고용정보원."
+    ]
+  },
+  {
+    id: 20, cat: "career", num: 21, author: "최민혁",
+    title: "출신 대학은 취업 확률과 임금에 영향을 미치는가.",
+    claim: "대기업 월평균 소득 613만원, 중소기업은 절반 수준.",
+    insight: "직접적 채용 차별은 약화 논의가 있지만, 대기업 진입 확률과 임금 경로에는 여전히 영향이 크다. 결국 출신 대학은 임금 프리미엄의 간접 경로로 작동한다.",
+    chart: { type: "bar",
+      labels: ["대기업 월평균 소득", "중소기업 월평균 소득", "대기업–중소기업 격차"],
+      data: [613, 307, 306],
+      unit: "만원", metric: "대기업·중소기업 임금 격차 (2024)",
+      emphasis: 2
+    },
+    evidence: [
+      "구직자 82.8%가 취업 과정에서 출신 학교 차별이 있다고 응답(교육의봄, 2025).",
+      "인사담당자 74.3%가 출신 학교 정보를 채용 평가에 반영.",
+      "2025 한국 1000대 기업 CEO의 29.1%가 SKY 출신."
+    ]
+  },
+  {
+    id: 21, cat: "career", num: 22, author: "하윤지",
+    title: "지역별로 수시·정시 합격 비율은 어떻게 다른가.",
+    claim: "서울대 정시 합격자의 78.4%가 수도권 출신, 수시는 55.8%.",
+    insight: "정시 확대는 교육특구·N수생 인프라와 결합해 지역 불평등을 키울 수 있다. 비수도권은 상대적으로 내신을 활용한 수시·지역인재전형으로 방어 전선을 구축한다.",
+    chart: { type: "groupedBar",
+      labels: ["수시 합격자", "정시 합격자"],
+      series: [
+        { name: "수도권 출신 비율", data: [55.8, 78.4] },
+        { name: "비수도권 출신 비율", data: [44.2, 21.6] }
+      ],
+      unit: "%", metric: "서울대 합격자 출신 지역 구성 (2021)"
+    },
+    evidence: [
+      "서울 고교생이 전국 고등학생의 16%이지만 서울시립대 정시 합격자의 32.5%.",
+      "2025학년도 서울대 정시 합격자 중 N수생 57.4%, 3수 이상 21%.",
+      "수능은 반복 훈련과 정보 인프라 효과 큼 → 교육특구 중심."
+    ]
+  },
+  {
+    id: 22, cat: "career", num: 23, author: "송시현",
+    title: "고등학교 성적은 장기 소득에 영향을 미치는가.",
+    claim: "월임금총액은 중졸 202만원에서 대학원졸 654.8만원까지 증가.",
+    insight: "시간당 임금도 학력에 따라 함께 오르기 때문에 근로시간 차이 때문이라는 설명만으로는 부족하다. 고교 성적은 학력을 경유해 장기 소득에 간접 영향.",
+    chart: { type: "bar",
+      labels: ["중졸 이하", "고졸", "전문대졸", "대졸", "대학원졸"],
+      data: [202.0, 278.7, 366.7, 459.1, 654.8],
+      unit: "만원", metric: "학력별 월임금총액 (KOSIS)",
+      emphasis: 4
+    },
+    evidence: [
+      "시간당 임금: 중졸 16,299원 → 대학원졸 45,780원.",
+      "고교 성적 → 고등교육 진학 가능성 → 장기 소득의 간접 경로.",
+      "자료: KOSIS 학력별 임금 및 근로시간 통계."
+    ]
+  },
+  {
+    id: 23, cat: "career", num: 24, author: "변주현",
+    title: "명문대 네트워크는 실제 취업에 얼마나 영향을 미치는가.",
+    claim: "수도권 대학 취업률 71.3%, 비수도권은 67.7% — 격차 3.6%p.",
+    insight: "동문 네트워크는 결정적 원인이라기보다, 기회와 정보가 전달되는 사회적 자본 경로다. 3~4%p 격차가 장기적으로 유지된다는 점이 구조의 존재를 드러낸다.",
+    chart: { type: "bar",
+      labels: ["수도권 대학", "비수도권 대학", "격차"],
+      data: [71.3, 67.7, 3.6],
+      unit: "%", metric: "대학 소재 지역별 졸업생 취업률 (2024)",
+      emphasis: 0
+    },
+    evidence: [
+      "수도권 졸업자 취업자 188,039/263,688 vs 비수도권 189,081/279,300.",
+      "멘토링·채용박람회·동문 릴레이 강연 등 공식 네트워크 지원.",
+      "자료: 2024 고등교육기관 졸업생 고용통계 조사."
+    ]
+  },
+  {
+    id: 24, cat: "labor", num: 26, author: "옥지민",
+    title: "비정규직 부모의 자녀는 비정규직이 될 확률이 높은가.",
+    claim: "비정규직 부모 자녀의 비정규직 입직 비율 77.8%, 정규직 부모는 67.8%.",
+    insight: "직업 계층의 세습은 유효하지만, 플랫폼 노동·AI 전환 국면에선 &lsquo;비정규직&rsquo;이라는 범주 자체를 다시 써야 한다. 대물림이 아니라 &lsquo;세습&rsquo;이라는 언어가 더 정확할 수 있다.",
+    chart: { type: "groupedBar",
+      labels: ["비정규직 입직", "정규직 입직"],
+      series: [
+        { name: "비정규직 부모 자녀", data: [77.8, 21.6] },
+        { name: "정규직 부모 자녀",   data: [67.8, 27.4] }
+      ],
+      unit: "%", metric: "부모 직업 지위별 자녀 첫 취업 형태"
+    },
+    evidence: [
+      "어머니 효과(10%p)가 아버지 효과(4%p)보다 강하게 나타남(이경희·민인식, 2016).",
+      "플랫폼 노동·긱 이코노미·AI 전환 맥락에서 재해석 필요.",
+      "자료: 김연아(2015); 이경희·민인식(2016) 한국노동연구원."
+    ]
+  },
+  {
+    id: 25, cat: "labor", num: 27, author: "최다솔",
+    title: "첫 직장이 이후 경력과 소득에 결정적인가.",
+    claim: "응답자 62.2%가 첫 직장을 3년 이내에 떠났다.",
+    insight: "첫 직장의 절대성은 약해졌다. 이제 첫 직장은 종착지보단 &lsquo;자기 시장 가치&rsquo;를 확인하는 경유지. 대신 초기 경력에서 얻는 학습과 평판은 여전히 복리로 작동한다.",
+    chart: { type: "horizontalBar",
+      labels: ["6개월 미만", "6개월~1년", "1~2년", "2~3년", "3~5년", "5~10년", "10년 이상·현재까지"],
+      data: [11.4, 18.4, 25.7, 12.6, 10.3, 9.4, 12.2],
+      unit: "%", metric: "첫 직장 퇴사 시기 (잡코리아 조사)",
+      emphasis: 2
+    },
+    evidence: [
+      "3년 내 퇴사 62.2%, 10년 이상/현재까지 12.2%.",
+      "이직 시 연봉 협상을 통한 점프업이 보편화.",
+      "자료: 잡코리아 직장인 퇴사 실태 조사."
+    ]
+  },
+  {
+    id: 26, cat: "gender", num: 28, author: "최준혁",
+    title: "같은 조건에서도 여성은 남성보다 임금이 낮은가.",
+    claim: "OECD 기준 한국 성별 임금 격차 31% (1위), 동일조건 비교에서도 10%.",
+    insight: "직관적 차별(동일 노동–차등 지급)은 5~10%. 나머지 20%+는 &lsquo;조건을 같게 만들 수 없게 하는 구조&rsquo;에서 발생한다. 35세 전후 마더후드 패널티가 격차를 벌린다.",
+    chart: { type: "bar",
+      labels: ["전체 임금격차", "직군·경력 동일조건 격차", "구조적·조건 격차"],
+      data: [31, 10, 21],
+      unit: "%", metric: "남녀 임금격차 분해 (2024)",
+      emphasis: 0
+    },
+    evidence: [
+      "OECD 2024: 남성 100원 기준 여성 68.8원 (한국 1위).",
+      "30대 후반 &lsquo;데스 벨리&rsquo; 구간에서 남성 임금 상승률이 여성의 2배 이상.",
+      "자료: OECD Gender Wage Gap; Glassdoor 분석; 한국노동연구원 패널 조사."
+    ]
+  }
+];
+
+/* ------------------------------------------------------------
+   State
+------------------------------------------------------------ */
+let state = {
+  activeCat: "all",
+  query: "",
+  theme: localStorage.getItem("theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+  chartInstances: new Map()
+};
+
+/* ------------------------------------------------------------
+   Theme
+------------------------------------------------------------ */
+function applyTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  document.getElementById("themeIconLight").style.display = t === "dark" ? "none" : "block";
+  document.getElementById("themeIconDark").style.display  = t === "dark" ? "block" : "none";
+  localStorage.setItem("theme", t);
+  state.theme = t;
+  // re-render charts to pick up new theme colors
+  rerenderCharts();
+}
+document.getElementById("themeBtn").addEventListener("click", () => {
+  applyTheme(state.theme === "dark" ? "light" : "dark");
+});
+
+/* ------------------------------------------------------------
+   Helpers
+------------------------------------------------------------ */
+function catInfo(id) { return CATEGORIES.find(c => c.id === id); }
+function catColor(id) { return state.theme === "dark" ? catInfo(id).dark : catInfo(id).color; }
+function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function countBy(key) {
+  const out = {};
+  TOPICS.forEach(t => out[t[key]] = (out[t[key]] || 0) + 1);
+  return out;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function filtered() {
+  const q = state.query.trim().toLowerCase();
+  return TOPICS.filter(t => {
+    const okCat = state.activeCat === "all" || t.cat === state.activeCat;
+    if (!okCat) return false;
+    if (!q) return true;
+    const hay = [t.title, t.claim, t.insight, t.author, catInfo(t.cat).label, ...(t.evidence||[])].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+/* ------------------------------------------------------------
+   Stats band
+------------------------------------------------------------ */
+function renderStats() {
+  const byCat = countBy("cat");
+  const list = filtered();
+  const el = document.getElementById("statsBand");
+  el.innerHTML = `
+    <div class="stat">
+      <div class="stat-value">${TOPICS.length}<small>개</small></div>
+      <div class="stat-label">발표된 질문의 수. 각기 다른 각도에서 한국의 격차를 묻는다.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">7<small>개</small></div>
+      <div class="stat-label">분류된 주제 축. 소득·교육·부모 배경·지역·학력·노동시장·젠더.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">${byCat.region || 0}<small>건</small></div>
+      <div class="stat-label">&lsquo;지역 격차&rsquo;를 주제로 한 발표. 수도권과 지방의 구조적 간극.</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">${(byCat.education||0) + (byCat.family||0)}<small>건</small></div>
+      <div class="stat-label">교육 자원과 부모 배경을 다룬 발표. 격차가 가장 길게 그림자를 드리우는 영역.</div>
+    </div>
+  `;
+}
+
+/* ------------------------------------------------------------
+   Overview chart
+------------------------------------------------------------ */
+function renderOverview() {
+  const byCat = countBy("cat");
+  const labels = CATEGORIES.map(c => c.label);
+  const data = CATEGORIES.map(c => byCat[c.id] || 0);
+  const colors = CATEGORIES.map(c => catColor(c.id));
+
+  const legend = CATEGORIES.map(c => `
+    <div class="legend-row">
+      <div class="legend-dot" style="background:${catColor(c.id)}"></div>
+      <div class="legend-name">${c.label}</div>
+      <div class="legend-count">${byCat[c.id] || 0}건</div>
+    </div>
+  `).join("");
+  document.getElementById("overviewLegend").innerHTML = legend;
+
+  const ctx = document.getElementById("overviewChart").getContext("2d");
+  if (state.chartInstances.has("__overview__")) state.chartInstances.get("__overview__").destroy();
+  const chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 28
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: "y",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: cssVar("--text"),
+          titleColor: cssVar("--bg"),
+          bodyColor: cssVar("--bg"),
+          padding: 10, cornerRadius: 6, displayColors: false,
+          titleFont: { family: "Inter", weight: "600" },
+          bodyFont:  { family: "Inter" },
+          callbacks: { label: c => `${c.raw}건` }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true, ticks: {
+            stepSize: 1, color: cssVar("--muted"),
+            font: { family: "Inter", size: 12 }
+          },
+          grid: { color: cssVar("--grid"), drawBorder: false }
+        },
+        y: {
+          ticks: {
+            color: cssVar("--text-dim"),
+            font: { family: "Inter", size: 13, weight: "500" }
+          },
+          grid: { display: false, drawBorder: false }
+        }
+      }
+    }
+  });
+  state.chartInstances.set("__overview__", chart);
+}
+
+/* ------------------------------------------------------------
+   Chips & filter
+------------------------------------------------------------ */
+function renderChips() {
+  const byCat = countBy("cat");
+  const html = [{ id: "all", label: "전체", count: TOPICS.length }]
+    .concat(CATEGORIES.map(c => ({ id: c.id, label: c.label, count: byCat[c.id] || 0 })))
+    .map(c => `
+      <button class="chip ${state.activeCat === c.id ? 'active' : ''}" data-id="${c.id}">
+        ${c.label}<span class="chip-count">${c.count}</span>
+      </button>
+    `).join("");
+  const box = document.getElementById("chips");
+  box.innerHTML = html;
+  box.querySelectorAll(".chip").forEach(el => {
+    el.addEventListener("click", () => {
+      state.activeCat = el.dataset.id;
+      renderChips();
+      renderGrid();
+    });
+  });
+}
+
+/* ------------------------------------------------------------
+   Topic grid
+------------------------------------------------------------ */
+function renderGrid() {
+  const items = filtered();
+  const grid = document.getElementById("topicGrid");
+  // destroy old charts
+  state.chartInstances.forEach((inst, key) => {
+    if (key !== "__overview__") inst.destroy();
+  });
+  for (const k of Array.from(state.chartInstances.keys())) {
+    if (k !== "__overview__") state.chartInstances.delete(k);
+  }
+
+  if (!items.length) {
+    grid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align:center; padding: 60px 20px; color: var(--muted); border: 1px dashed var(--line); border-radius: 20px;">
+        조건에 맞는 주제가 없습니다. 검색어나 카테고리를 바꿔 보세요.
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(t => `
+    <article class="topic-card" id="topic-${t.id}" data-id="${t.id}">
+      <div class="topic-head">
+        <div class="topic-meta">
+          <span class="topic-num">No. ${String(t.num).padStart(2,'0')}</span>
+          <span class="topic-cat" style="color:${catColor(t.cat)}">${catInfo(t.cat).label}</span>
+        </div>
+        <h3 class="topic-title">${escapeHtml(t.title)}</h3>
+        <div class="topic-author"><strong>${escapeHtml(t.author)}</strong>. 발표</div>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-${t.id}"></canvas></div>
+      <div class="topic-claim">&ldquo;${escapeHtml(t.claim)}&rdquo;</div>
+      <div class="topic-actions">
+        <button class="card-btn" data-action="expand" aria-expanded="false">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          <span>자세히</span>
+        </button>
+        <button class="card-btn" data-action="copy">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>링크</span>
+        </button>
+      </div>
+      <div class="topic-detail">
+        <div class="detail-row">
+          <div class="detail-label">핵심 해석</div>
+          <div class="detail-content"><p>${escapeHtml(t.insight)}</p></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">근거</div>
+          <div class="detail-content"><ul>${t.evidence.map(e => `<li>${escapeHtml(e)}</li>`).join("")}</ul></div>
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  // Build charts
+  items.forEach(t => buildTopicChart(t));
+
+  // Wire buttons
+  grid.querySelectorAll(".topic-card").forEach(card => {
+    const id = Number(card.dataset.id);
+    card.querySelector("[data-action='expand']").addEventListener("click", () => {
+      const expanded = card.classList.toggle("expanded");
+      const btn = card.querySelector("[data-action='expand']");
+      btn.setAttribute("aria-expanded", expanded);
+      btn.querySelector("span").textContent = expanded ? "접기" : "자세히";
+      btn.querySelector("svg").style.transform = expanded ? "rotate(180deg)" : "rotate(0)";
+      const topic = TOPICS.find(x => x.id === id);
+      // rebuild chart to pick up new size
+      setTimeout(() => buildTopicChart(topic), 220);
+    });
+    card.querySelector("[data-action='copy']").addEventListener("click", () => {
+      const url = window.location.origin + window.location.pathname + "#topic-" + id;
+      navigator.clipboard.writeText(url).then(() => showToast("링크가 복사됐습니다."));
+    });
+  });
+}
+
+/* ------------------------------------------------------------
+   Chart builders
+------------------------------------------------------------ */
+function buildTopicChart(t) {
+  const key = `chart-${t.id}`;
+  if (state.chartInstances.has(key)) state.chartInstances.get(key).destroy();
+  const canvas = document.getElementById(key);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const c = t.chart;
+  const baseColor = catColor(t.cat);
+  const secColor = state.theme === "dark" ? "#fb923c" : "#c2410c";
+  const neutral  = cssVar("--chart-neutral");
+  const textCol  = cssVar("--text-dim");
+  const muted    = cssVar("--muted");
+  const grid     = cssVar("--grid");
+
+  const commonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 420, easing: "easeOutCubic" },
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: !!c.metric,
+        text: c.metric,
+        color: muted,
+        font: { family: "Inter", size: 11, weight: "500" },
+        padding: { top: 4, bottom: 12 },
+        align: "start"
+      },
+      tooltip: {
+        backgroundColor: cssVar("--text"),
+        titleColor: cssVar("--bg"),
+        bodyColor: cssVar("--bg"),
+        padding: 10, cornerRadius: 6, displayColors: false,
+        titleFont: { family: "Inter", weight: "600" },
+        bodyFont: { family: "Inter" },
+        callbacks: {
+          label: ctx => {
+            const v = ctx.parsed.y ?? ctx.parsed.x ?? ctx.parsed;
+            const unit = c.unit || "";
+            return `${(Number.isFinite(v) ? v.toLocaleString("ko-KR") : v)}${unit}`;
+          }
+        }
+      }
+    }
+  };
+
+  const numAxisTicks = { color: muted, font: { family: "Inter", size: 11 } };
+  const numAxisGrid  = { color: grid, drawBorder: false };
+  const catAxisTicks = { color: textCol, font: { family: "Inter", size: 11, weight: "500" }, autoSkip: false };
+  const catAxisGrid  = { display: false, drawBorder: false };
+
+  let chart;
+
+  if (c.type === "bar") {
+    const backgroundColor = c.data.map((_, i) => (c.emphasis === i ? secColor : baseColor));
+    chart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: c.labels, datasets: [{ data: c.data, backgroundColor, borderRadius: 5, borderSkipped: false, barPercentage: 0.68, categoryPercentage: 0.78 }] },
+      options: { ...commonOptions,
+        scales: {
+          x: { ticks: catAxisTicks, grid: catAxisGrid },
+          y: { beginAtZero: true, ticks: { ...numAxisTicks, callback: v => v + (c.unit || "") }, grid: numAxisGrid }
+        }
+      }
+    });
+  } else if (c.type === "horizontalBar") {
+    const backgroundColor = c.data.map((_, i) => (c.emphasis === i ? secColor : baseColor));
+    chart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: c.labels, datasets: [{ data: c.data, backgroundColor, borderRadius: 5, borderSkipped: false, barPercentage: 0.72 }] },
+      options: { ...commonOptions, indexAxis: "y",
+        scales: {
+          x: { beginAtZero: true, ticks: { ...numAxisTicks, callback: v => v + (c.unit || "") }, grid: numAxisGrid },
+          y: { ticks: { ...catAxisTicks }, grid: catAxisGrid }
+        }
+      }
+    });
+  } else if (c.type === "divergingBar") {
+    const backgroundColor = c.data.map(v => v >= 0 ? baseColor : secColor);
+    chart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: c.labels, datasets: [{ data: c.data, backgroundColor, borderRadius: 5, borderSkipped: false, barPercentage: 0.72 }] },
+      options: { ...commonOptions, indexAxis: "y",
+        scales: {
+          x: { ticks: { ...numAxisTicks, callback: v => v }, grid: { ...numAxisGrid, color: grid } },
+          y: { ticks: { ...catAxisTicks }, grid: catAxisGrid }
+        }
+      }
+    });
+  } else if (c.type === "groupedBar") {
+    const palette = [baseColor, secColor, neutral];
+    const datasets = c.series.map((s, i) => ({
+      label: s.name,
+      data: s.data,
+      backgroundColor: palette[i % palette.length],
+      borderRadius: 5, borderSkipped: false,
+      barPercentage: 0.78, categoryPercentage: 0.72
+    }));
+    chart = new Chart(ctx, {
+      type: "bar",
+      data: { labels: c.labels, datasets },
+      options: { ...commonOptions,
+        plugins: { ...commonOptions.plugins,
+          legend: {
+            display: true, position: "top", align: "start",
+            labels: {
+              boxWidth: 10, boxHeight: 10, padding: 12,
+              font: { family: "Inter", size: 11, weight: "500" },
+              color: textCol, usePointStyle: true, pointStyle: "rectRounded"
+            }
+          }
+        },
+        scales: {
+          x: { ticks: catAxisTicks, grid: catAxisGrid },
+          y: { beginAtZero: true, ticks: { ...numAxisTicks, callback: v => v + (c.unit || "") }, grid: numAxisGrid }
+        }
+      }
+    });
+  } else if (c.type === "line") {
+    const palette = [baseColor, secColor];
+    const datasets = c.series.map((s, i) => ({
+      label: s.name,
+      data: s.data,
+      borderColor: palette[i % palette.length],
+      backgroundColor: palette[i % palette.length] + "22",
+      pointBackgroundColor: palette[i % palette.length],
+      pointBorderColor: cssVar("--panel"),
+      pointBorderWidth: 2,
+      pointRadius: 4, pointHoverRadius: 6,
+      tension: 0.28, borderWidth: 2.5, fill: true
+    }));
+    chart = new Chart(ctx, {
+      type: "line",
+      data: { labels: c.labels, datasets },
+      options: { ...commonOptions,
+        plugins: { ...commonOptions.plugins,
+          legend: {
+            display: true, position: "top", align: "start",
+            labels: {
+              boxWidth: 10, boxHeight: 10, padding: 12,
+              font: { family: "Inter", size: 11, weight: "500" },
+              color: textCol, usePointStyle: true, pointStyle: "line"
+            }
+          }
+        },
+        scales: {
+          x: { ticks: catAxisTicks, grid: catAxisGrid },
+          y: { beginAtZero: false, ticks: { ...numAxisTicks, callback: v => v + (c.unit || "") }, grid: numAxisGrid }
+        }
+      }
+    });
+  }
+
+  state.chartInstances.set(key, chart);
+}
+
+function rerenderCharts() {
+  // overview
+  renderOverview();
+  // topic charts
+  filtered().forEach(buildTopicChart);
+}
+
+/* ------------------------------------------------------------
+   Toasts & misc actions
+------------------------------------------------------------ */
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(window.__toast);
+  window.__toast = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+document.getElementById("shareBtn").addEventListener("click", () => {
+  const url = window.location.href.split("#")[0];
+  if (navigator.share) {
+    navigator.share({ title: document.title, url }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(url).then(() => showToast("링크가 복사됐습니다."));
+  }
+});
+document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+document.getElementById("searchInput").addEventListener("input", e => {
+  state.query = e.target.value;
+  renderGrid();
+});
+
+/* ------------------------------------------------------------
+   Boot
+------------------------------------------------------------ */
+applyTheme(state.theme);
+renderStats();
+renderOverview();
+renderChips();
+renderGrid();
+
+// If URL hash points to topic, expand it
+window.addEventListener("load", () => {
+  if (location.hash.startsWith("#topic-")) {
+    const id = Number(location.hash.replace("#topic-", ""));
+    const card = document.getElementById("topic-" + id);
+    if (card) {
+      card.classList.add("expanded");
+      const btn = card.querySelector("[data-action='expand']");
+      btn.setAttribute("aria-expanded", "true");
+      btn.querySelector("span").textContent = "접기";
+      setTimeout(() => {
+        card.scrollIntoView({ behavior: "smooth", block: "start" });
+        const topic = TOPICS.find(t => t.id === id);
+        if (topic) buildTopicChart(topic);
+      }, 100);
+    }
+  }
+});
+
+// React to color scheme changes if user hasn't manually toggled
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+  if (!localStorage.getItem("theme_manual")) {
+    applyTheme(e.matches ? "dark" : "light");
+  }
+});
+document.getElementById("themeBtn").addEventListener("click", () => {
+  localStorage.setItem("theme_manual", "1");
+});
+</script>
+
+</body>
+</html>
